@@ -1,0 +1,15 @@
+EXAMPLE - After creating database in Hostinger, your config.php should look like:
+
+<?php
+// If Hostinger gives you: u750263917_karyasaarthi_db
+// Update config.php like this:
+
+define('DB_HOST', 'localhost');
+define('DB_NAME', 'u750263917_karyasaarthi_db');  // Your actual database name from Hostinger
+define('DB_USER', 'u750263917_ksadmin');         // Your actual username from Hostinger
+define('DB_PASS', 'YourActualPassword123');      // Your actual password you created
+
+// Don't change these:
+define('SITE_NAME', 'KaryaSaarthi');
+define('SITE_URL', 'https://karyasaarthi.com');
+?>

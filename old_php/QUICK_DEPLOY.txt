@@ -1,0 +1,34 @@
+QUICK DEPLOYMENT - KARYASAARTHI WEBSITE
+========================================
+
+YOUR FILES TO UPLOAD:
+--------------------
+✅ index.html (main website)
+✅ images/ folder (contains all images)
+   - karyasaarthi.jpeg (logo)
+   - team/ folder with 6 photos
+
+DEPLOYMENT STEPS (15 MINUTES):
+------------------------------
+1. LOGIN: https://hpanel.hostinger.com
+2. Go to: Files → File Manager → public_html
+3. UPLOAD: Drag all files here
+4. SSL: Security → SSL → Install Let's Encrypt
+5. DONE! Visit: https://karyasaarthi.com
+
+WORKS ON:
+---------
+✅ Desktop/Laptop - Full view
+✅ Mobile/Tablet - Responsive menu
+✅ All browsers - Chrome, Safari, Firefox
+
+TEST AFTER UPLOAD:
+-----------------
+□ Logo shows in header
+□ All 6 team photos visible
+□ WhatsApp button works
+□ Social media links work
+□ Mobile menu works (test on phone)
+
+THAT'S IT! Your website is LIVE!
+=================================

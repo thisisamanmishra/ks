@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign Up - KaryaSaarthi</title>
+    <link rel="icon" type="image/jpeg" href="images/karyasaarthi.jpeg">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .signup-container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 30px;
+            box-shadow: 0 30px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+            max-width: 1200px;
+            width: 100%;
+            display: flex;
+            min-height: 650px;
+            backdrop-filter: blur(10px);
+            animation: slideIn 0.5s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .left-panel {
+            flex: 1;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 60px 50px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            color: white;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .left-panel::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+            animation: rotate 20s linear infinite;
+        }
+
+        @keyframes rotate {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .left-panel h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 20px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .left-panel p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+            position: relative;
+            z-index: 1;
+            margin-bottom: 30px;
+        }
+
+        .feature-list {
+            position: relative;
+            z-index: 1;
+        }
+
+        .feature-list li {
+            list-style: none;
+            padding: 10px 0;
+            display: flex;
+            align-items: center;
+            font-size: 1rem;
+        }
+
+        .feature-list li i {
+            margin-right: 15px;
+            font-size: 1.2rem;
+            color: #4ade80;
+        }
+
+        .right-panel {
+            flex: 1.2;
+            padding: 60px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .logo-section {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .logo-section img {
+            height: 60px;
+            margin-bottom: 15px;
+            filter: drop-shadow(0 5px 10px rgba(0,0,0,0.1));
+        }
+
+        .logo-section h2 {
+            color: #333;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .logo-section p {
+            color: #666;
+            font-size: 0.95rem;
+        }
+
+        .form-floating {
+            margin-bottom: 20px;
+        }
+
+        .form-floating input,
+        .form-floating select {
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            height: 55px;
+            font-size: 0.95rem;
+            transition: all 0.3s;
+        }
+
+        .form-floating input:focus,
+        .form-floating select:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.1);
+        }
+
+        .form-floating label {
+            color: #6b7280;
+            font-size: 0.9rem;
+        }
+
+        .password-strength {
+            height: 5px;
+            border-radius: 3px;
+            margin-top: 5px;
+            transition: all 0.3s;
+        }
+
+        .btn-signup {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            border-radius: 12px;
+            color: white;
+            padding: 14px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            width: 100%;
+            margin-top: 20px;
+            transition: transform 0.3s, box-shadow 0.3s;
+            cursor: pointer;
+        }
+
+        .btn-signup:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .divider {
+            text-align: center;
+            margin: 25px 0;
+            position: relative;
+        }
+
+        .divider::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 50%;
+            width: 100%;
+            height: 1px;
+            background: #e5e7eb;
+        }
+
+        .divider span {
+            background: white;
+            padding: 0 15px;
+            position: relative;
+            color: #6b7280;
+            font-size: 0.9rem;
+        }
+
+        .social-signup {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .social-btn {
+            flex: 1;
+            padding: 12px;
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            background: white;
+            color: #333;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            transition: all 0.3s;
+            cursor: pointer;
+            text-decoration: none;
+        }
+
+        .social-btn:hover {
+            border-color: #667eea;
+            background: #f9fafb;
+        }
+
+        .login-link {
+            text-align: center;
+            margin-top: 20px;
+            color: #6b7280;
+        }
+
+        .login-link a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .login-link a:hover {
+            text-decoration: underline;
+        }
+
+        @media (max-width: 768px) {
+            .signup-container {
+                flex-direction: column;
+            }
+
+            .left-panel {
+                padding: 40px 30px;
+                min-height: 200px;
+            }
+
+            .left-panel h1 {
+                font-size: 1.8rem;
+            }
+
+            .right-panel {
+                padding: 40px 30px;
+            }
+        }
+
+        .form-check {
+            margin-top: 15px;
+        }
+
+        .form-check-input:checked {
+            background-color: #667eea;
+            border-color: #667eea;
+        }
+    </style>
+</head>
+<body>
+    <div class="signup-container">
+        <!-- Left Panel -->
+        <div class="left-panel">
+            <h1>Welcome to KaryaSaarthi!</h1>
+            <p>Join thousands of students and businesses who trust us for their success</p>
+            <ul class="feature-list">
+                <li><i class="bi bi-check-circle-fill"></i>500+ Happy Clients</li>
+                <li><i class="bi bi-check-circle-fill"></i>Expert Assistance 24/7</li>
+                <li><i class="bi bi-check-circle-fill"></i>100% Secure & Confidential</li>
+                <li><i class="bi bi-check-circle-fill"></i>Money Back Guarantee</li>
+            </ul>
+        </div>
+
+        <!-- Right Panel -->
+        <div class="right-panel">
+            <div class="logo-section">
+                <img src="images/karyasaarthi.jpeg" alt="KaryaSaarthi Logo">
+                <h2>Create Your Account</h2>
+                <p>Get started in just 2 minutes</p>
+            </div>
+
+            <form onsubmit="showAlert(event)">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-floating">
+                            <input type="text" class="form-control" id="fullname" placeholder="John Doe" required>
+                            <label for="fullname"><i class="bi bi-person me-2"></i>Full Name</label>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-floating">
+                            <input type="tel" class="form-control" id="phone" placeholder="9876543210" pattern="[0-9]{10}" required>
+                            <label for="phone"><i class="bi bi-telephone me-2"></i>Phone Number</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-floating">
+                    <input type="email" class="form-control" id="email" placeholder="name@example.com" required>
+                    <label for="email"><i class="bi bi-envelope me-2"></i>Email Address</label>
+                </div>
+
+                <div class="form-floating">
+                    <select class="form-control" id="user_type" required>
+                        <option value="">Choose...</option>
+                        <option value="student">🎓 Student</option>
+                        <option value="business">💼 Business Owner</option>
+                        <option value="professional">👔 Professional</option>
+                        <option value="freelancer">💻 Freelancer</option>
+                    </select>
+                    <label for="user_type"><i class="bi bi-briefcase me-2"></i>I am a</label>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-floating">
+                            <input type="password" class="form-control" id="password" placeholder="Password" minlength="6" required>
+                            <label for="password"><i class="bi bi-lock me-2"></i>Password</label>
+                            <div class="password-strength" id="passwordStrength"></div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-floating">
+                            <input type="password" class="form-control" id="confirm_password" placeholder="Confirm Password" minlength="6" required>
+                            <label for="confirm_password"><i class="bi bi-lock-fill me-2"></i>Confirm Password</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="terms" required>
+                    <label class="form-check-label" for="terms">
+                        I agree to the Terms of Service and Privacy Policy
+                    </label>
+                </div>
+
+                <button type="submit" class="btn btn-signup">
+                    Create My Account
+                </button>
+            </form>
+
+            <div class="divider">
+                <span>OR</span>
+            </div>
+
+            <div class="social-signup">
+                <a href="https://wa.me/917991124091" class="social-btn">
+                    <i class="bi bi-whatsapp" style="color: #25D366;"></i>
+                    WhatsApp
+                </a>
+                <a href="tel:+919311025753" class="social-btn">
+                    <i class="bi bi-telephone-fill" style="color: #667eea;"></i>
+                    Call Us
+                </a>
+            </div>
+
+            <div class="login-link">
+                Already have an account? <a href="test_login.html">Sign In</a>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Password strength indicator
+        document.getElementById('password').addEventListener('input', function() {
+            const password = this.value;
+            const strength = document.getElementById('passwordStrength');
+
+            if (password.length < 6) {
+                strength.style.width = '30%';
+                strength.style.background = '#ef4444';
+            } else if (password.length < 10) {
+                strength.style.width = '60%';
+                strength.style.background = '#f59e0b';
+            } else {
+                strength.style.width = '100%';
+                strength.style.background = '#10b981';
+            }
+        });
+
+        function showAlert(e) {
+            e.preventDefault();
+            alert('This is a test version! Upload to Hostinger with PHP files for full functionality.');
+            return false;
+        }
+    </script>
+</body>
+</html>

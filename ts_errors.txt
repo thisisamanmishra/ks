@@ -1,0 +1,3 @@
+﻿app/admin/pillars/calling/page.tsx(205,158): error TS2339: Property 'monthly_target' does not exist on type 'PillarMember'.
+app/admin/pillars/calling/page.tsx(207,155): error TS2339: Property 'monthly_target' does not exist on type 'PillarMember'.
+app/api/services/referral/route.ts(45,72): error TS2551: Property 'catch' does not exist on type 'PostgrestFilterBuilder<any, any, any, any, "increment_referral_code_uses", null, "RPC">'. Did you mean 'match'?

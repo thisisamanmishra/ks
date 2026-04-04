@@ -1,0 +1,50 @@
+HOSTINGER MySQL DATABASE SETUP - QUICK GUIDE
+============================================
+
+1. LOGIN TO HOSTINGER
+   → https://hpanel.hostinger.com
+   → Select: karyasaarthi.com
+
+2. CREATE DATABASE
+   → Click: Databases → MySQL Databases
+   → Click: "Create New Database"
+
+3. FILL THESE DETAILS:
+   Database Name: karyasaarthi_db
+   Username: ksuser
+   Password: [Choose strong password]
+
+   HOSTINGER WILL ADD PREFIX AUTOMATICALLY:
+   Actual Database: u750263917_karyasaarthi_db
+   Actual Username: u750263917_ksuser
+
+4. SAVE YOUR CREDENTIALS:
+   ┌─────────────────────────────────────┐
+   │ Database Host: localhost            │
+   │ Database Name: u750263917_[yourdb]  │
+   │ Username: u750263917_[youruser]     │
+   │ Password: [your password]           │
+   └─────────────────────────────────────┘
+
+5. UPDATE config.php WITH YOUR ACTUAL VALUES:
+   - Replace example values with your real ones
+   - Keep 'localhost' as host
+
+6. ACCESS PHPMYADMIN:
+   → In Databases section
+   → Click "PHPMyAdmin" button
+   → Login with your database credentials
+
+7. IMPORT DATABASE:
+   → Select your database
+   → Click SQL tab
+   → Copy content from database_setup.sql
+   → Paste and click Go
+
+8. TEST CONNECTION:
+   → Upload files to Hostinger
+   → Visit: karyasaarthi.com/signup.php
+   → Try creating an account
+
+THAT'S IT! Database connected!
+=========================================

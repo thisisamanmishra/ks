@@ -1,0 +1,1946 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KaryaSaarthi - Your Work Companion</title>
+    <link rel="icon" type="image/jpeg" href="images/karyasaarthi.jpeg">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <style>
+        :root {
+            --primary-color: #667eea;
+            --secondary-color: #764ba2;
+        }
+        * {
+            scroll-behavior: smooth;
+        }
+        .hero-section {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 120px 0 100px 0;
+            color: white;
+        }
+        .step-number {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: #667eea;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            font-weight: bold;
+            margin: 0 auto 20px;
+        }
+        /* Enhanced Navigation */
+        .navbar {
+            box-shadow: 0 2px 10px rgba(0,0,0,.1);
+            padding: 15px 0;
+            background: white !important;
+            transition: all 0.3s ease;
+        }
+        .navbar-brand {
+            font-size: 1.5rem;
+            font-weight: 700;
+            transition: transform 0.3s;
+        }
+        .navbar-brand:hover {
+            transform: scale(1.05);
+        }
+        .navbar-nav .nav-link {
+            padding: 8px 16px;
+            margin: 0 5px;
+            color: #333;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            border-radius: 5px;
+            position: relative;
+        }
+        .navbar-nav .nav-link:hover {
+            color: #667eea;
+            background-color: rgba(102, 126, 234, 0.1);
+        }
+        .navbar-nav .nav-link.active {
+            color: #667eea;
+            background-color: rgba(102, 126, 234, 0.15);
+        }
+        .btn-login {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 8px 24px;
+            border-radius: 25px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            margin-left: 10px;
+        }
+        .btn-login:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+            color: white;
+        }
+        .btn-signup {
+            background: transparent;
+            color: #667eea;
+            border: 2px solid #667eea;
+            padding: 8px 24px;
+            border-radius: 25px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            margin-left: 10px;
+        }
+        .btn-signup:hover {
+            background: #667eea;
+            color: white;
+            transform: translateY(-2px);
+        }
+        /* Mobile Menu Styling */
+        @media (max-width: 991px) {
+            .navbar-collapse {
+                background: white;
+                padding: 20px;
+                border-radius: 10px;
+                margin-top: 15px;
+                box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+            }
+            .navbar-nav {
+                padding: 10px 0;
+            }
+            .navbar-nav .nav-link {
+                padding: 12px 20px;
+                margin: 5px 0;
+            }
+            .auth-buttons {
+                margin-top: 15px;
+                padding-top: 15px;
+                border-top: 1px solid #eee;
+            }
+            .btn-login, .btn-signup {
+                display: block;
+                width: 100%;
+                margin: 10px 0;
+            }
+        }
+        /* Sticky navbar scroll effect */
+        .navbar.scrolled {
+            padding: 10px 0;
+            box-shadow: 0 4px 20px rgba(0,0,0,.15);
+        }
+        .card {
+            transition: transform 0.3s;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+        }
+        .feature-icon {
+            font-size: 3rem;
+            color: #667eea;
+        }
+        .service-icon {
+            font-size: 2.5rem;
+            color: #764ba2;
+            margin-bottom: 15px;
+        }
+        .team-card {
+            transition: transform 0.3s;
+            border: none;
+        }
+        .team-card:hover {
+            transform: translateY(-10px);
+        }
+        .team-member-img {
+            width: 200px;
+            height: 200px;
+            object-fit: cover;
+            object-position: center;
+            border-radius: 50%;
+            border: 5px solid #667eea;
+            background-color: #f5f5f5;
+        }
+        /* Specific adjustments for large photos */
+        img[alt="Anish"],
+        img[alt="Rakhi Bhatt"],
+        img[alt="Annu Priya"] {
+            object-fit: contain;
+            object-position: center top;
+            transform: scale(0.9);
+        }
+        .team-img-wrapper {
+            display: flex;
+            justify-content: center;
+        }
+        /* Popular Services Section Styles */
+        #popular-services {
+            background: #f8f9fa;
+        }
+        .btn-category {
+            padding: 8px 20px;
+            border: 2px solid #dee2e6;
+            background: white;
+            color: #495057;
+            border-radius: 25px;
+            font-weight: 500;
+            transition: all 0.3s;
+            margin: 5px;
+            position: relative;
+        }
+        .btn-category:hover {
+            background: #f8f9fa;
+            border-color: #667eea;
+            color: #667eea;
+            transform: translateY(-2px);
+        }
+        .btn-category.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-color: #667eea;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+        /* Special styling for "All Services" button */
+        .btn-category[data-category="all"] {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: white;
+            border-color: #28a745;
+            font-weight: 600;
+            padding: 8px 25px;
+        }
+        .btn-category[data-category="all"]:hover {
+            background: linear-gradient(135deg, #20c997 0%, #28a745 100%);
+            transform: scale(1.05) translateY(-2px);
+            box-shadow: 0 5px 20px rgba(40, 167, 69, 0.3);
+            color: white;
+        }
+        .btn-category[data-category="all"].active {
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(40, 167, 69, 0.4); }
+            70% { box-shadow: 0 0 0 10px rgba(40, 167, 69, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(40, 167, 69, 0); }
+        }
+        .service-card {
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            transition: all 0.3s;
+            height: 100%;
+            cursor: pointer;
+        }
+        .service-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 20px rgba(0,0,0,0.15);
+        }
+        .service-image {
+            position: relative;
+            overflow: hidden;
+            height: 150px;
+        }
+        .service-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.3s;
+        }
+        .service-card:hover .service-image img {
+            transform: scale(1.1);
+        }
+        .service-badge {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: #28a745;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        .badge-hot {
+            background: #dc3545;
+        }
+        .badge-new {
+            background: #17a2b8;
+        }
+        .service-content {
+            padding: 15px;
+        }
+        .service-content h5 {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #333;
+        }
+        .service-rating {
+            margin-bottom: 8px;
+        }
+        .service-rating i {
+            color: #ffc107;
+            font-size: 12px;
+        }
+        .rating-text {
+            color: #6c757d;
+            font-size: 12px;
+            margin-left: 5px;
+        }
+        .service-description {
+            font-size: 13px;
+            color: #6c757d;
+            margin-bottom: 15px;
+            line-height: 1.4;
+        }
+        .service-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-top: 10px;
+            border-top: 1px solid #f0f0f0;
+        }
+        .service-price {
+            font-weight: 600;
+            color: #333;
+            font-size: 14px;
+        }
+        .btn-service {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 12px;
+            transition: all 0.3s;
+        }
+        .btn-service:hover {
+            transform: scale(1.05);
+            color: white;
+        }
+        /* How It Works Styles */
+        .step-icon {
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 20px;
+            flex-shrink: 0;
+        }
+        .step-icon i {
+            color: white;
+            font-size: 24px;
+        }
+        .step-content h5 {
+            color: #333;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+        .step-content p {
+            margin: 0;
+            font-size: 14px;
+        }
+        .feature-box {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+            transition: all 0.3s;
+        }
+        .feature-box:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 20px rgba(0,0,0,0.12);
+        }
+        .feature-box i {
+            font-size: 32px;
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+        .feature-box h6 {
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+        .feature-box small {
+            color: #6c757d;
+        }
+        .trust-badges {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+        }
+        /* 3D Hero Section Styles */
+        .hero-section-3d {
+            position: relative;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background-size: 400% 400%;
+            animation: gradientShift 15s ease infinite;
+            overflow: hidden;
+            padding-top: 80px;
+        }
+        @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        .hero-section-3d::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 800"><defs><linearGradient id="g" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" style="stop-color:rgba(255,255,255,0.05)"/><stop offset="100%" style="stop-color:rgba(255,255,255,0)"/></linearGradient></defs><circle cx="100" cy="100" r="80" fill="url(%23g)" opacity="0.5"><animate attributeName="cy" values="100;150;100" dur="20s" repeatCount="indefinite"/></circle><circle cx="400" cy="300" r="120" fill="url(%23g)" opacity="0.3"><animate attributeName="cx" values="400;450;400" dur="25s" repeatCount="indefinite"/></circle><circle cx="800" cy="500" r="150" fill="url(%23g)" opacity="0.2"><animate attributeName="r" values="150;180;150" dur="30s" repeatCount="indefinite"/></circle></svg>');
+            opacity: 0.4;
+            animation: float 20s ease-in-out infinite;
+        }
+        .hero-3d-container {
+            position: relative;
+            z-index: 2;
+        }
+        .hero-content {
+            position: relative;
+            z-index: 10;
+        }
+        .hero-title {
+            color: white;
+            animation: titleGlow 3s ease-in-out infinite alternate;
+            text-shadow:
+                0 0 20px rgba(255,255,255,0.5),
+                0 0 40px rgba(102, 126, 234, 0.5),
+                0 0 60px rgba(102, 126, 234, 0.3);
+        }
+        @keyframes titleGlow {
+            from {
+                text-shadow:
+                    0 0 20px rgba(255,255,255,0.5),
+                    0 0 40px rgba(102, 126, 234, 0.5),
+                    0 0 60px rgba(102, 126, 234, 0.3);
+            }
+            to {
+                text-shadow:
+                    0 0 25px rgba(255,255,255,0.7),
+                    0 0 50px rgba(102, 126, 234, 0.7),
+                    0 0 80px rgba(102, 126, 234, 0.5);
+            }
+        }
+        .text-gradient {
+            background: linear-gradient(90deg, #fff, #ffd700);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .hero-subtitle {
+            color: rgba(255,255,255,0.95);
+            text-shadow: 0 2px 10px rgba(0,0,0,0.2);
+        }
+        .hero-btn {
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        .hero-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.5s;
+        }
+        .hero-btn:hover::before {
+            left: 100%;
+        }
+        .hero-btn:hover {
+            transform: translateY(-3px) scale(1.05);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+        .trust-badge {
+            backdrop-filter: blur(10px);
+            background: linear-gradient(135deg, rgba(40, 167, 69, 0.9), rgba(40, 167, 69, 0.7)) !important;
+            border: 1px solid rgba(255,255,255,0.2);
+            box-shadow: 0 5px 20px rgba(40, 167, 69, 0.3);
+            animation: float 6s ease-in-out infinite;
+            animation-delay: calc(var(--delay) * 0.2s);
+        }
+        .trust-badge:nth-child(1) { --delay: 1; }
+        .trust-badge:nth-child(2) { --delay: 2; }
+        .trust-badge:nth-child(3) { --delay: 3; }
+        .hero-search-box {
+            max-width: 600px;
+        }
+        .search-input {
+            padding: 22px 30px;
+            font-size: 1.1rem;
+            border: 2px solid transparent;
+            border-radius: 50px 0 0 50px;
+            background: rgba(255,255,255,0.95);
+            backdrop-filter: blur(10px);
+            transition: all 0.3s;
+            box-shadow: inset 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .search-input:focus {
+            outline: none;
+            border-color: #667eea;
+            background: white;
+            box-shadow:
+                inset 0 2px 15px rgba(102, 126, 234, 0.1),
+                0 0 30px rgba(102, 126, 234, 0.2);
+        }
+        .btn-search {
+            padding: 22px 45px;
+            background: linear-gradient(135deg, #28a745, #20c997);
+            color: white;
+            border: none;
+            border-radius: 0 50px 50px 0;
+            font-size: 1.1rem;
+            font-weight: 600;
+            transition: all 0.3s cubic-bezier(0.23, 1, 0.320, 1);
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 4px 20px rgba(40, 167, 69, 0.3);
+        }
+        .btn-search::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            transition: left 0.5s;
+        }
+        .btn-search:hover::before {
+            left: 100%;
+        }
+        .btn-search:hover {
+            background: linear-gradient(135deg, #20c997, #28a745);
+            transform: translateX(5px) scale(1.02);
+            box-shadow:
+                0 6px 30px rgba(40, 167, 69, 0.4),
+                0 0 50px rgba(40, 167, 69, 0.2);
+        }
+        .popular-tags {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .popular-label {
+            color: rgba(255,255,255,0.8);
+            font-weight: 600;
+        }
+        .tag-pill {
+            padding: 10px 25px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.25), rgba(255,255,255,0.1));
+            color: white;
+            border-radius: 30px;
+            text-decoration: none;
+            transition: all 0.3s cubic-bezier(0.23, 1, 0.320, 1);
+            backdrop-filter: blur(10px) saturate(180%);
+            border: 1px solid rgba(255,255,255,0.2);
+            position: relative;
+            overflow: hidden;
+            box-shadow:
+                0 4px 15px rgba(0,0,0,0.1),
+                inset 0 0 10px rgba(255,255,255,0.1);
+        }
+        .tag-pill::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.3);
+            transform: translate(-50%, -50%);
+            transition: width 0.5s, height 0.5s;
+        }
+        .tag-pill:hover::before {
+            width: 100px;
+            height: 100px;
+        }
+        .tag-pill:hover {
+            background: linear-gradient(135deg, rgba(255,255,255,0.35), rgba(255,255,255,0.15));
+            color: white;
+            transform: translateY(-3px) scale(1.05);
+            box-shadow:
+                0 8px 25px rgba(0,0,0,0.2),
+                inset 0 0 15px rgba(255,255,255,0.2),
+                0 0 30px rgba(102, 126, 234, 0.3);
+            border-color: rgba(255,255,255,0.4);
+        }
+        .trust-indicators {
+            color: white;
+        }
+        .trust-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.95rem;
+        }
+        /* Floating Cards */
+        .floating-elements {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            pointer-events: none;
+        }
+        .floating-card {
+            position: absolute;
+            animation: float 20s infinite ease-in-out;
+            pointer-events: auto;
+        }
+        .card-3d {
+            background: linear-gradient(135deg, rgba(255,255,255,0.2), rgba(255,255,255,0.05));
+            backdrop-filter: blur(20px) saturate(180%);
+            -webkit-backdrop-filter: blur(20px) saturate(180%);
+            padding: 25px;
+            border-radius: 20px;
+            text-align: center;
+            color: white;
+            border: 1px solid rgba(255,255,255,0.2);
+            box-shadow:
+                0 8px 32px 0 rgba(31, 38, 135, 0.37),
+                inset 0 0 20px rgba(255,255,255,0.1);
+            transform-style: preserve-3d;
+            transition: all 0.6s cubic-bezier(0.23, 1, 0.320, 1);
+            position: relative;
+            overflow: hidden;
+        }
+        .card-3d::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(45deg, transparent, rgba(255,255,255,0.1), transparent);
+            transform: rotate(45deg);
+            transition: 0.5s;
+        }
+        .card-3d:hover {
+            transform: rotateY(15deg) rotateX(10deg) scale(1.15) translateZ(50px);
+            box-shadow:
+                0 20px 60px 0 rgba(31, 38, 135, 0.5),
+                inset 0 0 30px rgba(255,255,255,0.2),
+                0 0 50px rgba(102, 126, 234, 0.4);
+            border-color: rgba(255,255,255,0.4);
+        }
+        .card-3d:hover::before {
+            animation: shine 0.5s ease-in-out;
+        }
+        @keyframes shine {
+            0% { transform: translateX(-100%) translateY(-100%) rotate(45deg); }
+            100% { transform: translateX(100%) translateY(100%) rotate(45deg); }
+        }
+        .card-3d i {
+            font-size: 2rem;
+            margin-bottom: 5px;
+            display: block;
+        }
+        .card-3d span {
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+        .card-1 { top: 20%; left: 10%; animation-delay: 0s; }
+        .card-2 { top: 60%; left: 5%; animation-delay: 3s; }
+        .card-3 { top: 30%; left: 85%; animation-delay: 6s; }
+        .card-4 { top: 70%; left: 80%; animation-delay: 9s; }
+        .card-5 { top: 10%; left: 45%; animation-delay: 12s; }
+        .card-6 { top: 80%; left: 40%; animation-delay: 15s; }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0) rotate(0deg); }
+            25% { transform: translateY(-20px) rotate(5deg); }
+            50% { transform: translateY(0) rotate(-5deg); }
+            75% { transform: translateY(20px) rotate(3deg); }
+        }
+        /* 3D Visual */
+        .hero-3d-visual {
+            position: relative;
+            height: 500px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .orbit-container {
+            position: relative;
+            width: 400px;
+            height: 400px;
+            transform-style: preserve-3d;
+            animation: rotate3d 30s infinite linear;
+        }
+        @keyframes rotate3d {
+            from { transform: rotateY(0deg) rotateX(10deg); }
+            to { transform: rotateY(360deg) rotateX(10deg); }
+        }
+        .orbit {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border: 2px dashed rgba(255,255,255,0.2);
+            border-radius: 50%;
+            animation: orbitPulse 4s ease-in-out infinite;
+        }
+        @keyframes orbitPulse {
+            0%, 100% {
+                border-color: rgba(255,255,255,0.2);
+                box-shadow: 0 0 20px rgba(255,255,255,0.1);
+            }
+            50% {
+                border-color: rgba(255,255,255,0.4);
+                box-shadow: 0 0 40px rgba(255,255,255,0.2);
+            }
+        }
+        .orbit-1 { transform: rotateX(60deg); }
+        .orbit-2 { transform: rotateY(60deg); }
+        .orbit-3 { transform: rotateZ(60deg); }
+        .center-logo {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+        .logo-3d {
+            width: 180px;
+            height: 180px;
+            border-radius: 30px;
+            overflow: hidden;
+            position: relative;
+            transform-style: preserve-3d;
+            animation: logoFloat 4s ease-in-out infinite, rotate3dLogo 20s linear infinite;
+            box-shadow:
+                0 20px 60px rgba(0,0,0,0.4),
+                0 0 100px rgba(102, 126, 234, 0.3),
+                inset 0 0 20px rgba(255,255,255,0.2);
+        }
+        @keyframes rotate3dLogo {
+            0% { transform: perspective(1000px) rotateY(0deg); }
+            100% { transform: perspective(1000px) rotateY(360deg); }
+        }
+        .logo-3d::before {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            right: -2px;
+            bottom: -2px;
+            background: linear-gradient(45deg, #ff0080, #ff8c00, #ffd700, #00ff88, #00d4ff, #ff0080);
+            border-radius: 30px;
+            z-index: -1;
+            animation: rgbBorder 3s linear infinite;
+            background-size: 400%;
+        }
+        @keyframes rgbBorder {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+        @keyframes logoFloat {
+            0%, 100% { transform: translateY(0) scale(1); }
+            50% { transform: translateY(-10px) scale(1.05); }
+        }
+        .logo-3d img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .orbiting-icon {
+            position: absolute;
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.95), rgba(255,255,255,0.8));
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #667eea;
+            font-size: 1.8rem;
+            box-shadow:
+                0 10px 30px rgba(0,0,0,0.3),
+                0 0 40px rgba(102, 126, 234, 0.2),
+                inset 0 0 20px rgba(102, 126, 234, 0.1);
+            border: 2px solid rgba(255,255,255,0.5);
+            backdrop-filter: blur(10px);
+            transform-style: preserve-3d;
+            transition: all 0.3s;
+        }
+        .orbiting-icon:hover {
+            transform: scale(1.2) translateZ(30px);
+            box-shadow:
+                0 15px 40px rgba(0,0,0,0.4),
+                0 0 60px rgba(102, 126, 234, 0.4);
+        }
+        .orbiting-icon::after {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            background: radial-gradient(circle, transparent 30%, rgba(102, 126, 234, 0.2));
+            animation: pulse 2s ease-in-out infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.2); opacity: 0.5; }
+        }
+        .icon-1 {
+            animation: orbit1 20s infinite linear;
+        }
+        .icon-2 {
+            animation: orbit2 25s infinite linear;
+        }
+        .icon-3 {
+            animation: orbit3 30s infinite linear;
+        }
+        .icon-4 {
+            animation: orbit4 35s infinite linear;
+        }
+        @keyframes orbit1 {
+            from { transform: rotate(0deg) translateX(180px) rotate(0deg); }
+            to { transform: rotate(360deg) translateX(180px) rotate(-360deg); }
+        }
+        @keyframes orbit2 {
+            from { transform: rotate(90deg) translateX(160px) rotate(-90deg); }
+            to { transform: rotate(450deg) translateX(160px) rotate(-450deg); }
+        }
+        @keyframes orbit3 {
+            from { transform: rotate(180deg) translateX(140px) rotate(-180deg); }
+            to { transform: rotate(540deg) translateX(140px) rotate(-540deg); }
+        }
+        @keyframes orbit4 {
+            from { transform: rotate(270deg) translateX(120px) rotate(-270deg); }
+            to { transform: rotate(630deg) translateX(120px) rotate(-630deg); }
+        }
+        /* Stars Animation */
+        .stars, .stars2, .stars3 {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+        .stars {
+            background: transparent url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"><circle cx="10" cy="10" r="1" fill="white" opacity="0.8"/><circle cx="30" cy="40" r="1" fill="white" opacity="0.6"/><circle cx="60" cy="20" r="1" fill="white" opacity="0.9"/><circle cx="80" cy="60" r="1" fill="white" opacity="0.7"/><circle cx="45" cy="80" r="1" fill="white" opacity="0.8"/></svg>') repeat;
+            animation: animateStars 50s linear infinite;
+        }
+        .stars2 {
+            background: transparent url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="150" height="150"><circle cx="20" cy="30" r="2" fill="white" opacity="0.5"/><circle cx="70" cy="70" r="1.5" fill="white" opacity="0.4"/><circle cx="120" cy="40" r="2" fill="white" opacity="0.6"/><circle cx="100" cy="100" r="1.5" fill="white" opacity="0.5"/></svg>') repeat;
+            animation: animateStars 100s linear infinite;
+        }
+        .stars3 {
+            background: transparent url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200"><circle cx="50" cy="50" r="3" fill="white" opacity="0.3"/><circle cx="150" cy="100" r="2" fill="white" opacity="0.2"/><circle cx="100" cy="150" r="2.5" fill="white" opacity="0.4"/></svg>') repeat;
+            animation: animateStars 150s linear infinite;
+        }
+        @keyframes animateStars {
+            from {
+                transform: translateY(0px);
+            }
+            to {
+                transform: translateY(-1000px);
+            }
+        }
+        /* Enhanced Floating Animation */
+        @keyframes float {
+            0%, 100% {
+                transform: translateY(0) translateX(0) rotate(0deg);
+                filter: brightness(1);
+            }
+            25% {
+                transform: translateY(-30px) translateX(10px) rotate(5deg);
+                filter: brightness(1.1);
+            }
+            50% {
+                transform: translateY(0) translateX(-10px) rotate(-5deg);
+                filter: brightness(0.9);
+            }
+            75% {
+                transform: translateY(30px) translateX(5px) rotate(3deg);
+                filter: brightness(1.05);
+            }
+        }
+        /* Responsive */
+        @media (max-width: 991px) {
+            .hero-title { font-size: 2.5rem; }
+            .floating-card { display: none; }
+            .hero-3d-visual { height: 300px; }
+            .orbit-container { width: 250px; height: 250px; }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-white sticky-top" id="mainNav">
+        <div class="container">
+            <a class="navbar-brand d-flex align-items-center" href="#home" style="color: #667eea;">
+                <img src="images/karyasaarthi.jpeg" alt="KaryaSaarthi Logo" height="45" class="me-2">
+                <span>KaryaSaarthi</span>
+            </a>
+            <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav mx-auto">
+                    <li class="nav-item">
+                        <a class="nav-link active" href="#home">Home</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#about">About</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#popular-services">Services</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#team">Team</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#testimonials">Testimonials</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#contact">Contact</a>
+                    </li>
+                </ul>
+                <div class="auth-buttons d-flex">
+                    <a href="login.php" class="btn btn-login">Login</a>
+                    <a href="signup.php" class="btn btn-signup">Sign Up</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section with 3D Elements -->
+    <section id="home" class="hero-section-3d">
+        <div class="hero-3d-container">
+            <!-- Floating 3D Elements -->
+            <div class="floating-elements">
+                <div class="floating-card card-1" data-tilt>
+                    <div class="card-3d">
+                        <i class="bi bi-code-slash"></i>
+                        <span>Web Dev</span>
+                    </div>
+                </div>
+                <div class="floating-card card-2" data-tilt>
+                    <div class="card-3d">
+                        <i class="bi bi-journal-text"></i>
+                        <span>Thesis</span>
+                    </div>
+                </div>
+                <div class="floating-card card-3" data-tilt>
+                    <div class="card-3d">
+                        <i class="bi bi-palette"></i>
+                        <span>Design</span>
+                    </div>
+                </div>
+                <div class="floating-card card-4" data-tilt>
+                    <div class="card-3d">
+                        <i class="bi bi-graph-up"></i>
+                        <span>SEO</span>
+                    </div>
+                </div>
+                <div class="floating-card card-5" data-tilt>
+                    <div class="card-3d">
+                        <i class="bi bi-camera-video"></i>
+                        <span>Video</span>
+                    </div>
+                </div>
+                <div class="floating-card card-6" data-tilt>
+                    <div class="card-3d">
+                        <i class="bi bi-pencil-square"></i>
+                        <span>Writing</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Main Content -->
+            <div class="container hero-content text-center">
+                <h1 class="display-3 fw-bold mb-4 hero-title">Your Work Companion - Solution at Doorstep</h1>
+                <p class="lead fs-4 mb-5 hero-subtitle">From thesis writing to website development, we connect you with trusted experts who teach while helping. Get work done + learn new skills!</p>
+
+                <div class="mb-5">
+                    <a href="#contact" class="btn btn-light btn-lg me-3 px-5 hero-btn">Get Started Today</a>
+                    <a href="#popular-services" class="btn btn-outline-light btn-lg px-5 hero-btn">View Our Services</a>
+                </div>
+
+                <div class="row justify-content-center">
+                    <div class="col-auto">
+                        <span class="badge bg-success fs-6 p-3 me-2 trust-badge">✅ 500+ Happy Clients</span>
+                    </div>
+                    <div class="col-auto">
+                        <span class="badge bg-success fs-6 p-3 me-2 trust-badge">✅ 80% Repeat Rate</span>
+                    </div>
+                    <div class="col-auto">
+                        <span class="badge bg-success fs-6 p-3 trust-badge">✅ 100% Secure UPI Payments</span>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Animated Background Particles -->
+        <div class="particles" id="particles-js"></div>
+
+        <!-- Animated Stars Background -->
+        <div class="stars"></div>
+        <div class="stars2"></div>
+        <div class="stars3"></div>
+    </section>
+
+    <!-- About Section -->
+    <section id="about" class="py-5">
+        <div class="container">
+            <h2 class="text-center mb-4">What is KaryaSaarthi?</h2>
+            <div class="row">
+                <div class="col-lg-8 mx-auto">
+                    <p class="fs-5 text-center mb-5">
+                        KaryaSaarthi is like having a helpful friend who solves all your work problems. Whether you're a student struggling with thesis,
+                        a business owner needing a website, or anyone facing work challenges - we connect you with the right person who will work
+                        WITH you like a true friend (Saarthi), not just do the work and disappear.
+                    </p>
+                    <div class="row text-center">
+                        <div class="col-md-3 col-6 mb-4">
+                            <i class="bi bi-book feature-icon"></i>
+                            <p class="mt-2">Learn while getting work done</p>
+                        </div>
+                        <div class="col-md-3 col-6 mb-4">
+                            <i class="bi bi-shield-check feature-icon"></i>
+                            <p class="mt-2">Verified professionals only</p>
+                        </div>
+                        <div class="col-md-3 col-6 mb-4">
+                            <i class="bi bi-chat-dots feature-icon"></i>
+                            <p class="mt-2">Transparent communication</p>
+                        </div>
+                        <div class="col-md-3 col-6 mb-4">
+                            <i class="bi bi-currency-rupee feature-icon"></i>
+                            <p class="mt-2">Pay only when satisfied</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Popular Services Section (Fiverr Style) -->
+    <section id="popular-services" class="py-5">
+        <div class="container">
+            <h2 class="text-center mb-2">Popular Services</h2>
+            <p class="text-center text-muted mb-5">Choose from our most requested professional services</p>
+
+            <!-- Service Category Tabs -->
+            <div class="service-categories mb-4">
+                <div class="d-flex justify-content-center flex-wrap gap-2">
+                    <button class="btn btn-category active" data-category="all">
+                        <i class="bi bi-grid-3x3-gap-fill me-1"></i> All Services
+                    </button>
+                    <button class="btn btn-category" data-category="academic">
+                        <i class="bi bi-journal-text me-1"></i> Academic
+                    </button>
+                    <button class="btn btn-category" data-category="tech">
+                        <i class="bi bi-code-slash me-1"></i> Web & Tech
+                    </button>
+                    <button class="btn btn-category" data-category="design">
+                        <i class="bi bi-palette me-1"></i> Design
+                    </button>
+                    <button class="btn btn-category" data-category="marketing">
+                        <i class="bi bi-megaphone me-1"></i> Marketing
+                    </button>
+                    <button class="btn btn-category" data-category="writing">
+                        <i class="bi bi-pen me-1"></i> Writing
+                    </button>
+                </div>
+            </div>
+
+            <!-- Filter Status Message -->
+            <div class="text-center mb-3">
+                <p class="filter-status text-muted">
+                    <span id="filter-status">Showing <span class="fw-bold">All Services</span></span>
+                    <a href="#" class="text-primary ms-2" id="reset-filter" style="display: none; text-decoration: none;">
+                        <i class="bi bi-arrow-left-circle"></i> Back to All Services
+                    </a>
+                </p>
+            </div>
+
+            <!-- Service Cards Grid -->
+            <div class="row" id="service-cards">
+                <!-- Thesis Writing -->
+                <div class="col-lg-3 col-md-4 col-sm-6 mb-4" data-category="academic">
+                    <div class="service-card">
+                        <div class="service-image">
+                            <img src="https://images.unsplash.com/photo-1481627834876-b7833e8f5570?w=300&h=200&fit=crop" alt="Thesis Writing">
+                            <span class="service-badge">BESTSELLER</span>
+                        </div>
+                        <div class="service-content">
+                            <h5>Thesis Writing & Research</h5>
+                            <div class="service-rating">
+                                <i class="bi bi-star-fill"></i>
+                                <i class="bi bi-star-fill"></i>
+                                <i class="bi bi-star-fill"></i>
+                                <i class="bi bi-star-fill"></i>
+                                <i class="bi bi-star-fill"></i>
+                                <span class="rating-text">5.0 (127)</span>
+                            </div>
+                            <p class="service-description">Complete thesis support from topic selection to final submission</p>
+                            <div class="service-footer">
+                                <span class="service-price">From ₹5,000</span>
+                                <button class="btn btn-sm btn-service">View Details</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Website Development -->
+                <div class="col-lg-3 col-md-4 col-sm-6 mb-4" data-category="tech">
+                    <div class="service-card">
+                        <div class="service-image">
+                            <img src="https://images.unsplash.com/photo-1467232004584-a241de8bcf5d?w=300&h=200&fit=crop" alt="Website Development">
+                            <span class="service-badge badge-hot">HOT</span>
+                        </div>
+                        <div class="service-content">
+                            <h5>Professional Website</h5>
+                            <div class="service-rating">
+                                <i class="bi bi-star-fill"></i>
+                                <i class="bi bi-star-fill"></i>
+                                <i class="bi bi-star-fill"></i>
+                                <i class="bi bi-star-fill"></i>
+                                <i class="bi bi-star-fill"></i>
+                                <span class="rating-text">4.9 (89)</span>
+                            </div>
+                            <p class="service-description">Responsive business websites with modern design</p>
+                            <div class="service-footer">
+                                <span class="service-price">From ₹8,000</span>
+                                <button class="btn btn-sm btn-service">View Details</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Logo Design -->
+                <div class="col-lg-3 col-md-4 col-sm-6 mb-4" data-category="design">
+                    <div class="service-card">
+                        <div class="service-image">
+                            <img src="https://images.unsplash.com/photo-1561070791-2526d30994b5?w=300&h=200&fit=crop" alt="Logo Design">
+                        </div>
+                        <div class="service-content">
+                            <h5>Professional Logo Design</h5>
+                            <div class="service-rating">
+                                <i class="bi bi-star-fill"></i>
+                                <i class="bi bi-star-fill"></i>
+                                <i class="bi bi-star-fill"></i>
+                                <i class="bi bi-star-fill"></i>
+                                <i class="bi bi-star-half"></i>
+                                <span class="rating-text">4.8 (203)</span>
+                            </div>
+                            <p class="service-description">Unique logo with unlimited revisions</p>
+                            <div class="service-footer">
+                                <span class="service-price">From ₹1,000</span>
+                                <button class="btn btn-sm btn-service">View Details</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Assignment Help -->
+                <div class="col-lg-3 col-md-4 col-sm-6 mb-4" data-category="academic">
+                    <div class="service-card">
+                        <div class="service-image">
+                            <img src="https://images.unsplash.com/photo-1554415707-6e8cfc93fe23?w=300&h=200&fit=crop" alt="Assignment Help">
+                            <span class="service-badge">POPULAR</span>
+                        </div>
+                        <div class="service-content">
+                            <h5>Assignment & Homework</h5>
+                            <div class="service-rating">
+                                <i class="bi bi-star-fill"></i>
+                                <i class="bi bi-star-fill"></i>
+                                <i class="bi bi-star-fill"></i>
+                                <i class="bi bi-star-fill"></i>
+                                <i class="bi bi-star-fill"></i>
+                                <span class="rating-text">5.0 (156)</span>
+                            </div>
+                            <p class="service-description">Subject-wise assignment help with explanations</p>
+                            <div class="service-footer">
+                                <span class="service-price">From ₹500</span>
+                                <button class="btn btn-sm btn-service">View Details</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SEO Services -->
+                <div class="col-lg-3 col-md-4 col-sm-6 mb-4" data-category="marketing">
+                    <div class="service-card">
+                        <div class="service-image">
+                            <img src="https://images.unsplash.com/photo-1562577309-4932fdd64cd1?w=300&h=200&fit=crop" alt="SEO Services">
+                        </div>
+                        <div class="service-content">
+                            <h5>SEO & Digital Marketing</h5>
+                            <div class="service-rating">
+                                <i class="bi bi-star-fill"></i>
+                                <i class="bi bi-star-fill"></i>
+                                <i class="bi bi-star-fill"></i>
+                                <i class="bi bi-star-fill"></i>
+                                <i class="bi bi-star"></i>
+                                <span class="rating-text">4.7 (94)</span>
+                            </div>
+                            <p class="service-description">Improve your website ranking on Google</p>
+                            <div class="service-footer">
+                                <span class="service-price">From ₹3,000/mo</span>
+                                <button class="btn btn-sm btn-service">View Details</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Content Writing -->
+                <div class="col-lg-3 col-md-4 col-sm-6 mb-4" data-category="writing">
+                    <div class="service-card">
+                        <div class="service-image">
+                            <img src="https://images.unsplash.com/photo-1455390582262-044cdead277a?w=300&h=200&fit=crop" alt="Content Writing">
+                        </div>
+                        <div class="service-content">
+                            <h5>Blog & Article Writing</h5>
+                            <div class="service-rating">
+                                <i class="bi bi-star-fill"></i>
+                                <i class="bi bi-star-fill"></i>
+                                <i class="bi bi-star-fill"></i>
+                                <i class="bi bi-star-fill"></i>
+                                <i class="bi bi-star-fill"></i>
+                                <span class="rating-text">4.9 (178)</span>
+                            </div>
+                            <p class="service-description">SEO-optimized content that engages readers</p>
+                            <div class="service-footer">
+                                <span class="service-price">From ₹500/article</span>
+                                <button class="btn btn-sm btn-service">View Details</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Video Editing -->
+                <div class="col-lg-3 col-md-4 col-sm-6 mb-4" data-category="design">
+                    <div class="service-card">
+                        <div class="service-image">
+                            <img src="https://images.unsplash.com/photo-1492619375914-88005aa9e8fb?w=300&h=200&fit=crop" alt="Video Editing">
+                            <span class="service-badge badge-new">NEW</span>
+                        </div>
+                        <div class="service-content">
+                            <h5>Professional Video Editing</h5>
+                            <div class="service-rating">
+                                <i class="bi bi-star-fill"></i>
+                                <i class="bi bi-star-fill"></i>
+                                <i class="bi bi-star-fill"></i>
+                                <i class="bi bi-star-fill"></i>
+                                <i class="bi bi-star-half"></i>
+                                <span class="rating-text">4.8 (67)</span>
+                            </div>
+                            <p class="service-description">YouTube videos, reels, and promotional videos</p>
+                            <div class="service-footer">
+                                <span class="service-price">From ₹1,000</span>
+                                <button class="btn btn-sm btn-service">View Details</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Resume Writing -->
+                <div class="col-lg-3 col-md-4 col-sm-6 mb-4" data-category="writing">
+                    <div class="service-card">
+                        <div class="service-image">
+                            <img src="https://images.unsplash.com/photo-1586281380349-632531db7ed4?w=300&h=200&fit=crop" alt="Resume Writing">
+                        </div>
+                        <div class="service-content">
+                            <h5>Resume & Cover Letter</h5>
+                            <div class="service-rating">
+                                <i class="bi bi-star-fill"></i>
+                                <i class="bi bi-star-fill"></i>
+                                <i class="bi bi-star-fill"></i>
+                                <i class="bi bi-star-fill"></i>
+                                <i class="bi bi-star-fill"></i>
+                                <span class="rating-text">5.0 (234)</span>
+                            </div>
+                            <p class="service-description">ATS-friendly professional resume writing</p>
+                            <div class="service-footer">
+                                <span class="service-price">From ₹1,000</span>
+                                <button class="btn btn-sm btn-service">View Details</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- View All Services Button -->
+            <div class="text-center mt-5">
+                <a href="#services" class="btn btn-primary btn-lg px-5">Explore All 50+ Services</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Services Section -->
+    <section id="services" class="py-5 bg-light">
+        <div class="container">
+            <h2 class="text-center mb-5">How We Help You</h2>
+            <div class="row">
+                <div class="col-md-4 mb-4">
+                    <div class="card h-100 shadow-sm">
+                        <div class="card-body text-center">
+                            <i class="bi bi-mortarboard service-icon"></i>
+                            <h4>📚 For Students</h4>
+                            <ul class="list-unstyled mt-3">
+                                <li class="mb-2">Thesis Writing & Research Papers</li>
+                                <li class="mb-2">Online Form Filling (College/Visa)</li>
+                                <li class="mb-2">Assignment Writing</li>
+                                <li class="mb-2">Resume Writing</li>
+                                <li class="mb-2">Academic Support</li>
+                            </ul>
+                            <button class="btn btn-primary mt-3" onclick="document.getElementById('contact').scrollIntoView()">Get Help</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4 mb-4">
+                    <div class="card h-100 shadow-sm">
+                        <div class="card-body text-center">
+                            <i class="bi bi-building service-icon"></i>
+                            <h4>🏢 For Businesses</h4>
+                            <ul class="list-unstyled mt-3">
+                                <li class="mb-2">Website Development</li>
+                                <li class="mb-2">Mobile App Development</li>
+                                <li class="mb-2">Logo Design & Branding</li>
+                                <li class="mb-2">Digital Marketing</li>
+                                <li class="mb-2">E-commerce Solutions</li>
+                            </ul>
+                            <button class="btn btn-primary mt-3" onclick="document.getElementById('contact').scrollIntoView()">Get Started</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4 mb-4">
+                    <div class="card h-100 shadow-sm">
+                        <div class="card-body text-center">
+                            <i class="bi bi-graph-up service-icon"></i>
+                            <h4>📊 For Everyone</h4>
+                            <ul class="list-unstyled mt-3">
+                                <li class="mb-2">Presentations & Documentation</li>
+                                <li class="mb-2">Data Analysis</li>
+                                <li class="mb-2">Financial Analysis</li>
+                                <li class="mb-2">Video Editing</li>
+                                <li class="mb-2">Content Writing</li>
+                            </ul>
+                            <button class="btn btn-primary mt-3" onclick="document.getElementById('contact').scrollIntoView()">Explore</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- How KaryaSaarthi Works (Fiverr Style) -->
+    <section id="how-it-works" class="py-5" style="background: linear-gradient(135deg, #667eea15 0%, #764ba215 100%);">
+        <div class="container">
+            <h2 class="text-center mb-2">How KaryaSaarthi Works</h2>
+            <p class="text-center text-muted mb-5">Get professional help in just 4 simple steps</p>
+
+            <div class="row align-items-center">
+                <div class="col-lg-6 mb-4">
+                    <div class="how-it-works-steps">
+                        <div class="step-item mb-4">
+                            <div class="d-flex align-items-start">
+                                <div class="step-icon">
+                                    <i class="bi bi-search"></i>
+                                </div>
+                                <div class="step-content">
+                                    <h5>1. Browse & Select Service</h5>
+                                    <p class="text-muted">Choose from 50+ professional services. View pricing, delivery time, and expert ratings.</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="step-item mb-4">
+                            <div class="d-flex align-items-start">
+                                <div class="step-icon">
+                                    <i class="bi bi-cart-check"></i>
+                                </div>
+                                <div class="step-content">
+                                    <h5>2. Place Your Order</h5>
+                                    <p class="text-muted">Select package (Basic/Standard/Premium). Add requirements. Pay securely via UPI.</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="step-item mb-4">
+                            <div class="d-flex align-items-start">
+                                <div class="step-icon">
+                                    <i class="bi bi-people"></i>
+                                </div>
+                                <div class="step-content">
+                                    <h5>3. Collaborate & Learn</h5>
+                                    <p class="text-muted">Work directly with your expert. Get updates, ask questions, learn skills during the process.</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="step-item">
+                            <div class="d-flex align-items-start">
+                                <div class="step-icon">
+                                    <i class="bi bi-check-circle"></i>
+                                </div>
+                                <div class="step-content">
+                                    <h5>4. Receive & Review</h5>
+                                    <p class="text-muted">Get your completed work. Request revisions if needed. Pay only when 100% satisfied.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-6">
+                    <div class="features-grid">
+                        <div class="row">
+                            <div class="col-6 mb-3">
+                                <div class="feature-box">
+                                    <i class="bi bi-shield-check"></i>
+                                    <h6>100% Secure</h6>
+                                    <small>Safe UPI payments</small>
+                                </div>
+                            </div>
+                            <div class="col-6 mb-3">
+                                <div class="feature-box">
+                                    <i class="bi bi-clock"></i>
+                                    <h6>On-Time Delivery</h6>
+                                    <small>Guaranteed deadlines</small>
+                                </div>
+                            </div>
+                            <div class="col-6 mb-3">
+                                <div class="feature-box">
+                                    <i class="bi bi-star"></i>
+                                    <h6>Quality Work</h6>
+                                    <small>Expert professionals</small>
+                                </div>
+                            </div>
+                            <div class="col-6 mb-3">
+                                <div class="feature-box">
+                                    <i class="bi bi-chat-dots"></i>
+                                    <h6>24/7 Support</h6>
+                                    <small>Always here to help</small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="trust-badges mt-4">
+                            <div class="row text-center">
+                                <div class="col-4">
+                                    <h3 class="text-primary mb-0">500+</h3>
+                                    <small>Happy Clients</small>
+                                </div>
+                                <div class="col-4">
+                                    <h3 class="text-primary mb-0">1000+</h3>
+                                    <small>Projects Done</small>
+                                </div>
+                                <div class="col-4">
+                                    <h3 class="text-primary mb-0">4.9★</h3>
+                                    <small>Average Rating</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Team Section -->
+    <section id="team" class="py-5">
+        <div class="container">
+            <h2 class="text-center mb-5">Meet Our Leadership</h2>
+            <div class="row justify-content-center">
+                <!-- Adv. Saloni Kumari -->
+                <div class="col-md-4 mb-4">
+                    <div class="card h-100 shadow team-card">
+                        <div class="card-body text-center p-4">
+                            <div class="team-img-wrapper mb-3">
+                                <img src="images/team/Saloni.jpeg" alt="Adv. Saloni Kumari" class="team-member-img">
+                            </div>
+                            <h4>Adv. Saloni Kumari</h4>
+                            <p class="text-primary fw-bold">Founder & Director 🤝</p>
+                            <p class="text-muted">Leading KaryaSaarthi with vision and dedication to help students and businesses achieve their goals through collaborative learning.</p>
+                            <div class="contact-info">
+                                <a href="mailto:karyasaarthi@gmail.com" class="text-decoration-none">
+                                    <i class="bi bi-envelope"></i> karyasaarthi@gmail.com
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Anish -->
+                <div class="col-md-4 mb-4">
+                    <div class="card h-100 shadow team-card">
+                        <div class="card-body text-center p-4">
+                            <div class="team-img-wrapper mb-3">
+                                <img src="images/team/Anish.jpeg" alt="Anish" class="team-member-img" style="object-fit: cover; object-position: center top;">
+                            </div>
+                            <h4>Anish</h4>
+                            <p class="text-primary fw-bold">Co-Founder & Management Head 🤝</p>
+                            <p class="text-muted">Overseeing operations and strategic management to ensure excellence in service delivery and client satisfaction.</p>
+                            <div class="contact-info">
+                                <a href="mailto:info.karyasaarthi@gmail.com" class="text-decoration-none">
+                                    <i class="bi bi-envelope"></i> info.karyasaarthi@gmail.com
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Bhawna -->
+                <div class="col-md-4 mb-4">
+                    <div class="card h-100 shadow team-card">
+                        <div class="card-body text-center p-4">
+                            <div class="team-img-wrapper mb-3">
+                                <img src="images/team/Bhawna.jpeg" alt="Bhawna" class="team-member-img">
+                            </div>
+                            <h4>Bhawna</h4>
+                            <p class="text-primary fw-bold">HR Executive 🤝</p>
+                            <p class="text-muted">Managing talent acquisition and ensuring our team of Saarthis delivers exceptional service to all clients.</p>
+                            <div class="contact-info">
+                                <a href="mailto:hr.karyasaarthi@gmail.com" class="text-decoration-none">
+                                    <i class="bi bi-envelope"></i> hr.karyasaarthi@gmail.com
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Pawandeep Kaur -->
+                <div class="col-md-4 mb-4">
+                    <div class="card h-100 shadow team-card">
+                        <div class="card-body text-center p-4">
+                            <div class="team-img-wrapper mb-3">
+                                <img src="images/team/Pawandeep.jpeg" alt="Pawandeep Kaur" class="team-member-img">
+                            </div>
+                            <h4>Pawandeep Kaur 🤝</h4>
+                            <p class="text-primary fw-bold">Project Manager</p>
+                            <p class="text-muted">Leading project execution and ensuring timely delivery of all client projects with quality and precision.</p>
+                            <div class="contact-info">
+                                <a href="mailto:pm.karyasarthi@gmail.com" class="text-decoration-none">
+                                    <i class="bi bi-envelope"></i> pm.karyasarthi@gmail.com
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Rakhi Bhatt -->
+                <div class="col-md-4 mb-4">
+                    <div class="card h-100 shadow team-card">
+                        <div class="card-body text-center p-4">
+                            <div class="team-img-wrapper mb-3">
+                                <img src="images/team/Rakhi.jpeg" alt="Rakhi Bhatt" class="team-member-img" style="object-fit: cover; object-position: center top;">
+                            </div>
+                            <h4>Rakhi Bhatt 🤝</h4>
+                            <p class="text-primary fw-bold">Operations Assistant</p>
+                            <p class="text-muted">Supporting daily operations and ensuring smooth workflow across all departments for optimal service delivery.</p>
+                            <div class="contact-info">
+                                <a href="mailto:opt.karyasarthi@gmail.com" class="text-decoration-none">
+                                    <i class="bi bi-envelope"></i> opt.karyasarthi@gmail.com
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Annu Priya -->
+                <div class="col-md-4 mb-4">
+                    <div class="card h-100 shadow team-card">
+                        <div class="card-body text-center p-4">
+                            <div class="team-img-wrapper mb-3">
+                                <img src="images/team/Annu.jpeg" alt="Annu Priya" class="team-member-img" style="object-fit: cover; object-position: center top;">
+                            </div>
+                            <h4>Annu Priya 🤝</h4>
+                            <p class="text-primary fw-bold">Digital Marketing Executive</p>
+                            <p class="text-muted">Driving digital presence and marketing strategies to connect KaryaSaarthi with clients across all online platforms.</p>
+                            <div class="contact-info">
+                                <a href="mailto:digitalmarketingkaryasaarthi@gmail.com" class="text-decoration-none">
+                                    <i class="bi bi-envelope"></i> digitalmarketingkaryasaarthi@gmail.com
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Add more team members here -->
+            </div>
+        </div>
+    </section>
+
+    <!-- Testimonials -->
+    <section id="testimonials" class="py-5 bg-light">
+        <div class="container">
+            <h2 class="text-center mb-5">What Our Clients Say</h2>
+            <div class="row">
+                <div class="col-md-4 mb-4">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <div class="mb-2">⭐⭐⭐⭐⭐</div>
+                            <p class="card-text">"My mentor accepted my thesis and everything is perfect!"</p>
+                            <footer class="blockquote-footer">Ashish, MBA Student</footer>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4 mb-4">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <div class="mb-2">⭐⭐⭐⭐⭐</div>
+                            <p class="card-text">"Thanks for helping with my master's thesis! Great job - everything was well-organized."</p>
+                            <footer class="blockquote-footer">Anshika, Research Scholar</footer>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4 mb-4">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <div class="mb-2">⭐⭐⭐⭐⭐</div>
+                            <p class="card-text">"I really liked your work and would recommend to my friends for sure!"</p>
+                            <footer class="blockquote-footer">Shakshi, Business Owner</footer>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Contact Section -->
+    <section id="contact" class="py-5">
+        <div class="container">
+            <h2 class="text-center mb-5">Get In Touch</h2>
+            <div class="row">
+                <div class="col-md-6 mb-4">
+                    <div class="card shadow">
+                        <div class="card-body p-4">
+                            <h4 class="mb-4">Send Us a Message</h4>
+                            <form id="contactForm">
+                                <div class="mb-3">
+                                    <input type="text" class="form-control" placeholder="Your Name" required>
+                                </div>
+                                <div class="mb-3">
+                                    <input type="email" class="form-control" placeholder="Your Email" required>
+                                </div>
+                                <div class="mb-3">
+                                    <input type="tel" class="form-control" placeholder="Your Phone" required>
+                                </div>
+                                <div class="mb-3">
+                                    <select class="form-control">
+                                        <option>Select Service</option>
+                                        <option>Thesis Writing</option>
+                                        <option>Website Development</option>
+                                        <option>Mobile App</option>
+                                        <option>Other</option>
+                                    </select>
+                                </div>
+                                <div class="mb-3">
+                                    <textarea class="form-control" rows="4" placeholder="Your Message" required></textarea>
+                                </div>
+                                <button type="submit" class="btn btn-primary w-100">Send Message</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6 mb-4">
+                    <div class="card shadow mb-4">
+                        <div class="card-body p-4">
+                            <h4 class="mb-4">Quick Contact</h4>
+                            <div class="d-flex mb-3">
+                                <i class="bi bi-envelope-fill text-primary fs-4 me-3"></i>
+                                <div>
+                                    <h6>Email</h6>
+                                    <a href="mailto:info.karyasaarthi@gmail.com">info.karyasaarthi@gmail.com</a>
+                                </div>
+                            </div>
+                            <div class="d-flex mb-3">
+                                <i class="bi bi-whatsapp text-success fs-4 me-3"></i>
+                                <div>
+                                    <h6>WhatsApp</h6>
+                                    <a href="https://wa.me/917991124091" class="text-success">+91 7991124091</a>
+                                </div>
+                            </div>
+                            <div class="d-flex mb-3">
+                                <i class="bi bi-telephone-fill text-primary fs-4 me-3"></i>
+                                <div>
+                                    <h6>Call Us</h6>
+                                    <a href="tel:+919311025753">+91 9311025753</a>
+                                </div>
+                            </div>
+                            <div class="d-flex">
+                                <i class="bi bi-clock-fill text-primary fs-4 me-3"></i>
+                                <div>
+                                    <h6>Business Hours</h6>
+                                    <p class="mb-0">Monday - Saturday<br>9:00 AM - 8:00 PM</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card shadow">
+                        <div class="card-body p-4">
+                            <h5 class="mb-3">Follow Us</h5>
+                            <div class="d-flex flex-wrap gap-2">
+                                <a href="https://www.linkedin.com/in/karya-saarthi-693a01369/" target="_blank" class="btn btn-outline-primary" title="LinkedIn"><i class="bi bi-linkedin"></i></a>
+                                <a href="https://www.instagram.com/karyasaarthi/" target="_blank" class="btn btn-outline-danger" title="Instagram"><i class="bi bi-instagram"></i></a>
+                                <a href="https://www.facebook.com/profile.php?id=61576877739779" target="_blank" class="btn btn-outline-primary" title="Facebook"><i class="bi bi-facebook"></i></a>
+                                <a href="https://x.com/karyasaarthi" target="_blank" class="btn btn-outline-dark" title="X (Twitter)"><i class="bi bi-twitter-x"></i></a>
+                                <a href="https://www.youtube.com/@KaryaSaarthi" target="_blank" class="btn btn-outline-danger" title="YouTube"><i class="bi bi-youtube"></i></a>
+                                <a href="https://t.me/karyasaarthi" target="_blank" class="btn btn-outline-info" title="Telegram"><i class="bi bi-telegram"></i></a>
+                                <a href="https://whatsapp.com/channel/0029Vb66k5vADTO79QKvGx0L" target="_blank" class="btn btn-outline-success" title="WhatsApp Channel"><i class="bi bi-whatsapp"></i></a>
+                                <a href="https://www.snapchat.com/add/karya_saarthi?share_id=JTWyldpGLC8&locale=en-IN" target="_blank" class="btn btn-outline-warning" title="Snapchat"><i class="bi bi-snapchat"></i></a>
+                                <a href="https://pin.it/1GwGBkfOk" target="_blank" class="btn btn-outline-danger" title="Pinterest"><i class="bi bi-pinterest"></i></a>
+                                <a href="https://www.reddit.com/u/karyasaarthi/s/VtEUQQe570" target="_blank" class="btn btn-outline-warning" title="Reddit"><i class="bi bi-reddit"></i></a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="py-5 text-white" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+        <div class="container text-center">
+            <h2 class="mb-4">Ready to Transform Your Work Challenges?</h2>
+            <p class="fs-5 mb-4">Join 500+ satisfied clients who trust KaryaSaarthi for their work needs.</p>
+            <a href="https://wa.me/917991124091" class="btn btn-success btn-lg">
+                <i class="bi bi-whatsapp"></i> WhatsApp Us Now
+            </a>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-dark text-white py-4">
+        <div class="container">
+            <div class="row mb-3">
+                <div class="col-12 text-center">
+                    <div class="d-flex flex-wrap justify-content-center gap-2 mb-3">
+                        <a href="https://www.instagram.com/karyasaarthi/" target="_blank" class="text-white fs-4" title="Instagram"><i class="bi bi-instagram"></i></a>
+                        <a href="https://www.facebook.com/profile.php?id=61576877739779" target="_blank" class="text-white fs-4" title="Facebook"><i class="bi bi-facebook"></i></a>
+                        <a href="https://www.linkedin.com/in/karya-saarthi-693a01369/" target="_blank" class="text-white fs-4" title="LinkedIn"><i class="bi bi-linkedin"></i></a>
+                        <a href="https://x.com/karyasaarthi" target="_blank" class="text-white fs-4" title="X"><i class="bi bi-twitter-x"></i></a>
+                        <a href="https://www.threads.com/@karyasaarthi" target="_blank" class="text-white fs-4" title="Threads"><i class="bi bi-threads"></i></a>
+                        <a href="https://www.youtube.com/@KaryaSaarthi" target="_blank" class="text-white fs-4" title="YouTube"><i class="bi bi-youtube"></i></a>
+                        <a href="https://t.me/karyasaarthi" target="_blank" class="text-white fs-4" title="Telegram"><i class="bi bi-telegram"></i></a>
+                        <a href="https://whatsapp.com/channel/0029Vb66k5vADTO79QKvGx0L" target="_blank" class="text-white fs-4" title="WhatsApp Channel"><i class="bi bi-whatsapp"></i></a>
+                        <a href="https://www.snapchat.com/add/karya_saarthi?share_id=JTWyldpGLC8&locale=en-IN" target="_blank" class="text-white fs-4" title="Snapchat"><i class="bi bi-snapchat"></i></a>
+                        <a href="https://pin.it/1GwGBkfOk" target="_blank" class="text-white fs-4" title="Pinterest"><i class="bi bi-pinterest"></i></a>
+                        <a href="https://www.reddit.com/u/karyasaarthi/s/VtEUQQe570" target="_blank" class="text-white fs-4" title="Reddit"><i class="bi bi-reddit"></i></a>
+                        <a href="https://www.quora.com/profile/Karya-Saarthi?ch=10&oid=3096712882&share=e75200b1&srid=5T7uhZ&target_type=user" target="_blank" class="text-white fs-4" title="Quora"><i class="bi bi-quora"></i></a>
+                        <a href="https://www.tumblr.com/karyasaarthi?source=share" target="_blank" class="text-white fs-4" title="Tumblr"><i class="bi bi-stack"></i></a>
+                        <a href="https://www.twitch.tv/karyasaarthi?sr=a" target="_blank" class="text-white fs-4" title="Twitch"><i class="bi bi-twitch"></i></a>
+                        <a href="https://bsky.app/profile/karyasaarthi.bsky.social" target="_blank" class="text-white fs-4" title="Bluesky"><i class="bi bi-cloud"></i></a>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-6">
+                    <p class="mb-0">&copy; 2025 KaryaSaarthi. All Rights Reserved.</p>
+                </div>
+                <div class="col-md-6 text-md-end">
+                    <a href="#" class="text-white me-3">Privacy Policy</a>
+                    <a href="#" class="text-white me-3">Terms of Service</a>
+                    <a href="#" class="text-white">Refund Policy</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Handle contact form submission
+        document.getElementById('contactForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            alert('Thank you for contacting us! We will get back to you soon.');
+        });
+
+        // Navbar scroll effect
+        window.addEventListener('scroll', function() {
+            const navbar = document.getElementById('mainNav');
+            if (window.scrollY > 100) {
+                navbar.classList.add('scrolled');
+            } else {
+                navbar.classList.remove('scrolled');
+            }
+        });
+
+        // Active navigation link based on scroll position
+        const sections = document.querySelectorAll('section[id]');
+        const navLinks = document.querySelectorAll('.navbar-nav .nav-link');
+
+        window.addEventListener('scroll', function() {
+            let current = '';
+            sections.forEach(section => {
+                const sectionTop = section.offsetTop - 100;
+                const sectionHeight = section.clientHeight;
+                if (window.scrollY >= sectionTop && window.scrollY < sectionTop + sectionHeight) {
+                    current = section.getAttribute('id');
+                }
+            });
+
+            navLinks.forEach(link => {
+                link.classList.remove('active');
+                if (link.getAttribute('href').slice(1) === current) {
+                    link.classList.add('active');
+                }
+            });
+        });
+
+        // Smooth scroll for navigation links
+        navLinks.forEach(link => {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                const targetId = this.getAttribute('href');
+                if (targetId.startsWith('#')) {
+                    const targetSection = document.querySelector(targetId);
+                    if (targetSection) {
+                        targetSection.scrollIntoView({
+                            behavior: 'smooth',
+                            block: 'start'
+                        });
+                        // Close mobile menu after clicking
+                        const navbarCollapse = document.querySelector('.navbar-collapse');
+                        if (navbarCollapse.classList.contains('show')) {
+                            bootstrap.Collapse.getInstance(navbarCollapse).hide();
+                        }
+                    }
+                }
+            });
+        });
+
+        // Add animation to hero section buttons
+        document.querySelectorAll('.hero-section .btn').forEach(btn => {
+            btn.addEventListener('mouseenter', function() {
+                this.style.transform = 'scale(1.05)';
+            });
+            btn.addEventListener('mouseleave', function() {
+                this.style.transform = 'scale(1)';
+            });
+        });
+
+        // Service category filtering
+        const categoryButtons = document.querySelectorAll('.btn-category');
+        const serviceCards = document.querySelectorAll('#service-cards [data-category]');
+
+        // Function to filter cards and update status
+        function filterCards(category) {
+            let visibleCount = 0;
+            serviceCards.forEach(card => {
+                if (category === 'all' || card.getAttribute('data-category') === category) {
+                    card.style.display = 'block';
+                    card.style.animation = 'fadeIn 0.5s';
+                    visibleCount++;
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+
+            // Update filter status message
+            const filterStatus = document.getElementById('filter-status');
+            const resetFilter = document.getElementById('reset-filter');
+
+            if (category === 'all') {
+                filterStatus.innerHTML = `Showing <span class="fw-bold">All Services</span>`;
+                resetFilter.style.display = 'none';
+            } else {
+                const categoryName = document.querySelector(`.btn-category[data-category="${category}"]`).textContent.trim();
+                filterStatus.innerHTML = `Showing <span class="fw-bold">${visibleCount} ${categoryName} Services</span>`;
+                resetFilter.style.display = 'inline';
+            }
+        }
+
+        // Reset to show all when page loads or section is viewed
+        function resetFilters() {
+            categoryButtons.forEach(btn => btn.classList.remove('active'));
+            document.querySelector('.btn-category[data-category="all"]').classList.add('active');
+            filterCards('all');
+        }
+
+        // Initialize - show all cards
+        resetFilters();
+
+        categoryButtons.forEach(button => {
+            button.addEventListener('click', function(e) {
+                e.preventDefault();
+
+                // Remove active class from all buttons
+                categoryButtons.forEach(btn => btn.classList.remove('active'));
+                // Add active class to clicked button
+                this.classList.add('active');
+
+                const selectedCategory = this.getAttribute('data-category');
+                filterCards(selectedCategory);
+            });
+        });
+
+        // Reset filters when navigating to the section
+        const popularServicesSection = document.getElementById('popular-services');
+        if (popularServicesSection) {
+            // Use Intersection Observer to detect when section comes into view
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        // Reset to show all when section becomes visible
+                        resetFilters();
+                    }
+                });
+            }, { threshold: 0.1 });
+
+            observer.observe(popularServicesSection);
+        }
+
+        // Also reset when clicking nav links to services
+        document.querySelectorAll('a[href="#popular-services"]').forEach(link => {
+            link.addEventListener('click', function() {
+                setTimeout(resetFilters, 100);
+            });
+        });
+
+        // Add click handler for "Back to All" link
+        const resetFilterBtn = document.getElementById('reset-filter');
+        if (resetFilterBtn) {
+            resetFilterBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                // Click the "All Services" button
+                document.querySelector('.btn-category[data-category="all"]').click();
+            });
+        }
+
+        // Add fade-in animation
+        const style = document.createElement('style');
+        style.innerHTML = `
+            @keyframes fadeIn {
+                from { opacity: 0; transform: translateY(10px); }
+                to { opacity: 1; transform: translateY(0); }
+            }
+        `;
+        document.head.appendChild(style);
+
+        // Service card click handling
+        document.querySelectorAll('.service-card').forEach(card => {
+            card.addEventListener('click', function(e) {
+                if (!e.target.classList.contains('btn-service')) {
+                    // Simulate clicking the View Details button
+                    this.querySelector('.btn-service').click();
+                }
+            });
+        });
+
+        // View Details button handling
+        document.querySelectorAll('.btn-service').forEach(btn => {
+            btn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                const serviceName = this.closest('.service-card').querySelector('h5').textContent;
+                alert(`Contact us for "${serviceName}" service details:\n📱 WhatsApp: +91 7991124091\n📧 Email: info.karyasaarthi@gmail.com`);
+            });
+        });
+    </script>
+</body>
+</html>

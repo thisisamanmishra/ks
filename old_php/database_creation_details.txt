@@ -1,0 +1,36 @@
+HOSTINGER - CREATE NEW DATABASE DETAILS
+========================================
+
+Fill these exact details in Hostinger:
+
+1. DATABASE INFORMATION:
+   ----------------------
+   MySQL Database Name: karyasaarthi
+   MySQL Username: ksadmin
+   Password: KS@2024#Secure!db
+   Confirm Password: KS@2024#Secure!db
+
+2. CLICK: "Create" Button
+
+3. HOSTINGER WILL CREATE:
+   -----------------------
+   Database: u541656631_karyasaarthi
+   Username: u541656631_ksadmin
+   Password: KS@2024#Secure!db
+   Host: localhost
+
+4. IMPORTANT - SAVE THESE CREDENTIALS:
+   ------------------------------------
+   Database Host: localhost
+   Database Name: u541656631_karyasaarthi
+   Database User: u541656631_ksadmin
+   Database Pass: KS@2024#Secure!db
+
+5. AFTER CREATION YOU'LL SEE:
+   ---------------------------
+   ✅ Database created successfully!
+   - Manage button
+   - PHPMyAdmin button
+   - Delete option
+
+========================================
