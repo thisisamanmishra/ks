@@ -98,11 +98,11 @@ export default function InterdeptTaskInbox() {
                     {new Date(task.created_at).toLocaleDateString()}
                   </td>
                   <td className="p-4">
-                    <span className={\`px-2 py-1 rounded-full text-xs font-semibold \${
+                    <span className={`px-2 py-1 rounded-full text-xs font-semibold ${
                       task.priority === 'high' ? 'bg-red-100 text-red-700' :
                       task.priority === 'medium' ? 'bg-amber-100 text-amber-700' :
                       'bg-slate-100 text-slate-700'
-                    }\`}>
+                    }`}>
                       {task.priority || 'medium'}
                     </span>
                   </td>
@@ -110,11 +110,11 @@ export default function InterdeptTaskInbox() {
                     <select
                       value={task.status}
                       onChange={(e) => handleStatusChange(task.id, e.target.value)}
-                      className={\`px-3 py-1.5 rounded-lg text-xs font-semibold border-0 cursor-pointer focus:ring-2 focus:ring-coral/20 \${
+                      className={`px-3 py-1.5 rounded-lg text-xs font-semibold border-0 cursor-pointer focus:ring-2 focus:ring-coral/20 ${
                         task.status === 'completed' ? 'bg-green-100 text-green-700' :
                         task.status === 'in_progress' ? 'bg-blue-100 text-blue-700' :
                         'bg-slate-100 text-slate-700'
-                      }\`}
+                      }`}
                     >
                       <option value="pending">Pending</option>
                       <option value="in_progress">In Progress</option>
