@@ -184,7 +184,7 @@ function SignupContent() {
         {/* Right Panel */}
         <div className="lg:w-3/5 p-8 lg:p-10">
           <div className="text-center mb-4">
-            <Image src="/images/karyasaarthi.jpeg" alt="Logo" width={50} height={50} className="mx-auto rounded-xl shadow-md mb-3" />
+            <Image src="/images/karyasaarthi.png" alt="Logo" width={50} height={50} className="mx-auto rounded-xl shadow-md mb-3" />
             <h2 className="text-xl font-bold text-navy font-heading">
               {step === 'otp' ? 'Verify Your Email' : step === 'complete' ? '🎉 Registration Submitted!' : 'Create Your Account'}
             </h2>

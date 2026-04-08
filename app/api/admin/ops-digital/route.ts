@@ -64,6 +64,26 @@ export async function POST(req: Request) {
     if (error.code === '42P01') return NextResponse.json({ error: 'Run fix_all_panels.sql first' }, { status: 503 })
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
+
+  // Trigger Notifications if it's an interdept task
+  if (table === 'interdept_tasks' && payload.to_department) {
+    const { data: usersToNotify } = await supabase
+      .from('users')
+      .select('id')
+      .or(`department.eq.${payload.to_department},pillar_role.eq.${payload.to_department}`)
+
+    if (usersToNotify && usersToNotify.length > 0) {
+      const { createMultipleNotifications } = await import('@/lib/notifications')
+      const notifyInputs = usersToNotify.map((u: any) => ({
+        userId: u.id,
+        title: 'New Inter-Department Task',
+        message: `A new task "${payload.title}" has been assigned to your department.`,
+        type: 'task_assigned' as any
+      }))
+      await createMultipleNotifications(notifyInputs).catch(console.error)
+    }
+  }
+
   return NextResponse.json({ record: data }, { status: 201 })
 }
 

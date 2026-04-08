@@ -154,7 +154,7 @@ function LoginContent() {
             {icon ? (
               <div className="text-6xl drop-shadow-lg filter">{icon}</div>
             ) : (
-              <Image src="/images/karyasaarthi.jpeg" alt="Logo" width={60} height={60} className="rounded-xl shadow-lg" />
+              <Image src="/images/karyasaarthi.png" alt="Logo" width={60} height={60} className="rounded-xl shadow-lg" />
             )}
           </div>
           <h2 className={`text-2xl font-bold font-heading ${themeColor}`}>{title}</h2>

@@ -45,7 +45,7 @@ export default function VendorLayout({ children }: { children: React.ReactNode }
   const sidebarContent = (
     <>
       <div className="p-5 flex items-center gap-3 border-b border-white/10">
-        <Image src="/images/karyasaarthi.jpeg" alt="Logo" width={36} height={36} className="rounded-lg" />
+        <Image src="/images/karyasaarthi.png" alt="Logo" width={36} height={36} className="rounded-lg" />
         <span className="font-bold font-heading text-lg">Karya<span className="text-accent">Saarthi</span></span>
       </div>
       <div className="px-5 py-3 border-b border-white/10">

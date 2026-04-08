@@ -1,6 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 
-type NotificationType = 'project_assigned' | 'status_changed' | 'progress_updated' | 'file_uploaded' | 'new_message' | 'new_rating'
+type NotificationType = 'project_assigned' | 'status_changed' | 'progress_updated' | 'file_uploaded' | 'new_message' | 'new_rating' | 'task_assigned'
 
 interface NotificationInput {
   userId: number

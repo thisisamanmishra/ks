@@ -63,7 +63,7 @@ export function useRazorpay() {
         order_id: data.orderId,
         name: 'KaryaSaarthi',
         description: options.description || 'Payment to KaryaSaarthi',
-        image: '/images/karyasaarthi.jpeg',
+        image: '/images/karyasaarthi.png',
         prefill: data.prefill,
         theme: { color: '#FF6B35' },
         modal: { backdropclose: false, escape: false },

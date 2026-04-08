@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback, useMemo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
+import InterdeptTaskInbox from '@/components/admin/InterdeptTaskInbox'
 
 interface Campaign { id: number; name: string; type: string; channel: string; status: string; budget: number | null; start_date: string | null; end_date: string | null; leads_generated: number | null; created_at: string }
 
@@ -512,6 +513,10 @@ export default function MarketingPage() {
             </div>}
         </div>
       )}
+
+      <div className="mt-8">
+        <InterdeptTaskInbox />
+      </div>
     </div>
   )
 }

@@ -250,7 +250,7 @@ export default function AdminSidebar({ user }: { user: UserData }) {
       <div className="p-5 border-b border-white/8 flex-shrink-0">
         <Link href="/admin" className="flex items-center gap-3">
           <div className="w-9 h-9 rounded-xl overflow-hidden shadow-lg ring-2 ring-accent/30 flex-shrink-0">
-            <Image src="/images/karyasaarthi.jpeg" alt="Logo" width={36} height={36} className="w-full h-full object-cover" />
+            <Image src="/images/karyasaarthi.png" alt="Logo" width={36} height={36} className="w-full h-full object-cover" />
           </div>
           <div>
             <span className="font-bold text-white font-heading text-sm">Karya<span className="text-accent">Saarthi</span></span>

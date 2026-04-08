@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from 'react'
 import { motion } from 'framer-motion'
 import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, Tooltip, CartesianGrid, AreaChart, Area } from 'recharts'
+import InterdeptTaskInbox from '@/components/admin/InterdeptTaskInbox'
 
 const TABS = [
   { key: 'seo', label: '🔍 SEO' },
@@ -503,6 +504,10 @@ export default function DigitalPage() {
           </div>
         </div>
       )}
+
+      <div className="mt-8">
+        <InterdeptTaskInbox />
+      </div>
     </div>
   )
 }

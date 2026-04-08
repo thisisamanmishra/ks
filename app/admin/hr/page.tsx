@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
+import InterdeptTaskInbox from '@/components/admin/InterdeptTaskInbox'
 
 interface TeamMember {
   id: number
@@ -237,6 +238,10 @@ export default function HRPage() {
           )}
         </>
       )}
+
+      <div className="mt-8">
+        <InterdeptTaskInbox />
+      </div>
     </div>
   )
 }

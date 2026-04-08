@@ -14,23 +14,18 @@ envContent.split('\n').forEach(line => {
 const supabase = createClient(env['NEXT_PUBLIC_SUPABASE_URL'], env['SUPABASE_SERVICE_ROLE_KEY'])
 
 async function run() {
-  console.log('--- TESTING GROUP CHATS ---')
-  const { data: groups, error: groupsError } = await supabase
-    .from('group_chats')
-    .select('*')
-    .limit(5)
-  
-  if (groupsError) console.error('Groups Error:', groupsError)
-  else console.log('Groups Data:', groups)
+  console.log('--- TESTING AMBASSADORS ---')
+  const { data, error } = await supabase
+    .from('campus_ambassadors')
+    .insert({
+       user_id: 2,
+       college_id: 1,
+       referral_code: 'TEST1234'
+    })
+    .select()
 
-  console.log('\n--- TESTING GROUP CHAT MEMBERS ---')
-  const { data: members, error: membersError } = await supabase
-    .from('group_chat_members')
-    .select('*, group:group_id(*)')
-    .limit(5)
-
-  if (membersError) console.error('Members Error:', membersError)
-  else console.log('Members Data:', members)
+  if (error) console.error('Error inserting campus_ambassadors:', error)
+  else console.log('Successfully inserted:', !!data)
 }
 
 run()

@@ -176,7 +176,7 @@ export default function ForgotPasswordPage() {
         className="relative z-10 w-full max-w-md bg-white/95 backdrop-blur-xl rounded-3xl shadow-2xl p-8 lg:p-10"
       >
         <div className="text-center mb-8">
-          <Image src="/images/karyasaarthi.jpeg" alt="Logo" width={60} height={60} className="mx-auto rounded-xl shadow-lg mb-4" />
+          <Image src="/images/karyasaarthi.png" alt="Logo" width={60} height={60} className="mx-auto rounded-xl shadow-lg mb-4" />
 
           {step === 'email' && (
             <>

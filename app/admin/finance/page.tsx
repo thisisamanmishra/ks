@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
+import InterdeptTaskInbox from '@/components/admin/InterdeptTaskInbox'
 
 interface Invoice {
   id: number
@@ -280,6 +281,10 @@ export default function FinancePage() {
             </table>
           </div>
         )}
+      </div>
+
+      <div className="mt-8">
+        <InterdeptTaskInbox />
       </div>
 
       <AnimatePresence>
