@@ -104,13 +104,24 @@ export async function middleware(request: NextRequest) {
       return NextResponse.redirect(new URL('/admin/board', request.url))
     }
 
-    // Pillar member → only their pillar dashboard
+    // Pillar member → only their pillar dashboard AND APIs
     if (user.role === 'pillar_member' && user.pillarRole) {
-      const allowed = `/admin/pillars/${user.pillarRole}`
-      if (pathname.startsWith(allowed)) {
+      const allowedPage = `/admin/pillars/${user.pillarRole}`
+      const allowedApi1 = `/api/admin/pillars/${user.pillarRole}`
+      const allowedApi2 = `/api/admin/${user.pillarRole}`
+      
+      if (
+        pathname.startsWith(allowedPage) ||
+        pathname.startsWith(allowedApi1) ||
+        pathname.startsWith(allowedApi2)
+      ) {
         return NextResponse.next()
       }
-      return NextResponse.redirect(new URL(allowed, request.url))
+      // If it's an API route they aren't allowed to hit, return 403 instead of a 307 redirect
+      if (pathname.startsWith('/api/')) {
+        return NextResponse.json({ error: 'Unauthorized pillar access' }, { status: 403 })
+      }
+      return NextResponse.redirect(new URL(allowedPage, request.url))
     }
 
     // Approved admin → department-scoped access

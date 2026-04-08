@@ -281,7 +281,7 @@ export default function CampusSaarthiPage() {
 
           {/* Add Form */}
           {showNew && (
-            <form onSubmit={createAmbassador} className="bg-white rounded-2xl p-5 border border-slate-100 shadow-sm space-y-3">
+            <div className="bg-white rounded-2xl p-5 border border-slate-100 shadow-sm space-y-3">
               <h4 className="font-bold text-navy text-sm">New Ambassador</h4>
               <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                 <input required value={form.fullname} onChange={e => setForm(p => ({ ...p, fullname: e.target.value }))} placeholder="Full name *" className="px-3 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-sm focus:outline-none focus:border-blue-400" />
@@ -293,12 +293,12 @@ export default function CampusSaarthiPage() {
                 <textarea value={form.notes} onChange={e => setForm(p => ({ ...p, notes: e.target.value }))} placeholder="Notes (optional)" rows={2} className="col-span-3 px-3 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-sm focus:outline-none focus:border-blue-400 resize-none" />
               </div>
               <div className="flex gap-3">
-                <button type="submit" disabled={saving} className="px-5 py-2.5 rounded-xl font-bold text-white text-sm cursor-pointer bg-navy disabled:opacity-60">
+                <button type="button" onClick={createAmbassador} disabled={saving} className="px-5 py-2.5 rounded-xl font-bold text-white text-sm cursor-pointer bg-navy disabled:opacity-60">
                   {saving ? '⏳ Enrolling…' : '✅ Enroll Ambassador'}
                 </button>
                 <button type="button" onClick={() => setShowNew(false)} className="px-4 py-2.5 rounded-xl bg-slate-100 text-slate-600 text-sm cursor-pointer">Cancel</button>
               </div>
-            </form>
+            </div>
           )}
 
           {/* Ambassador Cards */}
@@ -405,7 +405,7 @@ export default function CampusSaarthiPage() {
               <h3 className="font-bold text-navy font-heading mb-5">📈 Monthly Target vs Achievement</h3>
               <div className="h-64">
                 {chartData.length > 0 ? (
-                  <ResponsiveContainer width="100%" height="100%">
+                  <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
                     <BarChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                       <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E2E8F0" />
                       <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: '#64748B' }} />
@@ -661,7 +661,7 @@ export default function CampusSaarthiPage() {
 
           {/* Add Referral Form */}
           {showNewRef && (
-            <form onSubmit={createReferral} className="bg-white rounded-2xl p-5 border border-slate-100 shadow-sm space-y-3">
+            <div className="bg-white rounded-2xl p-5 border border-slate-100 shadow-sm space-y-3">
               <h4 className="font-bold text-navy text-sm">Log New Referral</h4>
               <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                 <select required value={refForm.ambassador_id} onChange={e => setRefForm(p => ({ ...p, ambassador_id: e.target.value }))}
@@ -675,12 +675,12 @@ export default function CampusSaarthiPage() {
                 <input type="number" value={refForm.revenue} onChange={e => setRefForm(p => ({ ...p, revenue: e.target.value }))} placeholder="Revenue ₹ (if converted)" className="px-3 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-sm focus:outline-none" />
               </div>
               <div className="flex gap-3">
-                <button type="submit" disabled={refSaving} className="px-5 py-2.5 rounded-xl font-bold text-white text-sm cursor-pointer bg-navy disabled:opacity-60">
+                <button type="button" onClick={createReferral} disabled={refSaving} className="px-5 py-2.5 rounded-xl font-bold text-white text-sm cursor-pointer bg-navy disabled:opacity-60">
                   {refSaving ? '⏳' : '✅ Log Referral'}
                 </button>
                 <button type="button" onClick={() => setShowNewRef(false)} className="px-4 py-2.5 rounded-xl bg-slate-100 text-slate-600 text-sm cursor-pointer">Cancel</button>
               </div>
-            </form>
+            </div>
           )}
 
           {/* Referrals Table */}
