@@ -28,12 +28,15 @@ export async function GET() {
     if (error) throw error
 
     // Transform to match homepage structure
-    const formatted = (testimonials || []).map(t => ({
-      text: t.review,
-      name: t.customer?.fullname || 'Anonymous',
-      role: t.customer?.role === 'customer' ? 'Verified Client' : 'User',
-      rating: t.rating
-    }))
+    const formatted = (testimonials || []).map((t: any) => {
+      const cust = Array.isArray(t.customer) ? t.customer[0] : t.customer;
+      return {
+        text: t.review,
+        name: cust?.fullname || 'Anonymous',
+        role: cust?.role === 'customer' ? 'Verified Client' : 'User',
+        rating: t.rating
+      }
+    })
 
     // If not enough DB testimonials, we will supply some fallbacks dynamically.
     const fallbacks = [
