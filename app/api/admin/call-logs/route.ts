@@ -68,6 +68,18 @@ export async function POST(request: Request) {
       console.error('Call log insert error:', error)
       return NextResponse.json({ error: error.message }, { status: 500 })
     }
+    
+    // Automatically create a follow-up task if requested
+    if (outcome === 'callback') {
+      const taskMessage = `Follow up call with ${phone}${follow_up_date ? ` scheduled for ${follow_up_date}` : ''}.${notes ? ` Notes: ${notes}` : ''}`
+      await supabase.from('interdept_tasks').insert({
+        task: taskMessage,
+        from: 'calling',
+        to: 'operations',
+        due: follow_up_date || new Date().toISOString()
+      })
+    }
+
     return NextResponse.json({ log: data }, { status: 201 })
   } catch (err) {
     console.error('Call log POST exception:', err)

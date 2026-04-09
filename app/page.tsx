@@ -6,6 +6,9 @@ import HowItWorks from '@/components/HowItWorks'
 import PillarsSection from '@/components/PillarsSection'
 import StatsSection from '@/components/StatsSection'
 import EventsPreviewSection from '@/components/EventsPreviewSection'
+import HackathonsSection from '@/components/HackathonsSection'
+import PodcastsSection from '@/components/PodcastsSection'
+import BlogSection from '@/components/BlogSection'
 import TestimonialsSection from '@/components/TestimonialsSection'
 import QuickAccessDashboard from '@/components/QuickAccessDashboard'
 import CTABanner from '@/components/CTABanner'
@@ -30,6 +33,9 @@ export default function Home() {
       <PillarsSection />
       <StatsSection />
       <EventsPreviewSection />
+      <HackathonsSection />
+      <PodcastsSection />
+      <BlogSection />
       <TestimonialsSection />
       <QuickAccessDashboard />
       <CTABanner />

@@ -129,28 +129,35 @@ function buildNavGroups(user: UserData): NavGroup[] {
     })
   }
 
-  // ── Digital Marketing ──────────────────────────────
+  // ── Digital Saarthi ────────────────────────────────
   if (isSuperAdmin || dept === 'digital' || (user.role === 'admin' && pillar === 'digital')) {
     all.push({
-      title: 'Digital Marketing',
+      title: 'Digital Saarthi',
       items: [
-        { icon: '🔍', label: 'SEO Dashboard', href: '/admin/digital' },
-        { icon: '📱', label: 'Social Media', href: '/admin/digital/social' },
-        { icon: '📧', label: 'Email Campaigns', href: '/admin/digital/email' },
-        { icon: '📊', label: 'Traffic Analytics', href: '/admin/analytics' },
+        { icon: '📊', label: 'Overview', href: '/admin/digital' },
+        { icon: '👥', label: 'Creator Roster', href: '/admin/digital' },
+        { icon: '📥', label: 'Submissions', href: '/admin/digital' },
+        { icon: '📈', label: 'Creator Analytics', href: '/admin/digital' },
+        { icon: '📡', label: 'Lead Generation', href: '/admin/digital' },
+        { icon: '💰', label: 'Revenue Attribution', href: '/admin/digital' },
+        { icon: '💬', label: 'Creator Chat', href: '/admin/digital' },
+        { icon: '🎨', label: 'Ad Creatives', href: '/admin/digital' },
+        { icon: '📅', label: 'Content Calendar', href: '/admin/digital' },
+        { icon: '🔍', label: 'SEO', href: '/admin/digital' },
+        { icon: '📧', label: 'Email Campaigns', href: '/admin/digital' },
       ],
     })
   }
 
-  // ── HR ─────────────────────────────────────────────
-  if (isSuperAdmin || dept === 'hr') {
+  // ── Staff Management (Super Admin only — replaces HR) ────
+  if (isSuperAdmin || isBoard) {
     all.push({
-      title: 'HR & People',
+      title: 'Staff Management',
       items: [
-        { icon: '👥', label: 'Team Directory', href: '/admin/hr' },
-        { icon: '🏖️', label: 'Leave Requests', href: '/admin/hr/leaves' },
-        { icon: '📅', label: 'Attendance', href: '/admin/hr/attendance' },
-        { icon: '🏆', label: 'Performance', href: '/admin/hr/performance' },
+        { icon: '👥', label: 'Team Directory', href: '/admin/staff' },
+        { icon: '💰', label: 'Payroll', href: '/admin/staff?tab=payroll' },
+        { icon: '⭐', label: 'Appraisals', href: '/admin/staff?tab=appraisals' },
+        { icon: '🏖️', label: 'Leaves & Attendance', href: '/admin/staff?tab=leaves' },
       ],
     })
   }
@@ -180,6 +187,24 @@ function buildNavGroups(user: UserData): NavGroup[] {
       ],
     })
   }
+
+  // ── My Profile — visible to ALL staff ──────────────
+  all.push({
+    title: 'My Account',
+    items: [
+      { icon: '👤', label: 'My Profile & Docs', href: '/admin/profile' },
+      { icon: '🏖️', label: 'My Leave', href: '/admin/profile?tab=leaves' },
+      { icon: '⭐', label: 'My Appraisals', href: '/admin/profile?tab=appraisals' },
+    ],
+  })
+
+  // ── Shared Workspace — visible to ALL staff ──────────
+  all.push({
+    title: 'Shared Tools',
+    items: [
+      { icon: '📁', label: 'Team Workspace', href: '/admin/workspace' },
+    ],
+  })
 
   // ── Super Admin only: Settings & Access ─────────────
   if (isSuperAdmin) {

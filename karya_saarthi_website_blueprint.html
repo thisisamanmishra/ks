@@ -1,0 +1,417 @@
+
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: var(--font-sans); font-size: 14px; color: var(--color-text-primary); }
+.page { padding: 1.5rem 0; }
+.section-title { font-size: 13px; font-weight: 500; color: var(--color-text-secondary); text-transform: uppercase; letter-spacing: 0.08em; margin: 2rem 0 0.75rem; padding-bottom: 6px; border-bottom: 0.5px solid var(--color-border-tertiary); }
+.section-title:first-child { margin-top: 0; }
+.card { background: var(--color-background-primary); border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-lg); padding: 1rem 1.25rem; margin-bottom: 10px; }
+.card-title { font-size: 14px; font-weight: 500; margin-bottom: 10px; display: flex; align-items: center; gap: 8px; }
+.badge { font-size: 11px; font-weight: 500; padding: 2px 8px; border-radius: var(--border-radius-md); }
+.badge-blue { background: #E6F1FB; color: #0C447C; }
+.badge-teal { background: #E1F5EE; color: #085041; }
+.badge-amber { background: #FAEEDA; color: #633806; }
+.badge-coral { background: #FAECE7; color: #712B13; }
+.badge-purple { background: #EEEDFE; color: #3C3489; }
+.badge-green { background: #EAF3DE; color: #27500A; }
+.badge-pink { background: #FBEAF0; color: #72243E; }
+.points { list-style: none; }
+.points li { font-size: 13px; color: var(--color-text-secondary); line-height: 1.6; padding: 2px 0 2px 14px; position: relative; }
+.points li::before { content: "•"; position: absolute; left: 0; color: var(--color-text-tertiary); }
+.grid2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.grid3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.grid5 { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px; }
+.pill { font-size: 11px; padding: 2px 8px; border-radius: 20px; border: 0.5px solid var(--color-border-tertiary); color: var(--color-text-secondary); display: inline-block; margin: 2px; }
+.divider { height: 0.5px; background: var(--color-border-tertiary); margin: 1.5rem 0; }
+.highlight-box { border-radius: var(--border-radius-md); padding: 10px 14px; margin-bottom: 8px; }
+.hl-blue { background: #E6F1FB; border-left: 3px solid #378ADD; }
+.hl-teal { background: #E1F5EE; border-left: 3px solid #1D9E75; }
+.hl-amber { background: #FAEEDA; border-left: 3px solid #EF9F27; }
+.hl-purple { background: #EEEDFE; border-left: 3px solid #7F77DD; }
+.hl-coral { background: #FAECE7; border-left: 3px solid #D85A30; }
+.sub { font-size: 11px; color: var(--color-text-tertiary); margin-top: 2px; }
+.big-label { font-size: 15px; font-weight: 500; color: var(--color-text-primary); }
+.tag-row { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 8px; }
+@media (max-width: 600px) { .grid2, .grid3, .grid5 { grid-template-columns: 1fr; } }
+</style>
+
+<div class="page">
+
+<div class="section-title">Public website — main sections (fiverr-style)</div>
+<div class="grid2">
+  <div class="card">
+    <div class="card-title">Homepage <span class="badge badge-blue">Landing</span></div>
+    <ul class="points">
+      <li>Hero banner — tagline "Hum Hai Aapke Saathi" + CTA buttons</li>
+      <li>Live stats bar — projects completed, happy customers, satisfaction rate</li>
+      <li>Service category grid — Academic, Technical, Business, Government</li>
+      <li>How it works — 5-step model (Understand → Teach → Work → Deliver → Support)</li>
+      <li>5 Pillars showcase section — Campus, Digital, Calling, Government, Market Saarthi</li>
+      <li>Testimonials carousel with star ratings</li>
+      <li>Featured projects / portfolio highlights</li>
+      <li>Podcast / Seminar / Hackathon event boxes (embedded links)</li>
+      <li>Newsletter & WhatsApp subscription widget</li>
+      <li>Footer — contact, socials, quick links, support email</li>
+    </ul>
+  </div>
+  <div class="card">
+    <div class="card-title">Service marketplace <span class="badge badge-teal">Core</span></div>
+    <ul class="points">
+      <li>Category filter — Academic / Technical / Business / Government</li>
+      <li>Search bar with smart suggestions</li>
+      <li>Service listing cards — title, price, rating, delivery time, expert name</li>
+      <li>Sorting — price, rating, newest, popular</li>
+      <li>Service detail page — description, deliverables, timeline, expert bio</li>
+      <li>Project enquiry form — name, email, requirements, budget, deadline</li>
+      <li>Custom quote request option</li>
+      <li>Instant booking with payment gateway</li>
+      <li>Wishlist / save service feature</li>
+      <li>Compare services side-by-side</li>
+    </ul>
+  </div>
+</div>
+
+<div class="grid3" style="margin-top: 10px;">
+  <div class="card">
+    <div class="card-title">Events & Content hub <span class="badge badge-amber">Media</span></div>
+    <ul class="points">
+      <li>Podcast section — embedded player, episode list, guest tags</li>
+      <li>Hackathon — registration, status (upcoming/live/past), prize details</li>
+      <li>Seminar / webinar — schedule, speaker cards, register button</li>
+      <li>Blog / knowledge articles</li>
+      <li>YouTube / Instagram feed embed</li>
+      <li>Event calendar with reminder alerts</li>
+    </ul>
+  </div>
+  <div class="card">
+    <div class="card-title">Client portal <span class="badge badge-purple">Login</span></div>
+    <ul class="points">
+      <li>Project status tracker — progress bar per project</li>
+      <li>Document upload / download center</li>
+      <li>Live chat with assigned expert</li>
+      <li>Payment history & invoice download</li>
+      <li>Review & rating submission</li>
+      <li>Re-order / repeat project</li>
+    </ul>
+  </div>
+  <div class="card">
+    <div class="card-title">Lead & enquiry <span class="badge badge-coral">CRM input</span></div>
+    <ul class="points">
+      <li>Multi-step project enquiry form</li>
+      <li>WhatsApp chat widget (floating button)</li>
+      <li>Call-back request form</li>
+      <li>Free consultation booking slot</li>
+      <li>Lead magnet — free sample project download</li>
+      <li>Referral code entry & tracking</li>
+    </ul>
+  </div>
+</div>
+
+<div class="divider"></div>
+<div class="section-title">Admin panel 1 — BOD member access <span class="badge badge-blue" style="margin-left:8px;">Top level</span></div>
+
+<div class="card">
+  <div class="card-title">Board of Directors — full visibility, read + approve only</div>
+  <div class="grid3">
+    <ul class="points">
+      <li>Company-wide revenue dashboard (real-time)</li>
+      <li>Monthly / quarterly / annual P&L overview</li>
+      <li>Total leads, conversions, revenue per pillar</li>
+      <li>Headcount & team structure view</li>
+      <li>Budget allocation tracker across departments</li>
+    </ul>
+    <ul class="points">
+      <li>All 5 pillars performance comparison chart</li>
+      <li>Top projects & key clients list</li>
+      <li>Strategic KPI scorecards</li>
+      <li>Board meeting notes & documents vault</li>
+      <li>Policy & SOP approval workflow</li>
+    </ul>
+    <ul class="points">
+      <li>Investor / partner report generator (PDF export)</li>
+      <li>Risk & compliance alerts panel</li>
+      <li>Brand asset & legal document library</li>
+      <li>Announcement publisher (site-wide)</li>
+      <li>MOU / agreement tracker</li>
+    </ul>
+  </div>
+</div>
+
+<div class="divider"></div>
+<div class="section-title">Admin panel 2 — internal team access <span class="badge badge-teal" style="margin-left:8px;">Operations</span></div>
+
+<div class="grid2">
+  <div class="card">
+    <div class="card-title">Project manager</div>
+    <ul class="points">
+      <li>All projects kanban board — To-do / In-progress / Review / Done</li>
+      <li>Assign tasks to team members, set deadlines</li>
+      <li>Project timeline (Gantt view)</li>
+      <li>Client communication log per project</li>
+      <li>Delivery checklist & quality sign-off</li>
+      <li>Escalation & issue flagging</li>
+      <li>Project billing status link</li>
+    </ul>
+  </div>
+  <div class="card">
+    <div class="card-title">Operations head</div>
+    <ul class="points">
+      <li>Ops dashboard — SLA compliance, turnaround time</li>
+      <li>Team availability & workload heatmap</li>
+      <li>Vendor / freelancer panel management</li>
+      <li>Resource allocation across projects</li>
+      <li>SOP library — create, update, publish</li>
+      <li>Inter-department task coordination board</li>
+      <li>Inventory / tool subscription tracker</li>
+    </ul>
+  </div>
+  <div class="card">
+    <div class="card-title">Marketing head</div>
+    <ul class="points">
+      <li>Campaign planner — create, schedule, track campaigns</li>
+      <li>Lead source analytics — which channel drives most leads</li>
+      <li>Content calendar — blog, social, emailer schedule</li>
+      <li>Referral & affiliate program manager</li>
+      <li>Event / seminar / hackathon creation panel</li>
+      <li>Competitor benchmarking notes</li>
+      <li>Brand guideline & asset manager</li>
+    </ul>
+  </div>
+  <div class="card">
+    <div class="card-title">Digital marketing head</div>
+    <ul class="points">
+      <li>SEO dashboard — keyword rankings, page performance</li>
+      <li>Paid ads manager — Google, Meta, LinkedIn spend & ROI</li>
+      <li>Social media scheduler & analytics</li>
+      <li>Email campaign builder & open-rate tracker</li>
+      <li>Website traffic analytics (GA4 embed)</li>
+      <li>Podcast / YouTube content performance stats</li>
+      <li>Conversion funnel visualiser</li>
+    </ul>
+  </div>
+</div>
+
+<div class="card" style="margin-top:0;">
+  <div class="card-title">Shared internal team features</div>
+  <div class="tag-row">
+    <span class="pill">Direct chat between team members</span>
+    <span class="pill">Notification center (tasks, deadlines, approvals)</span>
+    <span class="pill">Shared document workspace</span>
+    <span class="pill">Leave & attendance tracker</span>
+    <span class="pill">Internal announcements feed</span>
+    <span class="pill">HR module — payroll, appraisal, joining docs</span>
+    <span class="pill">Monthly team performance scorecard</span>
+    <span class="pill">Role-based access — each role sees only their module</span>
+  </div>
+</div>
+
+<div class="divider"></div>
+<div class="section-title">Admin panel 3 — 5 pillar heads access <span class="badge badge-coral" style="margin-left:8px;">Pillar-specific</span></div>
+
+<div class="grid5">
+  <div class="card">
+    <div class="highlight-box hl-blue">
+      <div class="big-label">Campus Saarthi</div>
+      <div class="sub">Student ambassadors</div>
+    </div>
+    <ul class="points">
+      <li>Ambassador roster & college mapping</li>
+      <li>Each ambassador's lead count & revenue generated</li>
+      <li>Commission / incentive tracker per ambassador</li>
+      <li>Campus event registration list</li>
+      <li>Direct chat with each ambassador</li>
+      <li>Referral code issuance & tracking</li>
+      <li>Training material upload for ambassadors</li>
+      <li>Monthly target vs achievement chart</li>
+    </ul>
+  </div>
+  <div class="card">
+    <div class="highlight-box hl-teal">
+      <div class="big-label">Digital Saarthi</div>
+      <div class="sub">Online marketing</div>
+    </div>
+    <ul class="points">
+      <li>Content creator roster & platform assignments</li>
+      <li>Content submission & approval workflow</li>
+      <li>Post performance analytics per creator</li>
+      <li>Lead generation count per digital channel</li>
+      <li>Revenue attributed to digital campaigns</li>
+      <li>Direct chat with each content creator</li>
+      <li>Ad creative library & approvals</li>
+      <li>Monthly content calendar coordination</li>
+    </ul>
+  </div>
+  <div class="card">
+    <div class="highlight-box hl-amber">
+      <div class="big-label">Calling Saarthi</div>
+      <div class="sub">Phone & support</div>
+    </div>
+    <ul class="points">
+      <li>Caller roster & shift schedule</li>
+      <li>Call log — number of calls, duration, outcome</li>
+      <li>Lead captured per caller & conversion rate</li>
+      <li>Script library & objection handling notes</li>
+      <li>Revenue attributed to calling efforts</li>
+      <li>Direct chat with calling team</li>
+      <li>Follow-up task auto-assign after calls</li>
+      <li>Daily / weekly calling target tracker</li>
+    </ul>
+  </div>
+  <div class="card">
+    <div class="highlight-box hl-purple">
+      <div class="big-label">Government Saarthi</div>
+      <div class="sub">Gov projects</div>
+    </div>
+    <ul class="points">
+      <li>Government tender & project tracker</li>
+      <li>Client contact directory (govt bodies)</li>
+      <li>Proposal / bid document submission log</li>
+      <li>Revenue from govt projects dashboard</li>
+      <li>Project co-ordination board for each govt deal</li>
+      <li>Direct chat with govt pillar team</li>
+      <li>Compliance document checklist per project</li>
+      <li>MOU / agreement expiry alerts</li>
+    </ul>
+  </div>
+  <div class="card">
+    <div class="highlight-box hl-coral">
+      <div class="big-label">Market Saarthi</div>
+      <div class="sub">On-ground</div>
+    </div>
+    <ul class="points">
+      <li>Field agent roster & territory map</li>
+      <li>Walk-in lead capture form (mobile-friendly)</li>
+      <li>Lead count & revenue per field agent</li>
+      <li>On-ground event & stall activity log</li>
+      <li>Project co-ordination for offline clients</li>
+      <li>Direct chat with field agents</li>
+      <li>Geo-tagged visit reports from agents</li>
+      <li>Monthly market coverage heatmap</li>
+    </ul>
+  </div>
+</div>
+
+<div class="divider"></div>
+<div class="section-title">CRM system — integrated across all panels</div>
+
+<div class="grid3">
+  <div class="card">
+    <div class="card-title">Lead management</div>
+    <ul class="points">
+      <li>Lead capture from all sources — website, WhatsApp, calls, social, field</li>
+      <li>Auto-assign leads to right pillar / team member based on source</li>
+      <li>Lead stages — New → Contacted → Interested → Proposal → Won / Lost</li>
+      <li>Follow-up reminders & auto-alerts</li>
+      <li>Lead score based on activity & intent signals</li>
+      <li>Duplicate lead detection & merge</li>
+    </ul>
+  </div>
+  <div class="card">
+    <div class="card-title">Client management</div>
+    <ul class="points">
+      <li>Client profile — contact info, projects, payments, communication history</li>
+      <li>Project lifecycle view per client</li>
+      <li>Renewal & upsell opportunity alerts</li>
+      <li>Feedback & satisfaction score tracking</li>
+      <li>Client segmentation — student, startup, corporate, government</li>
+      <li>Bulk email / WhatsApp messaging to segments</li>
+    </ul>
+  </div>
+  <div class="card">
+    <div class="card-title">Revenue & reporting</div>
+    <ul class="points">
+      <li>Revenue dashboard — total, by pillar, by service, by team member</li>
+      <li>Invoice creation & payment tracking</li>
+      <li>Pending payment alerts & follow-up log</li>
+      <li>Conversion rate report by source</li>
+      <li>Monthly & quarterly report auto-generator (PDF)</li>
+      <li>Custom date range filters on all reports</li>
+    </ul>
+  </div>
+</div>
+
+<div class="divider"></div>
+<div class="section-title">Chatting & communication — platform-wide</div>
+<div class="card">
+  <div class="grid3">
+    <ul class="points">
+      <li>Direct 1:1 chat between any two team members</li>
+      <li>Group chat per pillar / department</li>
+      <li>Client ↔ expert live chat on service page</li>
+      <li>WhatsApp API integration — auto-replies & manual chat</li>
+    </ul>
+    <ul class="points">
+      <li>Chat notifications — browser + email + mobile push</li>
+      <li>File sharing in chat (PDF, images, docs)</li>
+      <li>Chat history searchable per project / client</li>
+      <li>Read receipts & online status indicators</li>
+    </ul>
+    <ul class="points">
+      <li>Chatbot for website visitors — FAQ auto-responses</li>
+      <li>Escalate chat to human agent in one click</li>
+      <li>Chat linked to CRM — auto-log conversation to client profile</li>
+      <li>Video call / screen share link generator from chat</li>
+    </ul>
+  </div>
+</div>
+
+<div class="divider"></div>
+<div class="section-title">Homepage quick-access boxes (dashboard widgets)</div>
+<div class="grid3">
+  <div class="card">
+    <div class="card-title">Podcast box</div>
+    <ul class="points">
+      <li>Embedded latest episode player</li>
+      <li>Episode title, guest name, date</li>
+      <li>Link to full podcast page</li>
+      <li>Subscribe button (Spotify / YouTube)</li>
+    </ul>
+  </div>
+  <div class="card">
+    <div class="card-title">Hackathon box</div>
+    <ul class="points">
+      <li>Upcoming / live / past status badge</li>
+      <li>Prize pool & theme display</li>
+      <li>Register now button</li>
+      <li>Countdown timer when live</li>
+    </ul>
+  </div>
+  <div class="card">
+    <div class="card-title">Seminar / events box</div>
+    <ul class="points">
+      <li>Next event date, topic, speaker name</li>
+      <li>RSVP / register button</li>
+      <li>Past recording links</li>
+      <li>Google calendar add button</li>
+    </ul>
+  </div>
+  <div class="card">
+    <div class="card-title">Project enquiry box</div>
+    <ul class="points">
+      <li>Quick 3-field form — name, service needed, phone</li>
+      <li>Auto-creates lead in CRM on submit</li>
+      <li>WhatsApp redirect option</li>
+      <li>Estimated response time shown</li>
+    </ul>
+  </div>
+  <div class="card">
+    <div class="card-title">Live stats box</div>
+    <ul class="points">
+      <li>Projects completed counter (auto-update)</li>
+      <li>Active projects today</li>
+      <li>Happy clients total</li>
+      <li>Pillars active indicator</li>
+    </ul>
+  </div>
+  <div class="card">
+    <div class="card-title">Social proof box</div>
+    <ul class="points">
+      <li>Latest Google / platform review (auto-pull)</li>
+      <li>Star rating display</li>
+      <li>Client photo + name + project type</li>
+      <li>Link to all reviews page</li>
+    </ul>
+  </div>
+</div>
+
+</div>

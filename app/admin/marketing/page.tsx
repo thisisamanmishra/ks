@@ -3,15 +3,23 @@
 import { useEffect, useState, useCallback, useMemo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import InterdeptTaskInbox from '@/components/admin/InterdeptTaskInbox'
+import dynamic from 'next/dynamic'
+
+const RichTextEditor = dynamic(() => import('@/components/RichTextEditor'), { ssr: false, loading: () => <div className="h-64 bg-slate-50 rounded-xl animate-pulse border border-slate-200 flex items-center justify-center text-slate-400 text-sm">Loading editor...</div> })
+
 
 interface Campaign { id: number; name: string; type: string; channel: string; status: string; budget: number | null; start_date: string | null; end_date: string | null; leads_generated: number | null; created_at: string }
 
 const TABS = [
   { key: 'campaigns', label: '📣 Campaigns' },
+  { key: 'blog', label: '📝 Blog' },
+  { key: 'podcast', label: '🎙️ Podcasts' },
+  { key: 'hackathon', label: '💻 Hackathons' },
+  { key: 'schedule', label: '📅 Schedule Event' },
   { key: 'leads', label: '📊 Lead Sources' },
-  { key: 'calendar', label: '📅 Content Calendar' },
+  { key: 'calendar', label: '🗓️ Content Calendar' },
   { key: 'referral', label: '🤝 Referrals' },
-  { key: 'events', label: '🎪 Events' },
+  { key: 'events', label: '🎪 All Events' },
   { key: 'competitor', label: '🔍 Competitor Intel' },
   { key: 'brand', label: '🎨 Brand Assets' },
 ] as const
@@ -48,12 +56,31 @@ export default function MarketingPage() {
   // Brand assets
   const [brandAssets, setBrandAssets] = useState<{ id: string; name: string; type: string; url: string; description: string }[]>([])
   const [newAsset, setNewAsset] = useState({ name: '', type: 'Logo', url: '', description: '' })
+  // Blogs
+  const [blogs, setBlogs] = useState<any[]>([])
+  const [blogCategories, setBlogCategories] = useState<{ id: number; name: string }[]>([])
+  const [blogForm, setBlogForm] = useState({ title: '', excerpt: '', content: '', category_id: '', is_published: false, is_featured: false, featured_image: '' })
+  const [savingBlog, setSavingBlog] = useState(false)
+  const [showBlogForm, setShowBlogForm] = useState(false)
+  const [editingBlogId, setEditingBlogId] = useState<number | null>(null)
+  const [deletingBlogId, setDeletingBlogId] = useState<number | null>(null)
+  // Podcast (event type=podcast)
+  const [podcasts, setPodcasts] = useState<any[]>([])
+  const [podForm, setPodForm] = useState({ title: '', short_desc: '', date: '', episode: '', guest: '', audio_url: '', fee: '' })
+  const [savingPod, setSavingPod] = useState(false)
+  // Hackathon (event type=hackathon)
+  const [hackathons, setHackathons] = useState<any[]>([])
+  const [hackForm, setHackForm] = useState({ title: '', short_desc: '', date: '', end_date: '', venue: '', capacity: '', fee: '', prize: '', team_size: '', problem: '' })
+  const [savingHack, setSavingHack] = useState(false)
+  // Scheduled Events (seminar/webinar)
+  const [schedEvents, setSchedEvents] = useState<any[]>([])
+  const [schedForm, setSchedForm] = useState({ title: '', type: 'seminar', short_desc: '', date: '', venue: '', capacity: '', fee: '' })
+  const [savingSched, setSavingSched] = useState(false)
 
   const loadSubData = useCallback(async () => {
     try {
       const routes = ['calendar', 'referrals', 'events', 'competitor', 'brand']
       const promises = routes.map(r => fetch(`/api/admin/marketing/sub?type=${r}`).then(res => res.json()))
-      // Also fetch global events
       const globalEventsRes = await fetch('/api/events?limit=50').then(res => res.json())
       const results = await Promise.all(promises)
       setCalItems(results[0].calendar || [])
@@ -61,6 +88,19 @@ export default function MarketingPage() {
       setCompNotes(results[2].competitor || [])
       setBrandAssets(results[3].brand || [])
       setEvents(globalEventsRes.events || [])
+      // Load filtered event types
+      const [podRes, hackRes, schedRes, blogRes, catRes] = await Promise.all([
+        fetch('/api/events?type=podcast&limit=50').then(r => r.json()),
+        fetch('/api/events?type=hackathon&limit=50').then(r => r.json()),
+        fetch('/api/events?type=seminar&limit=50').then(r => r.json()),
+        fetch('/api/admin/blogs').then(r => r.json()),
+        fetch('/api/blogs/categories').then(r => r.json()),
+      ])
+      setPodcasts(podRes.events || [])
+      setHackathons(hackRes.events || [])
+      setSchedEvents(schedRes.events || [])
+      setBlogs(blogRes.blogs || [])
+      setBlogCategories(catRes.categories || [])
     } catch (e) { console.error(e) }
   }, [])
 
@@ -75,6 +115,116 @@ export default function MarketingPage() {
   }, [])
 
   useEffect(() => { fetchCampaigns() }, [fetchCampaigns])
+
+  const saveBlog = async (e: React.FormEvent) => {
+    e.preventDefault(); setSavingBlog(true)
+    try {
+      const isEditing = editingBlogId !== null
+      const url = isEditing ? `/api/admin/blogs/${editingBlogId}` : '/api/admin/blogs'
+      const method = isEditing ? 'PATCH' : 'POST'
+      const res = await fetch(url, {
+        method, headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...blogForm, category_id: blogForm.category_id ? Number(blogForm.category_id) : null })
+      })
+      if (res.ok) {
+        const d = await res.json()
+        if (isEditing) {
+          setBlogs(p => p.map(b => b.id === editingBlogId ? { ...b, ...d.blog } : b))
+        } else {
+          setBlogs(p => [d.blog, ...p])
+        }
+        setBlogForm({ title: '', excerpt: '', content: '', category_id: '', is_published: false, is_featured: false, featured_image: '' })
+        setEditingBlogId(null)
+        setShowBlogForm(false)
+      }
+    } catch {} finally { setSavingBlog(false) }
+  }
+
+  const startEditBlog = (b: any) => {
+    setBlogForm({
+      title: b.title || '',
+      excerpt: b.excerpt || '',
+      content: b.content || '',
+      category_id: b.category_id ? String(b.category_id) : '',
+      is_published: !!b.is_published,
+      is_featured: !!b.is_featured,
+      featured_image: b.featured_image || '',
+    })
+    setEditingBlogId(b.id)
+    setShowBlogForm(true)
+    setTimeout(() => document.getElementById('blog-form-anchor')?.scrollIntoView({ behavior: 'smooth' }), 100)
+  }
+
+  const deleteBlog = async (id: number) => {
+    if (!confirm('Are you sure you want to delete this blog post? This cannot be undone.')) return
+    setDeletingBlogId(id)
+    try {
+      const res = await fetch(`/api/admin/blogs/${id}`, { method: 'DELETE' })
+      if (res.ok) setBlogs(p => p.filter(b => b.id !== id))
+    } catch {} finally { setDeletingBlogId(null) }
+  }
+
+  const savePodcast = async () => {
+    if (!podForm.title || !podForm.date) return
+    setSavingPod(true)
+    const desc = podForm.guest ? `Guest: ${podForm.guest}${podForm.short_desc ? '. ' + podForm.short_desc : ''}` : podForm.short_desc || 'A new episode is now available.'
+    const payload = {
+      title: podForm.episode ? `EP${podForm.episode}: ${podForm.title}` : podForm.title,
+      type: 'podcast', short_description: desc,
+      event_date: new Date(podForm.date).toISOString(),
+      is_online: true, registration_fee: Number(podForm.fee) || 0,
+      audio_url: podForm.audio_url || null,
+      guest_name: podForm.guest || null,
+      meeting_link: null,
+      tags: ['podcast']
+    }
+    try {
+      const res = await fetch('/api/events', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) })
+      if (res.ok) { const d = await res.json(); setPodcasts(p => [d.event, ...p]) }
+      setPodForm({ title: '', short_desc: '', date: '', episode: '', guest: '', audio_url: '', fee: '' })
+    } catch {} finally { setSavingPod(false) }
+  }
+
+  const saveHackathon = async () => {
+    if (!hackForm.title || !hackForm.date) return
+    setSavingHack(true)
+    const payload = {
+      title: hackForm.title, type: 'hackathon',
+      short_description: hackForm.short_desc || 'Join our hackathon and win exciting prizes!',
+      event_date: new Date(hackForm.date).toISOString(),
+      end_date: hackForm.end_date ? new Date(hackForm.end_date).toISOString() : null,
+      venue: hackForm.venue || null, is_online: !hackForm.venue,
+      max_participants: Number(hackForm.capacity) || null,
+      registration_fee: Number(hackForm.fee) || 0,
+      prize_pool: hackForm.prize || null,
+      description: hackForm.problem ? `Problem Statement: ${hackForm.problem}${hackForm.team_size ? `\nTeam Size: ${hackForm.team_size}` : ''}` : null,
+      tags: ['hackathon', 'coding', 'competition']
+    }
+    try {
+      const res = await fetch('/api/events', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) })
+      if (res.ok) { const d = await res.json(); setHackathons(p => [d.event, ...p]) }
+      setHackForm({ title: '', short_desc: '', date: '', end_date: '', venue: '', capacity: '', fee: '', prize: '', team_size: '', problem: '' })
+    } catch {} finally { setSavingHack(false) }
+  }
+
+  const saveScheduledEvent = async () => {
+    if (!schedForm.title || !schedForm.date) return
+    setSavingSched(true)
+    const payload = {
+      title: schedForm.title, type: schedForm.type,
+      short_description: schedForm.short_desc || `Join us for this ${schedForm.type}.`,
+      event_date: new Date(schedForm.date).toISOString(),
+      venue: schedForm.venue || null, is_online: !schedForm.venue,
+      max_participants: Number(schedForm.capacity) || null,
+      registration_fee: Number(schedForm.fee) || 0,
+      tags: [schedForm.type]
+    }
+    try {
+      const res = await fetch('/api/events', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) })
+      if (res.ok) { const d = await res.json(); setSchedEvents(p => [d.event, ...p]) }
+      setSchedForm({ title: '', type: 'seminar', short_desc: '', date: '', venue: '', capacity: '', fee: '' })
+    } catch {} finally { setSavingSched(false) }
+  }
 
   const createCampaign = async (e: React.FormEvent) => {
     e.preventDefault(); setSavingCamp(true)
@@ -207,6 +357,201 @@ export default function MarketingPage() {
           </button>
         ))}
       </div>
+
+      {/* ── BLOG ── */}
+      {activeTab === 'blog' && (
+        <div className="space-y-4">
+          <div className="flex justify-between items-center">
+            <div className="flex gap-3">
+              {[{ label: 'Total', v: blogs.length, c: '#1B3A6B' }, { label: 'Published', v: blogs.filter(b => b.is_published).length, c: '#10B981' }, { label: 'Drafts', v: blogs.filter(b => !b.is_published).length, c: '#F59E0B' }].map(s => (
+                <div key={s.label} className="bg-white rounded-xl px-4 py-2.5 border border-slate-100 text-center shadow-sm">
+                  <p className="text-xl font-extrabold" style={{ color: s.c }}>{s.v}</p>
+                  <p className="text-[10px] text-slate-400">{s.label}</p>
+                </div>
+              ))}
+            </div>
+            <button onClick={() => setShowBlogForm(v => !v)} className="px-4 py-2.5 rounded-xl font-bold text-white text-sm cursor-pointer hover:opacity-90" style={{ background: '#FF6B35' }}>+ New Blog Post</button>
+          </div>
+          <div id="blog-form-anchor" />
+          <AnimatePresence>
+            {showBlogForm && (
+              <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="bg-white rounded-2xl p-5 border border-slate-100 shadow-sm">
+                <h4 className="font-bold text-navy mb-4 text-base flex items-center gap-2">
+                  {editingBlogId ? '✏️ Edit Blog Post' : '✍️ Create Blog Post'}
+                  <span className="text-xs font-normal text-slate-400 ml-2">Rich Text Editor — headings, tables, images, charts, links, code blocks &amp; more</span>
+                </h4>
+                <form onSubmit={saveBlog} className="space-y-3">
+                  <input required value={blogForm.title} onChange={e => setBlogForm(p => ({ ...p, title: e.target.value }))} placeholder="Blog title *" className="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-sm focus:outline-none focus:border-navy font-semibold" />
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                    <select value={blogForm.category_id} onChange={e => setBlogForm(p => ({ ...p, category_id: e.target.value }))} className="px-3 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-sm focus:outline-none">
+                      <option value="">— Category —</option>
+                      {blogCategories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                    </select>
+                    <input value={blogForm.featured_image} onChange={e => setBlogForm(p => ({ ...p, featured_image: e.target.value }))} placeholder="Featured image URL (optional)" className="col-span-2 px-3 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-sm focus:outline-none" />
+                  </div>
+                  <textarea required value={blogForm.excerpt} onChange={e => setBlogForm(p => ({ ...p, excerpt: e.target.value }))} placeholder="Short excerpt / meta description *" rows={2} className="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-sm focus:outline-none resize-none" />
+                  {/* Rich Text Editor */}
+                  <div>
+                    <p className="text-xs font-semibold text-slate-500 mb-1.5">Blog Content * <span className="text-slate-400 font-normal">(supports charts 📊, images 🖼, tables ▦, links 🔗, code blocks and more)</span></p>
+                    <RichTextEditor
+                      content={blogForm.content}
+                      onChange={html => setBlogForm(p => ({ ...p, content: html }))}
+                      placeholder="Start writing your blog post... Use the toolbar to add headings, bold, images, charts, tables, code blocks and more!"
+                    />
+                  </div>
+                  <div className="flex gap-6 text-sm pt-1">
+                    <label className="flex items-center gap-2 cursor-pointer select-none"><input type="checkbox" checked={blogForm.is_published} onChange={e => setBlogForm(p => ({ ...p, is_published: e.target.checked }))} className="w-4 h-4 accent-green-500" /> <span className="text-slate-600">Publish immediately</span></label>
+                    <label className="flex items-center gap-2 cursor-pointer select-none"><input type="checkbox" checked={blogForm.is_featured} onChange={e => setBlogForm(p => ({ ...p, is_featured: e.target.checked }))} className="w-4 h-4 accent-orange-400" /> <span className="text-slate-600">Mark as featured</span></label>
+                  </div>
+                  <div className="flex gap-3 pt-1">
+                    <button type="submit" disabled={savingBlog || !blogForm.content || blogForm.content === '<p></p>'} className="px-6 py-2.5 rounded-xl font-bold text-white text-sm cursor-pointer disabled:opacity-50 transition-all hover:opacity-90" style={{ background: '#1B3A6B' }}>
+                      {savingBlog ? '⏳ Saving...' : editingBlogId ? '✏️ Update Blog Post' : '📝 Publish Blog Post'}
+                    </button>
+                    <button type="button" onClick={() => { setShowBlogForm(false); setEditingBlogId(null); setBlogForm({ title: '', excerpt: '', content: '', category_id: '', is_published: false, is_featured: false, featured_image: '' }) }} className="px-4 py-2.5 rounded-xl bg-slate-100 text-slate-600 text-sm cursor-pointer hover:bg-slate-200">Cancel</button>
+                  </div>
+                </form>
+              </motion.div>
+            )}
+          </AnimatePresence>
+          <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+            <table className="w-full text-xs">
+              <thead><tr className="bg-slate-50 border-b border-slate-100">{['Title', 'Category', 'Status', 'Views', 'Actions'].map(h => <th key={h} className="px-4 py-3 text-left font-bold text-slate-400 uppercase text-[10px]">{h}</th>)}</tr></thead>
+              <tbody>
+                {blogs.length === 0 ? <tr><td colSpan={5} className="px-4 py-12 text-center text-slate-400"><span className="text-3xl block mb-2">📝</span>No blog posts yet. Click &ldquo;+ New Blog Post&rdquo; to get started.</td></tr> :
+                  blogs.map(b => (
+                    <tr key={b.id} className="border-b border-slate-50 hover:bg-slate-50/60">
+                      <td className="px-4 py-3 font-semibold text-navy max-w-xs">
+                        <div className="truncate">{b.title}</div>
+                        {b.is_featured && <span className="text-[9px] text-orange-500 font-bold">⭐ Featured</span>}
+                      </td>
+                      <td className="px-4 py-3"><span className="px-2 py-0.5 rounded-full bg-accent/10 text-accent text-[10px] font-bold">{b.category?.name || '—'}</span></td>
+                      <td className="px-4 py-3"><span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${b.is_published ? 'bg-green-100 text-green-600' : 'bg-amber-100 text-amber-600'}`}>{b.is_published ? 'Published' : 'Draft'}</span></td>
+                      <td className="px-4 py-3 text-slate-500">{b.views || 0}</td>
+                      <td className="px-4 py-3">
+                        <div className="flex items-center gap-2">
+                          <button onClick={() => startEditBlog(b)} className="text-blue-500 hover:text-blue-700 font-bold cursor-pointer transition-colors">✏️ Edit</button>
+                          {b.slug && <a href={`/blogs/${b.slug}`} target="_blank" rel="noreferrer" className="text-slate-400 hover:text-navy font-bold transition-colors">👁</a>}
+                          <button onClick={() => deleteBlog(b.id)} disabled={deletingBlogId === b.id} className="text-slate-300 hover:text-red-500 transition-colors cursor-pointer disabled:opacity-40">🗑️</button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {/* ── PODCAST ── */}
+      {activeTab === 'podcast' && (
+        <div className="space-y-4">
+          <div className="bg-white rounded-2xl p-5 border border-slate-100 shadow-sm">
+            <h4 className="font-bold text-navy mb-4">🎙️ Create New Podcast Episode</h4>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-3">
+              <input value={podForm.episode} onChange={e => setPodForm(p => ({ ...p, episode: e.target.value }))} placeholder="Episode # (e.g. 12)" className="px-3 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-sm focus:outline-none" />
+              <input value={podForm.guest} onChange={e => setPodForm(p => ({ ...p, guest: e.target.value }))} placeholder="Guest name" className="px-3 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-sm focus:outline-none" />
+              <input type="date" value={podForm.date} onChange={e => setPodForm(p => ({ ...p, date: e.target.value }))} className="px-3 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-sm focus:outline-none" />
+              <input type="number" value={podForm.fee} onChange={e => setPodForm(p => ({ ...p, fee: e.target.value }))} placeholder="Fee ₹ (0=free)" className="px-3 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-sm focus:outline-none" />
+            </div>
+            <input required value={podForm.title} onChange={e => setPodForm(p => ({ ...p, title: e.target.value }))} placeholder="Episode title *" className="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-sm focus:outline-none mb-3" />
+            <textarea value={podForm.short_desc} onChange={e => setPodForm(p => ({ ...p, short_desc: e.target.value }))} placeholder="Episode description / summary" rows={2} className="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-sm focus:outline-none resize-none mb-3" />
+            <input value={podForm.audio_url} onChange={e => setPodForm(p => ({ ...p, audio_url: e.target.value }))} placeholder="Audio / video URL (optional)" className="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-sm focus:outline-none mb-3" />
+            <button onClick={savePodcast} disabled={savingPod} className="px-4 py-2 rounded-xl bg-purple-600 text-white text-xs font-bold cursor-pointer hover:opacity-90 disabled:opacity-60">{savingPod ? '⏳ Saving...' : '🎙️ Publish Episode'}</button>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {podcasts.length === 0 ? <div className="col-span-3 bg-white rounded-2xl p-12 text-center border border-slate-100 text-slate-400"><span className="text-4xl block mb-3">🎙️</span><p>No podcast episodes yet</p></div> :
+              podcasts.map((ep, i) => (
+                <motion.div key={ep.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }} className="bg-white rounded-2xl p-5 shadow-sm border border-purple-100">
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="w-10 h-10 rounded-xl bg-purple-100 flex items-center justify-center text-xl">🎙️</div>
+                    <div className="flex-1 min-w-0"><p className="font-bold text-navy truncate text-sm">{ep.title}</p><p className="text-[10px] text-slate-400">{new Date(ep.event_date).toLocaleDateString('en-IN')}</p></div>
+                  </div>
+                  <p className="text-xs text-slate-500 line-clamp-2">{ep.short_description}</p>
+                </motion.div>
+              ))}
+          </div>
+        </div>
+      )}
+
+      {/* ── HACKATHON ── */}
+      {activeTab === 'hackathon' && (
+        <div className="space-y-4">
+          <div className="bg-white rounded-2xl p-5 border border-slate-100 shadow-sm">
+            <h4 className="font-bold text-navy mb-4">💻 Create Hackathon</h4>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-3">
+              <input value={hackForm.title} onChange={e => setHackForm(p => ({ ...p, title: e.target.value }))} placeholder="Hackathon title *" className="col-span-2 px-3 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-sm focus:outline-none" />
+              <div><label className="text-[10px] text-slate-400 mb-1 block">Start Date *</label><input type="date" value={hackForm.date} onChange={e => setHackForm(p => ({ ...p, date: e.target.value }))} className="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-sm focus:outline-none" /></div>
+              <div><label className="text-[10px] text-slate-400 mb-1 block">End Date</label><input type="date" value={hackForm.end_date} onChange={e => setHackForm(p => ({ ...p, end_date: e.target.value }))} className="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-sm focus:outline-none" /></div>
+            </div>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-3">
+              <input value={hackForm.prize} onChange={e => setHackForm(p => ({ ...p, prize: e.target.value }))} placeholder="Prize pool (e.g. ₹1,00,000)" className="col-span-2 px-3 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-sm focus:outline-none" />
+              <input type="number" value={hackForm.capacity} onChange={e => setHackForm(p => ({ ...p, capacity: e.target.value }))} placeholder="Max participants" className="px-3 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-sm focus:outline-none" />
+              <input type="number" value={hackForm.fee} onChange={e => setHackForm(p => ({ ...p, fee: e.target.value }))} placeholder="Reg. fee ₹ (0=free)" className="px-3 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-sm focus:outline-none" />
+            </div>
+            <div className="grid grid-cols-2 gap-3 mb-3">
+              <input value={hackForm.venue} onChange={e => setHackForm(p => ({ ...p, venue: e.target.value }))} placeholder="Venue (leave blank if online)" className="px-3 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-sm focus:outline-none" />
+              <input value={hackForm.team_size} onChange={e => setHackForm(p => ({ ...p, team_size: e.target.value }))} placeholder="Team size (e.g. 1-4 members)" className="px-3 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-sm focus:outline-none" />
+            </div>
+            <textarea value={hackForm.short_desc} onChange={e => setHackForm(p => ({ ...p, short_desc: e.target.value }))} placeholder="Short description" rows={2} className="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-sm focus:outline-none resize-none mb-3" />
+            <textarea value={hackForm.problem} onChange={e => setHackForm(p => ({ ...p, problem: e.target.value }))} placeholder="Problem statement (optional)" rows={2} className="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-sm focus:outline-none resize-none mb-3" />
+            <button onClick={saveHackathon} disabled={savingHack} className="px-4 py-2 rounded-xl text-white text-xs font-bold cursor-pointer hover:opacity-90 disabled:opacity-60" style={{ background: '#FF6B35' }}>{savingHack ? '⏳ Creating...' : '💻 Launch Hackathon'}</button>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {hackathons.length === 0 ? <div className="col-span-2 bg-white rounded-2xl p-12 text-center border border-slate-100 text-slate-400"><span className="text-4xl block mb-3">💻</span><p>No hackathons yet</p></div> :
+              hackathons.map((h, i) => (
+                <motion.div key={h.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.06 }} className="bg-white rounded-2xl p-5 shadow-sm border border-orange-100">
+                  <div className="flex items-start justify-between mb-3">
+                    <h3 className="font-bold text-navy">{h.title}</h3>
+                    <span className="px-2 py-0.5 rounded-full bg-orange-100 text-orange-600 text-[10px] font-bold">💻 Hackathon</span>
+                  </div>
+                  <div className="grid grid-cols-3 gap-2">
+                    <div className="p-2 rounded-xl bg-slate-50 text-center"><p className="text-xs font-bold text-orange-500">{h.prize_pool || '—'}</p><p className="text-[10px] text-slate-400">Prize</p></div>
+                    <div className="p-2 rounded-xl bg-slate-50 text-center"><p className="text-xs font-bold text-navy">{h.max_participants || '∞'}</p><p className="text-[10px] text-slate-400">Seats</p></div>
+                    <div className="p-2 rounded-xl bg-slate-50 text-center"><p className="text-xs font-bold text-navy">{new Date(h.event_date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}</p><p className="text-[10px] text-slate-400">Date</p></div>
+                  </div>
+                </motion.div>
+              ))}
+          </div>
+        </div>
+      )}
+
+      {/* ── SCHEDULE EVENT ── */}
+      {activeTab === 'schedule' && (
+        <div className="space-y-4">
+          <div className="bg-white rounded-2xl p-5 border border-slate-100 shadow-sm">
+            <h4 className="font-bold text-navy mb-4">📅 Schedule Event (Seminar / Webinar / Workshop)</h4>
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+              <input value={schedForm.title} onChange={e => setSchedForm(p => ({ ...p, title: e.target.value }))} placeholder="Event title *" className="col-span-2 px-3 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-sm focus:outline-none" />
+              <select value={schedForm.type} onChange={e => setSchedForm(p => ({ ...p, type: e.target.value }))} className="px-3 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-sm focus:outline-none">
+                {['seminar', 'webinar', 'workshop', 'conference', 'other'].map(t => <option key={t} value={t} className="capitalize">{t}</option>)}
+              </select>
+              <input type="date" value={schedForm.date} onChange={e => setSchedForm(p => ({ ...p, date: e.target.value }))} className="px-3 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-sm focus:outline-none" />
+              <input type="number" value={schedForm.capacity} onChange={e => setSchedForm(p => ({ ...p, capacity: e.target.value }))} placeholder="Capacity" className="px-3 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-sm focus:outline-none" />
+              <input value={schedForm.venue} onChange={e => setSchedForm(p => ({ ...p, venue: e.target.value }))} placeholder="Venue / link (blank=online)" className="col-span-2 px-3 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-sm focus:outline-none" />
+              <input type="number" value={schedForm.fee} onChange={e => setSchedForm(p => ({ ...p, fee: e.target.value }))} placeholder="Fee ₹ (0=free)" className="px-3 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-sm focus:outline-none" />
+              <textarea value={schedForm.short_desc} onChange={e => setSchedForm(p => ({ ...p, short_desc: e.target.value }))} placeholder="Short description" rows={2} className="col-span-5 px-3 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-sm focus:outline-none resize-none" />
+            </div>
+            <button onClick={saveScheduledEvent} disabled={savingSched} className="mt-3 px-4 py-2 rounded-xl bg-navy text-white text-xs font-bold cursor-pointer hover:opacity-90 disabled:opacity-60">{savingSched ? '⏳ Scheduling...' : '📅 Schedule Event'}</button>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {schedEvents.length === 0 ? <div className="col-span-3 bg-white rounded-2xl p-12 text-center border border-slate-100 text-slate-400"><span className="text-4xl block mb-3">📅</span><p>No scheduled events yet</p></div> :
+              schedEvents.map((ev, i) => (
+                <motion.div key={ev.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.06 }} className="bg-white rounded-2xl p-5 shadow-sm border border-slate-100">
+                  <div className="flex items-start justify-between mb-2">
+                    <h3 className="font-bold text-navy text-sm">{ev.title}</h3>
+                    <span className="px-2 py-0.5 rounded-full bg-blue-100 text-blue-600 text-[10px] font-bold capitalize">{ev.type}</span>
+                  </div>
+                  <p className="text-xs text-slate-500 mb-2 line-clamp-2">{ev.short_description}</p>
+                  <div className="flex gap-2 text-[10px] text-slate-400">
+                    <span>📅 {new Date(ev.event_date).toLocaleDateString('en-IN')}</span>
+                    {ev.venue && <span>📍 {ev.venue}</span>}
+                    {!ev.venue && <span className="text-green-500">🌐 Online</span>}
+                  </div>
+                </motion.div>
+              ))}
+          </div>
+        </div>
+      )}
 
       {/* ── CAMPAIGNS ── */}
       {activeTab === 'campaigns' && (

@@ -19,6 +19,8 @@ interface BoardData {
 
 interface MOU { id: number; title: string; type: string; status: string; description: string | null; updated_at: string }
 interface Announcement { id: number; title: string; message: string; type: string; is_active: boolean; created_at: string }
+interface BoardNote { id: number; title: string; meeting_date: string; agenda: string | null; minutes: string | null; file_url: string | null; created_at: string }
+interface BrandAsset { id: number; name: string; category: string; file_url: string; description: string | null; created_at: string }
 
 // ── Sub-components ────────────────────────────────────────────────
 function KPICard({ icon, label, value, sub, color, delay = 0 }: {
@@ -78,6 +80,8 @@ const TABS = [
   { key: 'reports', label: '📄 Reports' },
   { key: 'mou', label: '⚖️ Legal & Policy' },
   { key: 'announce', label: '📢 Announcements' },
+  { key: 'boarddocs', label: '📋 Board Docs' },
+  { key: 'brand', label: '🎨 Brand Assets' },
 ] as const
 
 type Tab = typeof TABS[number]['key']
@@ -105,6 +109,18 @@ function BoardDashboard() {
   const [showAnnForm, setShowAnnForm] = useState(false)
   const [annForm, setAnnForm] = useState({ title: '', message: '', type: 'info' })
   const [savingAnn, setSavingAnn] = useState(false)
+  // Board Docs state
+  const [boardNotes, setBoardNotes] = useState<BoardNote[]>([])
+  const [noteLoading, setNoteLoading] = useState(false)
+  const [showNoteForm, setShowNoteForm] = useState(false)
+  const [noteForm, setNoteForm] = useState({ title: '', meeting_date: '', agenda: '', minutes: '', file_url: '' })
+  const [savingNote, setSavingNote] = useState(false)
+  // Brand Assets state
+  const [brandAssets, setBrandAssets] = useState<BrandAsset[]>([])
+  const [assetLoading, setAssetLoading] = useState(false)
+  const [showAssetForm, setShowAssetForm] = useState(false)
+  const [assetForm, setAssetForm] = useState({ name: '', category: 'logo', file_url: '', description: '' })
+  const [savingAsset, setSavingAsset] = useState(false)
 
   useEffect(() => {
     const t = searchParams.get('tab') as Tab
@@ -115,7 +131,7 @@ function BoardDashboard() {
     try {
       const res = await fetch('/api/admin/board')
       if (res.ok) setData(await res.json())
-    } catch {} finally { setLoading(false) }
+    } catch { } finally { setLoading(false) }
   }, [])
 
   useEffect(() => { fetchBoard() }, [fetchBoard])
@@ -123,13 +139,37 @@ function BoardDashboard() {
   useEffect(() => {
     if (activeTab === 'mou') {
       setMouLoading(true)
-      fetch('/api/admin/board/legal').then(r => r.json()).then(d => setMous(d.docs || [])).catch(() => {}).finally(() => setMouLoading(false))
+      fetch('/api/admin/board/legal').then(r => r.json()).then(d => setMous(d.docs || [])).catch(() => { }).finally(() => setMouLoading(false))
     }
     if (activeTab === 'announce') {
       setAnnLoading(true)
-      fetch('/api/admin/announcements').then(r => r.json()).then(d => setAnnouncements(d.announcements || [])).catch(() => {}).finally(() => setAnnLoading(false))
+      fetch('/api/admin/announcements').then(r => r.json()).then(d => setAnnouncements(d.announcements || [])).catch(() => { }).finally(() => setAnnLoading(false))
+    }
+    if (activeTab === 'boarddocs') {
+      setNoteLoading(true)
+      fetch('/api/admin/board/docs').then(r => r.json()).then(d => setBoardNotes(d.notes || [])).catch(() => { }).finally(() => setNoteLoading(false))
+    }
+    if (activeTab === 'brand') {
+      setAssetLoading(true)
+      fetch('/api/admin/board/brand').then(r => r.json()).then(d => setBrandAssets(d.assets || [])).catch(() => { }).finally(() => setAssetLoading(false))
     }
   }, [activeTab])
+
+  const saveBoardNote = async (e: React.FormEvent) => {
+    e.preventDefault(); setSavingNote(true)
+    try {
+      const res = await fetch('/api/admin/board/docs', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(noteForm) })
+      if (res.ok) { const d = await res.json(); setBoardNotes(p => [d.note, ...p]); setShowNoteForm(false); setNoteForm({ title: '', meeting_date: '', agenda: '', minutes: '', file_url: '' }) }
+    } catch { } finally { setSavingNote(false) }
+  }
+
+  const saveBrandAsset = async (e: React.FormEvent) => {
+    e.preventDefault(); setSavingAsset(true)
+    try {
+      const res = await fetch('/api/admin/board/brand', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(assetForm) })
+      if (res.ok) { const d = await res.json(); setBrandAssets(p => [d.asset, ...p]); setShowAssetForm(false); setAssetForm({ name: '', category: 'logo', file_url: '', description: '' }) }
+    } catch { } finally { setSavingAsset(false) }
+  }
 
   const publishAnnouncement = async (e: React.FormEvent) => {
     e.preventDefault(); setSavingAnn(true)
@@ -144,7 +184,7 @@ function BoardDashboard() {
         setAnnForm({ title: '', message: '', type: 'info' })
         fetch('/api/admin/announcements').then(r => r.json()).then(d => setAnnouncements(d.announcements || []))
       }
-    } catch {} finally { setSavingAnn(false) }
+    } catch { } finally { setSavingAnn(false) }
   }
 
   if (loading) return (
@@ -654,8 +694,8 @@ function BoardDashboard() {
                           {doc.description && <p className="text-xs text-slate-400 mt-0.5 truncate">{doc.description}</p>}
                           <p className="text-[10px] text-slate-300 mt-0.5">Updated: {new Date(doc.updated_at).toLocaleDateString('en-IN')}</p>
                         </div>
-                        <select 
-                          value={doc.status} 
+                        <select
+                          value={doc.status}
                           onChange={async (e) => {
                             const newStatus = e.target.value
                             setMous(m => m.map(d => d.id === doc.id ? { ...d, status: newStatus } : d))
@@ -753,6 +793,138 @@ function BoardDashboard() {
                       <p className="text-sm text-slate-600">{ann.message}</p>
                       <p className="text-[10px] text-slate-400 mt-2">{new Date(ann.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</p>
                     </div>
+                  </motion.div>
+                )
+              })}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ── BOARD DOCS TAB ── */}
+      {activeTab === 'boarddocs' && (
+        <div className="space-y-4">
+          <div className="flex justify-between items-center">
+            <p className="text-sm text-slate-500">{boardNotes.length} meeting notes</p>
+            <button onClick={() => setShowNoteForm(v => !v)}
+              className="px-4 py-2 rounded-xl font-bold text-white text-sm cursor-pointer hover:opacity-90"
+              style={{ background: '#1B3A6B' }}>+ Add Meeting Notes</button>
+          </div>
+          {showNoteForm && (
+            <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }}
+              className="bg-white rounded-2xl p-5 border border-slate-100 shadow-sm">
+              <form onSubmit={saveBoardNote} className="space-y-3">
+                <input required value={noteForm.title} onChange={e => setNoteForm(p => ({ ...p, title: e.target.value }))}
+                  placeholder="Meeting Title *" className="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-sm focus:outline-none" />
+                <div className="grid grid-cols-2 gap-3">
+                  <input required type="date" value={noteForm.meeting_date} onChange={e => setNoteForm(p => ({ ...p, meeting_date: e.target.value }))}
+                    className="px-3 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-sm focus:outline-none" />
+                  <input value={noteForm.file_url} onChange={e => setNoteForm(p => ({ ...p, file_url: e.target.value }))}
+                    placeholder="Document URL (optional)" className="px-3 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-sm focus:outline-none" />
+                </div>
+                <textarea rows={3} value={noteForm.agenda} onChange={e => setNoteForm(p => ({ ...p, agenda: e.target.value }))}
+                  placeholder="Agenda items..." className="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-sm focus:outline-none resize-none" />
+                <textarea rows={4} value={noteForm.minutes} onChange={e => setNoteForm(p => ({ ...p, minutes: e.target.value }))}
+                  placeholder="Meeting minutes / decisions taken..." className="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-sm focus:outline-none resize-none" />
+                <div className="flex gap-3">
+                  <button type="submit" disabled={savingNote}
+                    className="px-4 py-2 rounded-xl bg-navy text-white text-xs font-bold cursor-pointer disabled:opacity-60">{savingNote ? '⏳' : '💾 Save Notes'}</button>
+                  <button type="button" onClick={() => setShowNoteForm(false)} className="text-sm text-slate-400 cursor-pointer">Cancel</button>
+                </div>
+              </form>
+            </motion.div>
+          )}
+          {noteLoading ? (
+            <div className="space-y-3">{Array.from({ length: 3 }).map((_, i) => <div key={i} className="h-28 bg-white rounded-2xl animate-pulse border border-slate-100" />)}</div>
+          ) : boardNotes.length === 0 ? (
+            <div className="bg-white rounded-2xl p-12 text-center border border-slate-100 text-slate-400"><span className="text-4xl block mb-3">📋</span><p>No meeting notes yet</p></div>
+          ) : (
+            <div className="space-y-4">
+              {boardNotes.map((n, i) => (
+                <motion.div key={n.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}
+                  className="bg-white rounded-2xl p-5 border border-slate-100 shadow-sm hover:shadow-md transition-shadow">
+                  <div className="flex items-start justify-between mb-3">
+                    <div>
+                      <h3 className="font-bold text-navy">{n.title}</h3>
+                      <p className="text-xs text-slate-400 mt-0.5">📅 {new Date(n.meeting_date).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
+                    </div>
+                    {n.file_url && (
+                      <a href={n.file_url} target="_blank" rel="noreferrer"
+                        className="px-3 py-1.5 rounded-lg bg-blue-50 text-blue-600 text-xs font-bold hover:bg-blue-100 transition-colors">📎 Doc</a>
+                    )}
+                  </div>
+                  {n.agenda && (
+                    <div className="mb-3">
+                      <p className="text-[10px] font-bold text-slate-400 uppercase mb-1">Agenda</p>
+                      <p className="text-sm text-slate-600 bg-slate-50 rounded-xl p-3 whitespace-pre-wrap">{n.agenda}</p>
+                    </div>
+                  )}
+                  {n.minutes && (
+                    <div>
+                      <p className="text-[10px] font-bold text-slate-400 uppercase mb-1">Minutes / Decisions</p>
+                      <p className="text-sm text-slate-600 bg-blue-50 rounded-xl p-3 whitespace-pre-wrap">{n.minutes}</p>
+                    </div>
+                  )}
+                </motion.div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ── BRAND ASSETS TAB ── */}
+      {activeTab === 'brand' && (
+        <div className="space-y-4">
+          <div className="flex justify-between items-center">
+            <p className="text-sm text-slate-500">{brandAssets.length} brand assets</p>
+            <button onClick={() => setShowAssetForm(v => !v)}
+              className="px-4 py-2 rounded-xl font-bold text-white text-sm cursor-pointer hover:opacity-90"
+              style={{ background: '#8B5CF6' }}>+ Add Brand Asset</button>
+          </div>
+          {showAssetForm && (
+            <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }}
+              className="bg-white rounded-2xl p-5 border border-slate-100 shadow-sm">
+              <form onSubmit={saveBrandAsset} className="grid grid-cols-2 gap-3">
+                <input required value={assetForm.name} onChange={e => setAssetForm(p => ({ ...p, name: e.target.value }))}
+                  placeholder="Asset Name *" className="px-3 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-sm focus:outline-none" />
+                <select value={assetForm.category} onChange={e => setAssetForm(p => ({ ...p, category: e.target.value }))}
+                  className="px-3 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-sm focus:outline-none">
+                  {['logo', 'guideline', 'template', 'banner', 'presentation', 'legal', 'other'].map(c => <option key={c} value={c}>{c}</option>)}
+                </select>
+                <input required value={assetForm.file_url} onChange={e => setAssetForm(p => ({ ...p, file_url: e.target.value }))}
+                  placeholder="File URL (Google Drive, etc.) *" className="col-span-2 px-3 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-sm focus:outline-none" />
+                <textarea value={assetForm.description} onChange={e => setAssetForm(p => ({ ...p, description: e.target.value }))}
+                  placeholder="Description..." rows={2} className="col-span-2 px-3 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-sm focus:outline-none resize-none" />
+                <div className="flex gap-3 col-span-2">
+                  <button type="submit" disabled={savingAsset}
+                    className="px-4 py-2 rounded-xl bg-purple-600 text-white text-xs font-bold cursor-pointer disabled:opacity-60">{savingAsset ? '⏳' : '🎨 Save Asset'}</button>
+                  <button type="button" onClick={() => setShowAssetForm(false)} className="text-sm text-slate-400 cursor-pointer">Cancel</button>
+                </div>
+              </form>
+            </motion.div>
+          )}
+          {assetLoading ? (
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">{Array.from({ length: 6 }).map((_, i) => <div key={i} className="h-36 bg-white rounded-2xl animate-pulse border border-slate-100" />)}</div>
+          ) : brandAssets.length === 0 ? (
+            <div className="bg-white rounded-2xl p-12 text-center border border-slate-100 text-slate-400"><span className="text-4xl block mb-3">🎨</span><p>No brand assets uploaded yet</p></div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {brandAssets.map((a, i) => {
+                const CAT_ICONS: Record<string, string> = { logo: '🏷️', guideline: '📐', template: '📄', banner: '🖼️', presentation: '📊', legal: '⚖️', other: '📁' }
+                return (
+                  <motion.div key={a.id} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}
+                    className="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 hover:shadow-md transition-shadow">
+                    <div className="flex items-start gap-3 mb-3">
+                      <div className="w-11 h-11 rounded-xl bg-purple-100 flex items-center justify-center text-2xl flex-shrink-0">{CAT_ICONS[a.category] || '📁'}</div>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-bold text-navy text-sm truncate">{a.name}</p>
+                        <span className="px-2 py-0.5 rounded-full bg-purple-50 text-purple-600 text-[10px] font-bold capitalize">{a.category}</span>
+                      </div>
+                    </div>
+                    {a.description && <p className="text-xs text-slate-500 mb-3 line-clamp-2">{a.description}</p>}
+                    <p className="text-[10px] text-slate-400 mb-3">{new Date(a.created_at).toLocaleDateString('en-IN')}</p>
+                    <a href={a.file_url} target="_blank" rel="noreferrer"
+                      className="block w-full text-center py-2 bg-purple-50 text-purple-600 text-xs font-bold rounded-xl hover:bg-purple-100 transition-colors">🔗 Open Asset</a>
                   </motion.div>
                 )
               })}

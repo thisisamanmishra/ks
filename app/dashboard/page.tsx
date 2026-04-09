@@ -394,25 +394,51 @@ function DashboardPage() {
                       {/* Extra Panel (Tasks & Chat) */}
                       {chatProject === p.id && (
                         <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} className="mt-4 bg-slate-50 rounded-xl p-4 gap-4 flex flex-col lg:flex-row">
-                          {/* Tasks Section */}
-                          <div className="flex-1 bg-white p-4 rounded-xl border border-slate-100 h-96 overflow-y-auto">
-                            <h4 className="font-bold text-navy text-sm mb-3">📋 Project Tasks</h4>
-                            {tasks.length === 0 && <p className="text-xs text-slate-400">No tasks assigned yet.</p>}
-                            <div className="space-y-3">
-                              {tasks.map(t => (
-                                <div key={t.id} className="p-3 bg-slate-50 border border-slate-100 rounded-lg">
-                                  <div className="flex items-start justify-between">
-                                    <p className="text-sm font-semibold text-navy">{t.title}</p>
-                                    <span className="px-2 py-1 text-[10px] uppercase font-bold rounded bg-slate-200 text-slate-600">
-                                      {t.status.replace('_', ' ')}
-                                    </span>
+                          {/* Left Column (Tasks & Docs) */}
+                          <div className="flex-1 flex flex-col gap-4">
+                            {/* Tasks Section */}
+                            <div className="flex-1 bg-white p-4 rounded-xl border border-slate-100 min-h-[200px] overflow-y-auto">
+                              <h4 className="font-bold text-navy text-sm mb-3">📋 Project Tasks</h4>
+                              {tasks.length === 0 && <p className="text-xs text-slate-400">No tasks assigned yet.</p>}
+                              <div className="space-y-3">
+                                {tasks.map(t => (
+                                  <div key={t.id} className="p-3 bg-slate-50 border border-slate-100 rounded-lg">
+                                    <div className="flex items-start justify-between">
+                                      <p className="text-sm font-semibold text-navy">{t.title}</p>
+                                      <span className="px-2 py-1 text-[10px] uppercase font-bold rounded bg-slate-200 text-slate-600">
+                                        {t.status.replace('_', ' ')}
+                                      </span>
+                                    </div>
+                                    <div className="flex gap-2 mt-2 text-[10px] font-bold">
+                                      {t.priority === 'high' && <span className="text-red-500 bg-red-50 px-2 py-0.5 rounded">High Priority</span>}
+                                      {t.deadline && <span className="text-amber-500 bg-amber-50 px-2 py-0.5 rounded">Due: {new Date(t.deadline).toLocaleDateString('en-IN')}</span>}
+                                    </div>
                                   </div>
-                                  <div className="flex gap-2 mt-2 text-[10px] font-bold">
-                                    {t.priority === 'high' && <span className="text-red-500 bg-red-50 px-2 py-0.5 rounded">High Priority</span>}
-                                    {t.deadline && <span className="text-amber-500 bg-amber-50 px-2 py-0.5 rounded">Due: {new Date(t.deadline).toLocaleDateString('en-IN')}</span>}
-                                  </div>
-                                </div>
-                              ))}
+                                ))}
+                              </div>
+                            </div>
+
+                            {/* Document Center Section */}
+                            <div className="flex-1 bg-white p-4 rounded-xl border border-slate-100 min-h-[170px] overflow-y-auto relative">
+                              <div className="flex items-center justify-between mb-3">
+                                <h4 className="font-bold text-navy text-sm">📁 Document Center</h4>
+                                <label className="cursor-pointer text-[10px] bg-accent/10 text-accent font-bold px-2.5 py-1 rounded-lg hover:bg-accent/20 transition-colors">
+                                  + Upload Document
+                                  <input type="file" onChange={handleFileUpload} className="hidden" accept=".pdf,.doc,.docx,.xls,.xlsx,.zip,.rar" />
+                                </label>
+                              </div>
+                              {messages.filter(m => m.attachment_url).length === 0 && <p className="text-xs text-slate-400">No documents uploaded.</p>}
+                              <div className="space-y-2">
+                                {messages.filter(m => m.attachment_url).map(doc => (
+                                  <a key={doc.id} href={doc.attachment_url!} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 p-2 bg-slate-50 border border-slate-100 hover:border-accent hover:shadow-sm rounded-lg transition-all group">
+                                    <span className="text-xl">{doc.file_type === 'image' ? '🖼️' : '📎'}</span>
+                                    <div className="overflow-hidden">
+                                      <p className="text-xs font-semibold text-navy truncate group-hover:text-accent">Document attached by {doc.sender?.fullname}</p>
+                                      <p className="text-[10px] text-slate-400">{new Date(doc.created_at).toLocaleDateString('en-IN')}</p>
+                                    </div>
+                                  </a>
+                                ))}
+                              </div>
                             </div>
                           </div>
                           {/* Chat Section */}

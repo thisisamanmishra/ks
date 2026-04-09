@@ -1,5 +1,6 @@
 'use client'
 
+import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import dynamic from 'next/dynamic'
 
@@ -15,6 +16,28 @@ const testimonials = [
 ]
 
 export default function TestimonialsSection() {
+  const [data, setData] = useState<{text:string, name:string, role:string, rating:number}[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    async function load() {
+      try {
+        const res = await fetch('/api/public/testimonials')
+        if (res.ok) {
+          const d = await res.json()
+          setData(d.testimonials || testimonials)
+        } else {
+          setData(testimonials)
+        }
+      } catch {
+        setData(testimonials)
+      } finally {
+        setLoading(false)
+      }
+    }
+    load()
+  }, [])
+
   return (
     <section id="testimonials" className="py-20 lg:py-28 bg-white relative overflow-hidden">
       {/* Background 3D pattern */}
@@ -30,39 +53,45 @@ export default function TestimonialsSection() {
           <h2 className="text-3xl lg:text-5xl font-bold text-navy font-heading">What Our Clients Say</h2>
         </motion.div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {testimonials.map((t, i) => (
-            <motion.div
-              key={i}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: i * 0.08 }}
-              className="bg-surface rounded-2xl p-6 hover:shadow-xl transition-all duration-300 border border-slate-100 relative group hover:-translate-y-1"
-            >
-              {/* 3D Speech Bubble */}
-              <div className="absolute -top-3 -right-3 opacity-70 group-hover:opacity-100 transition-opacity">
-                <TestimonialBubble variant={i} />
-              </div>
+        {loading ? (
+          <div className="flex justify-center p-12">
+            <div className="w-10 h-10 border-4 border-navy/20 border-t-navy rounded-full animate-spin" />
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {data.map((t, i) => (
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.08 }}
+                className="bg-surface rounded-2xl p-6 hover:shadow-xl transition-all duration-300 border border-slate-100 relative group hover:-translate-y-1"
+              >
+                {/* 3D Speech Bubble */}
+                <div className="absolute -top-3 -right-3 opacity-70 group-hover:opacity-100 transition-opacity">
+                  <TestimonialBubble variant={i} />
+                </div>
 
-              <div className="flex gap-1 mb-3">
-                {Array.from({ length: t.rating }).map((_, j) => (
-                  <span key={j} className="text-amber-400 text-lg">★</span>
-                ))}
-              </div>
-              <p className="text-slate-600 mb-4 leading-relaxed">&ldquo;{t.text}&rdquo;</p>
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-navy to-accent flex items-center justify-center text-white font-bold text-sm shadow-md">
-                  {t.name[0]}
+                <div className="flex gap-1 mb-3">
+                  {Array.from({ length: t.rating }).map((_, j) => (
+                    <span key={j} className="text-amber-400 text-lg">★</span>
+                  ))}
                 </div>
-                <div>
-                  <h4 className="font-semibold text-navy text-sm">{t.name}</h4>
-                  <p className="text-slate-400 text-xs">{t.role}</p>
+                <p className="text-slate-600 mb-4 leading-relaxed">&ldquo;{t.text}&rdquo;</p>
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-navy to-accent flex items-center justify-center text-white font-bold text-sm shadow-md">
+                    {(t.name && t.name[0]) || 'A'}
+                  </div>
+                  <div>
+                    <h4 className="font-semibold text-navy text-sm">{t.name}</h4>
+                    <p className="text-slate-400 text-xs">{t.role}</p>
+                  </div>
                 </div>
-              </div>
-            </motion.div>
-          ))}
-        </div>
+              </motion.div>
+            ))}
+          </div>
+        )}
       </div>
     </section>
   )

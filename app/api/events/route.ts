@@ -14,7 +14,7 @@ export async function GET(request: Request) {
   const supabase = await createClient()
   let query = supabase
     .from('events')
-    .select('id, title, slug, type, short_description, featured_image, event_date, end_date, venue, is_online, max_participants, prize_pool, registration_fee, status, tags, created_at', { count: 'exact' })
+    .select('id, title, slug, type, short_description, featured_image, event_date, end_date, venue, is_online, max_participants, prize_pool, registration_fee, status, tags, created_at, guest_name, audio_url', { count: 'exact' })
     .order('event_date', { ascending: true })
     .range(offset, offset + limit - 1)
 
@@ -37,7 +37,7 @@ export async function POST(request: Request) {
 
   try {
     const body = await request.json()
-    const { title, type, description, short_description, event_date, end_date, venue, is_online, meeting_link, max_participants, prize_pool, registration_fee, tags } = body
+    const { title, type, description, short_description, event_date, end_date, venue, is_online, meeting_link, max_participants, prize_pool, registration_fee, tags, audio_url, guest_name } = body
 
     if (!title || !type || !event_date) {
       return NextResponse.json({ error: 'title, type, event_date required' }, { status: 400 })
@@ -53,6 +53,7 @@ export async function POST(request: Request) {
         venue, is_online: is_online ?? true, meeting_link, max_participants,
         prize_pool, registration_fee: registration_fee || 0,
         tags: tags || [], status: 'upcoming', created_by: user.userId,
+        audio_url: audio_url || null, guest_name: guest_name || null
       })
       .select()
       .single()
