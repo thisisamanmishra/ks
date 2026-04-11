@@ -121,7 +121,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
 
       const updaterName = user.role === 'customer' ? (customer?.fullname || 'Customer')
         : user.role === 'vendor' ? (vendor?.fullname || 'Vendor')
-        : 'KaryaSaarthi Team'
+        : 'Karya Saarthi Team'
 
       // Notify on status change
       if (updates.status && updates.status !== oldProject.status) {
@@ -172,7 +172,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
         if (newVendor?.email) {
           sendEmail({
             to: newVendor.email,
-            ...projectProgressEmail({ recipientName: newVendor.fullname, projectName, newStatus: 'assigned', updatedBy: 'KaryaSaarthi Team', projectUrl: `${siteUrl}/vendor` }),
+            ...projectProgressEmail({ recipientName: newVendor.fullname, projectName, newStatus: 'assigned', updatedBy: 'Karya Saarthi Team', projectUrl: `${siteUrl}/vendor` }),
           })
         }
       }

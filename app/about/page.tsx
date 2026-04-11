@@ -8,7 +8,7 @@ import Footer from '@/components/Footer'
 import Chatbot from '@/components/Chatbot'
 
 const timeline = [
-  { year: '2024', title: 'KaryaSaarthi Founded', desc: 'Started with a vision to make professional services accessible to every student and business.' },
+  { year: '2024', title: 'Karya Saarthi Founded', desc: 'Started with a vision to make professional services accessible to every student and business.' },
   { year: '2024', title: 'First 100 Clients', desc: 'Crossed 100 happy clients within 6 months of launch.' },
   { year: '2025', title: '500+ Projects Done', desc: 'Expanded to 50+ service categories across academic, tech, and design.' },
   { year: '2025', title: 'Going Digital', desc: 'Launched online platform with AI-powered service matching and project tracking.' },
@@ -21,7 +21,7 @@ const team = [
     image: '/images/team/Saloni.jpg',
     vision: 'To create a global platform where knowledge meets opportunity, making quality education and professional services accessible to every student and business across India and beyond.',
     mission: 'To empower 10 million students and 1 million businesses by 2030 through collaborative learning and affordable professional services.',
-    statement: 'As a legal professional turned entrepreneur, I\'ve witnessed the gap between what education teaches and what the industry demands. KaryaSaarthi bridges that gap. We are not service providers; we are growth partners.',
+    statement: 'As a legal professional turned entrepreneur, I\'ve witnessed the gap between what education teaches and what the industry demands. Karya Saarthi bridges that gap. We are not service providers; we are growth partners.',
   },
   {
     name: 'Pawandeep Kaur',
@@ -37,7 +37,7 @@ const team = [
     image: '/images/team/Bhawna.jpeg',
     vision: 'To build the strongest network of verified experts where talent meets opportunity.',
     mission: 'To recruit, train, and retain the best talent with 1000+ verified experts across 100+ specializations by 2027.',
-    statement: 'People are our biggest asset. Every vendor we hire, every intern we train - they all contribute to the KaryaSaarthi family.',
+    statement: 'People are our biggest asset. Every vendor we hire, every intern we train - they all contribute to the Karya Saarthi family.',
   },
   {
     name: 'Rakhi Bhatt',
@@ -51,7 +51,7 @@ const team = [
     name: 'Annu Priya',
     role: 'Digital Marketing Executive',
     image: '/images/team/Annu.jpg',
-    vision: 'To make KaryaSaarthi a household name across India through strategic digital marketing.',
+    vision: 'To make Karya Saarthi a household name across India through strategic digital marketing.',
     mission: 'To grow online presence to 500K+ followers across platforms by 2027 and generate 10,000+ monthly leads.',
     statement: 'In today\'s digital age, if you\'re not online, you don\'t exist. I ensure we reach those who need us most.',
   },
@@ -60,7 +60,7 @@ const team = [
     role: 'Management Head',
     image: '/images/team/Anish1.jpeg',
     vision: 'To oversee all business operations with strategic precision, ensuring sustainable growth and financial stability.',
-    mission: 'To manage cash flows, oversee departmental performance, and ensure KaryaSaarthi scales efficiently.',
+    mission: 'To manage cash flows, oversee departmental performance, and ensure Karya Saarthi scales efficiently.',
     statement: 'Good management is invisible - things just work. I manage the business so the team can focus on serving customers.',
   },
 ]
@@ -86,7 +86,7 @@ export default function AboutPage() {
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
               <span className="inline-block px-4 py-1.5 rounded-full bg-accent/20 text-accent text-sm font-semibold mb-4">Our Story</span>
-              <h1 className="text-3xl lg:text-5xl font-bold font-heading">About KaryaSaarthi</h1>
+              <h1 className="text-3xl lg:text-5xl font-bold font-heading">About Karya Saarthi</h1>
               <p className="mt-4 text-white/60 max-w-2xl mx-auto">From a small idea to India&apos;s most trusted work companion — powered by passion, driven by purpose.</p>
             </motion.div>
           </div>
@@ -132,7 +132,7 @@ export default function AboutPage() {
               <motion.div initial={{ opacity: 0, x: -30 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} className="glass rounded-2xl p-8 lg:p-10">
                 <div className="text-4xl mb-4">🎯</div>
                 <h3 className="text-2xl font-bold text-navy mb-4 font-heading">Vision</h3>
-                <p className="text-slate-600 leading-relaxed">&ldquo;To create a global platform where knowledge meets opportunity, making quality education and professional services accessible to every student and business across India and beyond. KaryaSaarthi will be the most trusted companion in every individual&apos;s professional and academic journey.&rdquo;</p>
+                <p className="text-slate-600 leading-relaxed">&ldquo;To create a global platform where knowledge meets opportunity, making quality education and professional services accessible to every student and business across India and beyond. Karya Saarthi will be the most trusted companion in every individual&apos;s professional and academic journey.&rdquo;</p>
                 <p className="mt-4 text-accent font-semibold text-sm">— Adv. Saloni Kumari, Founder</p>
               </motion.div>
               <motion.div initial={{ opacity: 0, x: 30 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} className="glass rounded-2xl p-8 lg:p-10">
@@ -149,7 +149,7 @@ export default function AboutPage() {
         <section className="py-16 lg:py-24">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <h2 className="text-2xl lg:text-4xl font-bold text-navy text-center mb-4 font-heading">Meet Our Team</h2>
-            <p className="text-slate-500 text-center mb-14 max-w-xl mx-auto">The passionate people behind KaryaSaarthi — click a card to know more!</p>
+            <p className="text-slate-500 text-center mb-14 max-w-xl mx-auto">The passionate people behind Karya Saarthi — click a card to know more!</p>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {team.map((m, i) => (

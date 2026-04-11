@@ -99,7 +99,7 @@ export default function ContactPage() {
                   allowFullScreen
                   loading="lazy"
                   referrerPolicy="no-referrer-when-downgrade"
-                  title="KaryaSaarthi Location"
+                  title="Karya Saarthi Location"
                 />
               </div>
             </motion.div>

@@ -53,7 +53,7 @@ export async function GET(request: Request) {
         // Fallback dynamic structure if no ratings in DB
         return NextResponse.json({
           rating: 5,
-          review: "Working with KaryaSaarthi has been a phenomenal experience. Their multi-pillar setup made operations seamless and highly professional.",
+          review: "Working with Karya Saarthi has been a phenomenal experience. Their multi-pillar setup made operations seamless and highly professional.",
           customer: { fullname: "Priya Sharma", profile_image: null },
           project: { service_type: "Academic Consulting" }
         })

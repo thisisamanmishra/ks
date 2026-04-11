@@ -85,7 +85,7 @@ export default function Navbar() {
             <Image src="/images/karyasaarthi.png" alt="Karya Saarthi" width={36} height={36} className="rounded-lg shadow-md group-hover:scale-105 transition-transform flex-shrink-0" />
             <div className="leading-none">
               <span className={`text-lg font-bold font-heading tracking-tight transition-colors block ${logoText}`}>
-                Karya<span className="text-accent">Saarthi</span>
+                Karya <span className="text-accent">Saarthi</span>
               </span>
               <span className={`text-[10px] font-medium transition-colors ${navBg ? 'text-slate-400' : 'text-white/50'}`}>Your Trusted Work Companion</span>
             </div>

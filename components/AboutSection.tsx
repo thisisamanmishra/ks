@@ -6,7 +6,7 @@ import dynamic from 'next/dynamic'
 const TimelineNode3D = dynamic(() => import('./ThreeElements').then(m => m.TimelineNode3D), { ssr: false })
 
 const timeline = [
-  { year: '2023', title: 'KaryaSaarthi Founded', desc: 'Started with a vision to make professional services accessible to all.' },
+  { year: '2023', title: 'Karya Saarthi Founded', desc: 'Started with a vision to make professional services accessible to all.' },
   { year: '2023', title: 'First 100 Clients', desc: 'Crossed 100 happy clients within 6 months of launch.' },
   { year: '2024', title: '500+ Projects Done', desc: 'Expanded to 50+ service categories across academic, tech, and design.' },
   { year: '2025', title: 'Going Digital', desc: 'Launched online platform with AI-powered service matching.' },
@@ -18,7 +18,7 @@ export default function AboutSection() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="text-center mb-16">
           <span className="inline-block px-4 py-1.5 rounded-full bg-accent/10 text-accent text-sm font-semibold mb-4">Our Story</span>
-          <h2 className="text-3xl lg:text-5xl font-bold text-navy font-heading">About KaryaSaarthi</h2>
+          <h2 className="text-3xl lg:text-5xl font-bold text-navy font-heading">About Karya Saarthi</h2>
         </motion.div>
 
         {/* Vision & Mission */}

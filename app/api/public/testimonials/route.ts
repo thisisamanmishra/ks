@@ -40,7 +40,7 @@ export async function GET() {
 
     // If not enough DB testimonials, we will supply some fallbacks dynamically.
     const fallbacks = [
-      { text: 'My mentor accepted my thesis and everything is perfect! KaryaSaarthi made it so easy.', name: 'Ashish', role: 'MBA Student', rating: 5 },
+      { text: 'My mentor accepted my thesis and everything is perfect! Karya Saarthi made it so easy.', name: 'Ashish', role: 'MBA Student', rating: 5 },
       { text: 'Thanks for helping with my master\'s thesis! Great job — everything was well-organized.', name: 'Anshika', role: 'Research Scholar', rating: 5 },
       { text: 'I really liked your work and would recommend to my friends for sure!', name: 'Shakshi', role: 'Business Owner', rating: 5 },
       { text: 'Best website development service I\'ve ever used. Clean code, modern design, great communication.', name: 'Rahul', role: 'Startup Founder', rating: 5 },

@@ -18,8 +18,8 @@ import Chatbot from '@/components/Chatbot'
 import WhatsAppWidget from '@/components/WhatsAppWidget'
 
 export const metadata = {
-  title: 'KaryaSaarthi — Hum Hai Aapke Saathi | Academic, Technical & Business Services',
-  description: 'KaryaSaarthi provides expert academic writing, technical, business, and government services across India. Get free quotes, track your project, and connect with our 5-pillar support system.',
+  title: 'Karya Saarthi — Hum Hai Aapke Saathi | Academic, Technical & Business Services',
+  description: 'Karya Saarthi provides expert academic writing, technical, business, and government services across India. Get free quotes, track your project, and connect with our 5-pillar support system.',
 }
 
 export default function Home() {

@@ -125,7 +125,7 @@ export default function HackathonsPage() {
               <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-bold mb-6"
                 style={{ background: 'rgba(255,107,53,0.15)', color: '#FCA572', border: '1px solid rgba(255,107,53,0.3)' }}>
                 <span className="w-2 h-2 rounded-full bg-orange-400 animate-pulse" />
-                💻 KaryaSaarthi Hackathons
+                💻 Karya Saarthi Hackathons
               </span>
               <h1 className="text-5xl md:text-7xl font-extrabold text-white font-heading mb-5 leading-tight">
                 Build, Compete<br />& <span style={{ color: '#FF6B35', textShadow: '0 0 40px rgba(255,107,53,0.4)' }}>Win Big</span>
@@ -377,7 +377,7 @@ export default function HackathonsPage() {
               <div className="relative z-10">
                 <div className="text-4xl mb-4">💻</div>
                 <h3 className="text-2xl font-extrabold text-white font-heading mb-2">Host a Hackathon</h3>
-                <p className="text-white/70 text-sm mb-6">Partner with KaryaSaarthi to run your hackathon and reach thousands of developers</p>
+                <p className="text-white/70 text-sm mb-6">Partner with Karya Saarthi to run your hackathon and reach thousands of developers</p>
                 <Link href="/contact"
                   className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold text-orange-600 transition-all hover:opacity-90"
                   style={{ background: '#fff' }}>

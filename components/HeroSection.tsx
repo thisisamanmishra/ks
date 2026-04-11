@@ -48,10 +48,7 @@ export default function HeroSection() {
             </motion.span>
 
             <h1 className="text-5xl sm:text-6xl lg:text-[4.5rem] xl:text-[5.5rem] font-extrabold text-white leading-[1.1] font-heading">
-              Karya
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-accent to-accent-light">
-                Saarthi
-              </span>
+              <span className="whitespace-nowrap">Karya <span className="text-transparent bg-clip-text bg-gradient-to-r from-accent to-accent-light">Saarthi</span></span>
             </h1>
 
             <h2 className="mt-3 text-2xl sm:text-3xl lg:text-4xl font-bold text-white/90 leading-tight">

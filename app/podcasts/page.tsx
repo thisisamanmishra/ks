@@ -127,7 +127,7 @@ export default function PodcastsPage() {
                 <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-bold mb-6"
                   style={{ background: 'rgba(139,92,246,0.2)', color: '#C4B5FD', border: '1px solid rgba(139,92,246,0.3)' }}>
                   <span className="w-2 h-2 rounded-full bg-purple-400 animate-pulse" />
-                  🎙️ KaryaSaarthi Podcasts
+                  🎙️ Karya Saarthi Podcasts
                 </span>
                 <h1 className="text-5xl md:text-6xl font-extrabold text-white font-heading mb-4 leading-tight">
                   Listen, Learn<br />& <span style={{ color: '#A78BFA' }}>Grow</span>

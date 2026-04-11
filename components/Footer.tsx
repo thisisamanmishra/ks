@@ -42,7 +42,7 @@ export default function Footer() {
           {/* Brand */}
           <div>
             <h3 className="text-xl font-bold font-heading mb-4">
-              Karya<span className="text-accent">Saarthi</span>
+              Karya <span className="text-accent">Saarthi</span>
             </h3>
             <p className="text-white/60 text-sm leading-relaxed mb-4">
               Your trusted work companion. We guide, teach, and empower you to succeed in academics and business.

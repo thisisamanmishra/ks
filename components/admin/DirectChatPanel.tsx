@@ -243,7 +243,7 @@ export default function DirectChatPanel({ currentUserId, mode, onClose }: Props)
             <span className="text-lg">🎧</span>
             <div>
               <h3 className="font-bold font-heading text-sm">Chat with Support</h3>
-              <p className="text-xs text-white/50">Operations Team · KaryaSaarthi</p>
+              <p className="text-xs text-white/50">Operations Team · Karya Saarthi</p>
             </div>
           </div>
           <button onClick={onClose} className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center cursor-pointer transition-colors text-sm">✕</button>

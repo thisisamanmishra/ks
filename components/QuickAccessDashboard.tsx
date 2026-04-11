@@ -28,9 +28,12 @@ const PodcastWidget = () => {
 
   return (
     <WidgetWrapper delay={0}>
-      <div className="flex items-center gap-2 mb-4">
-        <span className="w-8 h-8 rounded-full bg-purple-100 flex items-center justify-center text-purple-600 text-sm">🎙️</span>
-        <h3 className="font-bold text-navy">Latest Podcast</h3>
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-2">
+          <span className="w-8 h-8 rounded-full bg-purple-100 flex items-center justify-center text-purple-600 text-sm">🎙️</span>
+          <h3 className="font-bold text-navy">Latest Podcast</h3>
+        </div>
+        <Link href="/podcasts" className="text-[10px] font-bold text-purple-600 hover:text-purple-800 transition-colors">View All →</Link>
       </div>
       <div className="flex-1">
         <p className="text-xl font-bold text-navy font-heading leading-tight">{data.title}</p>
@@ -92,9 +95,12 @@ const HackathonWidget = () => {
           <span className="w-8 h-8 rounded-full bg-orange-100 flex items-center justify-center text-orange-600 text-sm">💻</span>
           <h3 className="font-bold text-navy">Hackathon</h3>
         </div>
-        <span className="px-2.5 py-1 rounded-full bg-green-100 text-green-700 text-[10px] font-bold uppercase tracking-wider animate-pulse flex items-center gap-1">
-          <span className="w-1.5 h-1.5 rounded-full bg-green-500" /> LIVE
-        </span>
+        <div className="flex items-center gap-2">
+          <Link href="/hackathons" className="text-[10px] font-bold text-orange-600 hover:text-orange-800 transition-colors mr-2">View All →</Link>
+          <span className="px-2.5 py-1 rounded-full bg-green-100 text-green-700 text-[10px] font-bold uppercase tracking-wider animate-pulse flex items-center gap-1">
+            <span className="w-1.5 h-1.5 rounded-full bg-green-500" /> LIVE
+          </span>
+        </div>
       </div>
       <div className="flex-1 relative z-10">
         <h4 className="font-bold text-lg text-navy leading-tight">{event.title}</h4>
@@ -142,7 +148,10 @@ const SeminarWidget = () => {
           <span className="w-8 h-8 rounded-full bg-teal-100 flex items-center justify-center text-teal-600 text-sm">🎓</span>
           <h3 className="font-bold text-navy">Upcoming Seminar</h3>
         </div>
-        <span className="text-xs font-bold text-teal-600 bg-teal-50 px-2 py-1 rounded-lg">Webinar</span>
+        <div className="flex items-center gap-2">
+          <Link href="/events" className="text-[10px] font-bold text-teal-600 hover:text-teal-800 transition-colors mr-2">View All →</Link>
+          <span className="text-xs font-bold text-teal-600 bg-teal-50 px-2 py-1 rounded-lg">Webinar</span>
+        </div>
       </div>
       <div className="flex-1">
         <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest">{new Date(event.event_date).toLocaleDateString('en-IN', { month: 'long', day: 'numeric', year: 'numeric' })}</p>

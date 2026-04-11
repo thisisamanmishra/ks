@@ -42,7 +42,7 @@ export default function WhatsAppWidget() {
                 </div>
                 <p className="text-xs text-slate-600 mb-3">👋 Hi! How can we help you today? Chat with us on WhatsApp.</p>
                 <a
-                  href="https://wa.me/918595025753?text=Hi%20KaryaSaarthi%2C%20I%20need%20help%20with..."
+                  href="https://wa.me/918595025753?text=Hi%20Karya%20Saarthi%2C%20I%20need%20help%20with..."
                   target="_blank"
                   rel="noopener noreferrer"
                   className="block w-full text-center py-2 rounded-xl text-xs font-bold text-white"
