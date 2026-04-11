@@ -212,7 +212,7 @@ function buildNavGroups(user: UserData): NavGroup[] {
       title: 'Platform',
       items: [
         { icon: '👤', label: 'All Users', href: '/admin/users' },
-        { icon: '📩', label: 'Admin Requests', href: '/admin/requests' },
+        { icon: '📩', label: 'Staff Requests', href: '/admin/staff-requests' },
         { icon: '📢', label: 'Announcements', href: '/admin/announcements' },
         { icon: '⚙️', label: 'Settings', href: '/admin/settings' },
       ],

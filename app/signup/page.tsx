@@ -169,7 +169,7 @@ function SignupContent() {
         <div className="lg:w-2/5 bg-gradient-to-br from-navy to-navy-light p-8 lg:p-10 flex flex-col justify-center text-white relative overflow-hidden">
           <motion.div className="absolute inset-0 bg-white/5 rounded-full w-[200%] h-[200%] -top-1/2 -right-1/2" animate={{ rotate: 360 }} transition={{ duration: 30, repeat: Infinity, ease: 'linear' }} />
           <div className="relative z-10">
-            <h1 className="text-3xl font-bold mb-4 font-heading">Welcome to KaryaSaarthi!</h1>
+            <h1 className="text-3xl font-bold mb-4 font-heading">Welcome to Karya Saarthi!</h1>
             <p className="text-white/70 mb-8">Join thousands who trust us for their success</p>
             <ul className="space-y-4">
               {['500+ Happy Clients', 'Expert Assistance 24/7', '100% Secure & Confidential', 'Money Back Guarantee'].map(f => (

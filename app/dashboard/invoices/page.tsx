@@ -47,7 +47,7 @@ function handlePrint(inv: Invoice) {
       </style>
     </head>
     <body>
-      <h1>KaryaSaarthi</h1>
+      <h1>Karya Saarthi</h1>
       <p style="color:#64748b">Enterprise Services · karyasaarthi.com</p>
       <hr style="margin:20px 0;border:1px solid #e2e8f0" />
       <h2>Invoice #${inv.invoice_number}</h2>
@@ -58,7 +58,7 @@ function handlePrint(inv: Invoice) {
       <div class="row"><span class="label">Status</span><span class="badge">${STATUS_CONFIG[inv.status]?.icon} ${STATUS_CONFIG[inv.status]?.label || inv.status}</span></div>
       <div class="total">Total: ₹${inv.total.toLocaleString('en-IN')}</div>
       <div class="footer">
-        <p>KaryaSaarthi Enterprise · Delhi, India</p>
+        <p>Karya Saarthi Enterprise · Delhi, India</p>
         <p>This is a computer-generated invoice. For queries, contact support@karyasaarthi.com</p>
       </div>
     </body>

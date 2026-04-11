@@ -340,7 +340,7 @@ export default function QuickAccessDashboard() {
             Live <span className="text-accent">Updates & Dashboard</span>
           </h2>
           <p className="text-slate-500 mt-3 text-sm md:text-base">
-            Stay connected with the latest from KaryaSaarthi – jump into ongoing hackathons, catch our newest podcast episode, or instantly book a technical consultation right here.
+            Stay connected with the latest from Karya Saarthi – jump into ongoing hackathons, catch our newest podcast episode, or instantly book a technical consultation right here.
           </p>
         </div>
 

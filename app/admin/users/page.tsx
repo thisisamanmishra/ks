@@ -13,6 +13,7 @@ interface User {
   role: string
   department: string | null
   pillar_role: string | null
+  designation: string | null
   is_approved: boolean
   status: string
   created_at: string
@@ -22,6 +23,7 @@ interface User {
 const roleColors: Record<string, string> = {
   super_admin: 'bg-purple-100 text-purple-700',
   admin: 'bg-blue-100 text-blue-700',
+  board_member: 'bg-indigo-100 text-indigo-700',
   vendor: 'bg-cyan-100 text-cyan-700',
   customer: 'bg-green-100 text-green-700',
   pending_admin: 'bg-amber-100 text-amber-700',
@@ -66,6 +68,22 @@ export default function UsersPage() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(updates),
     })
+    await fetchUsers()
+    setActionLoading(null)
+  }
+
+  const deleteUser = async (id: number, name: string) => {
+    if (!confirm(`Are you sure you want to permanently delete "${name}"? This cannot be undone.`)) return
+    setActionLoading(id)
+    try {
+      const res = await fetch(`/api/admin/users/${id}`, { method: 'DELETE' })
+      if (!res.ok) {
+        const d = await res.json()
+        alert(d.error || 'Failed to delete user')
+      }
+    } catch {
+      alert('Network error')
+    }
     await fetchUsers()
     setActionLoading(null)
   }
@@ -158,16 +176,26 @@ export default function UsersPage() {
                     </td>
                     <td className="p-4">
                       <span className={`inline-block px-2.5 py-1 rounded-full text-xs font-bold ${roleColors[user.role] || 'bg-slate-100 text-slate-600'}`}>
-                        {user.role === 'admin' && user.department 
-                           ? (user.department === 'operations' && user.pillar_role === 'project_manager' ? 'project_manager'
-                              : user.department === 'operations' ? 'operation_head'
-                              : `${user.department}_head`).replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())
+                        {user.designation
+                           ? user.designation
+                           : user.role === 'admin' && user.department 
+                           ? (user.department === 'operations' && user.pillar_role === 'project_manager' ? 'Project Manager'
+                              : user.department === 'operations' ? 'Operation Head'
+                              : user.department === 'digital' ? 'Digital Marketing Head'
+                              : user.department === 'marketing' ? 'Marketing Head'
+                              : `${user.department} Head`)
+                           : user.role === 'pending_admin' && user.department
+                           ? (user.department === 'operations' && user.pillar_role === 'project_manager' ? 'Project Manager'
+                              : user.department === 'operations' ? 'Operation Head'
+                              : user.department === 'digital' ? 'Digital Marketing Head'
+                              : user.department === 'marketing' ? 'Marketing Head'
+                              : `${user.department} Head`)
                            : user.role === 'pillar_member' && user.pillar_role
-                           ? `${user.pillar_role}_saarthi`.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())
-                           : user.role.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                           ? `${user.pillar_role.replace('_', ' ')} Saarthi`
+                           : user.role.replace('_', ' ')}
                       </span>
-                      {user.department && user.role !== 'admin' && (
-                        <span className="ml-1 text-xs text-slate-400 capitalize">({user.department})</span>
+                      {user.role === 'pending_admin' && (
+                        <span className="ml-1.5 text-[10px] text-amber-500 font-bold">⏳ Pending</span>
                       )}
                     </td>
                     <td className="p-4">
@@ -192,9 +220,17 @@ export default function UsersPage() {
                             >
                               {actionLoading === user.id ? '...' : user.status === 'blocked' ? 'Unblock' : 'Block'}
                             </button>
-                            {user.role !== 'board_member' && (
+                            <button
+                              onClick={() => deleteUser(user.id, user.fullname)}
+                              disabled={actionLoading === user.id}
+                              className="px-3 py-1.5 rounded-lg text-xs font-medium transition-colors cursor-pointer bg-red-500 text-white hover:bg-red-600"
+                            >
+                              {actionLoading === user.id ? '...' : '🗑 Delete'}
+                            </button>
+                            {(
                               <select
                                 value={
+                                  user.role === 'board_member' ? 'board_member' :
                                   user.role === 'admin' && (user.department === 'digital' || user.pillar_role === 'digital') ? 'digital_head' :
                                   user.role === 'admin' && user.department === 'operations' && user.pillar_role === 'project_manager' ? 'pm' :
                                   user.role === 'admin' && user.department === 'operations' ? 'ops_head' :
@@ -215,6 +251,8 @@ export default function UsersPage() {
                               >
                                 <option value="customer">Customer</option>
                                 <option value="vendor">Vendor</option>
+                                <option value="board_member">👔 Board Member</option>
+                                <option disabled>── Staff Roles ──</option>
                                 <option value="admin">Global Admin</option>
                                 <option value="digital_head">Digital Marketing Head</option>
                                 <option value="ops_head">Operation Head</option>

@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import Image from 'next/image'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 
@@ -21,72 +21,232 @@ const ROLE_ROUTES: Record<string, string> = {
   'pillar-market': '/admin/pillars/market',
 }
 
-function RegisterForm() {
-  const [form, setForm] = useState({ fullname: '', email: '', password: '', phone: '', role: 'admin', department: 'operations', pillar_role: 'campus' })
-  const [saving, setSaving] = useState(false)
-  const [success, setSuccess] = useState(false)
-  const [error, setError] = useState('')
+const STAFF_ROLES = [
+  { value: 'digital_marketing_head', label: '💻 Digital Marketing Head' },
+  { value: 'marketing_head', label: '📢 Marketing Head' },
+  { value: 'operation_head', label: '⚙️ Operation Head' },
+  { value: 'project_manager', label: '📋 Project Manager' },
+]
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault(); setSaving(true); setError('')
+type RegisterStep = 'form' | 'otp' | 'success'
+
+function RegisterForm() {
+  const [form, setForm] = useState({ fullname: '', email: '', password: '', phone: '', staff_role: '' })
+  const [step, setStep] = useState<RegisterStep>('form')
+  const [saving, setSaving] = useState(false)
+  const [error, setError] = useState('')
+  const [otp, setOtp] = useState(['', '', '', '', '', ''])
+  const [countdown, setCountdown] = useState(0)
+
+  useEffect(() => {
+    if (countdown > 0) {
+      const t = setTimeout(() => setCountdown(c => c - 1), 1000)
+      return () => clearTimeout(t)
+    }
+  }, [countdown])
+
+  // Step 1: Send OTP
+  const handleSendOTP = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!form.staff_role) { setError('Please select a role'); return }
+    if (form.password.length < 8) { setError('Password must be at least 8 characters'); return }
+    setSaving(true); setError('')
+
     try {
+      const res = await fetch('/api/auth/send-signup-otp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: form.email, fullname: form.fullname }),
+      })
+      const d = await res.json()
+      if (!res.ok) { setError(d.error || 'Failed to send OTP'); setSaving(false); return }
+      setStep('otp')
+      setCountdown(60)
+    } catch { setError('Something went wrong') }
+    setSaving(false)
+  }
+
+  // OTP input handlers
+  const handleOtpChange = useCallback((index: number, value: string) => {
+    if (value.length > 1) value = value.slice(-1)
+    if (value && !/^\d$/.test(value)) return
+    const newOtp = [...otp]
+    newOtp[index] = value
+    setOtp(newOtp)
+    if (value && index < 5) {
+      const next = document.getElementById(`staff-otp-${index + 1}`)
+      next?.focus()
+    }
+  }, [otp])
+
+  const handleOtpKeyDown = useCallback((index: number, e: React.KeyboardEvent) => {
+    if (e.key === 'Backspace' && !otp[index] && index > 0) {
+      const prev = document.getElementById(`staff-otp-${index - 1}`)
+      prev?.focus()
+    }
+  }, [otp])
+
+  const handleOtpPaste = useCallback((e: React.ClipboardEvent) => {
+    e.preventDefault()
+    const pasted = e.clipboardData.getData('text').replace(/\D/g, '').slice(0, 6)
+    if (pasted.length === 6) setOtp(pasted.split(''))
+  }, [])
+
+  // Step 2: Verify OTP then register
+  const handleVerifyAndRegister = async (e: React.FormEvent) => {
+    e.preventDefault()
+    const otpStr = otp.join('')
+    if (otpStr.length !== 6) { setError('Please enter the complete 6-digit OTP'); return }
+    setSaving(true); setError('')
+
+    try {
+      // Verify OTP first
+      const verifyRes = await fetch('/api/auth/verify-otp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: form.email, otp: otpStr, purpose: 'signup_verification' }),
+      })
+      const verifyData = await verifyRes.json()
+      if (!verifyRes.ok) { setError(verifyData.error || 'OTP verification failed'); setSaving(false); return }
+
+      // OTP verified — now register
       const res = await fetch('/api/auth/staff-register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(form),
+        body: JSON.stringify({ ...form, email_verified: true }),
       })
       const d = await res.json()
-      if (!res.ok) { setError(d.error || 'Registration failed'); return }
-      setSuccess(true)
-    } catch { setError('Something went wrong') } finally { setSaving(false) }
+      if (!res.ok) { setError(d.error || 'Registration failed'); setSaving(false); return }
+      setStep('success')
+    } catch { setError('Something went wrong') }
+    setSaving(false)
   }
 
-  if (success) return (
-    <div className="bg-green-500/10 border border-green-500/20 rounded-xl p-5 text-center">
-      <span className="text-3xl block mb-2">🎉</span>
-      <p className="text-green-400 font-bold">Registration submitted!</p>
-      <p className="text-green-400/70 text-sm mt-1">Your account is pending Super Admin approval. You&apos;ll receive an email once approved.</p>
-    </div>
+  // Resend OTP
+  const handleResend = async () => {
+    if (countdown > 0) return
+    setSaving(true); setError('')
+    try {
+      const res = await fetch('/api/auth/send-signup-otp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: form.email, fullname: form.fullname }),
+      })
+      const d = await res.json()
+      if (!res.ok) { setError(d.error); setSaving(false); return }
+      setOtp(['', '', '', '', '', ''])
+      setCountdown(60)
+    } catch { setError('Something went wrong') }
+    setSaving(false)
+  }
+
+  if (step === 'success') return (
+    <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}
+      className="bg-green-500/10 border border-green-500/20 rounded-xl p-6 text-center">
+      <span className="text-4xl block mb-3">🎉</span>
+      <p className="text-green-400 font-bold text-lg">Registration Submitted!</p>
+      <p className="text-green-400/70 text-sm mt-2">
+        Your email has been verified and your account is pending <strong>Super Admin approval</strong>.
+        You&apos;ll receive an email once your account is approved.
+      </p>
+      <div className="mt-4 bg-green-500/10 rounded-lg px-4 py-2 text-green-400/60 text-xs">
+        💡 After approval, log in using the Login tab with your registered email and password.
+      </div>
+    </motion.div>
+  )
+
+  if (step === 'otp') return (
+    <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="space-y-4">
+      <div className="text-center mb-2">
+        <span className="text-3xl block mb-2">✉️</span>
+        <p className="text-white/80 text-sm">Enter the 6-digit code sent to</p>
+        <p className="text-accent font-bold text-sm">{form.email}</p>
+      </div>
+
+      {error && <div className="bg-red-500/10 text-red-400 px-3 py-2.5 rounded-xl text-xs border border-red-500/20">⚠️ {error}</div>}
+
+      <form onSubmit={handleVerifyAndRegister} className="space-y-4">
+        <div className="flex justify-center gap-2" onPaste={handleOtpPaste}>
+          {otp.map((digit, i) => (
+            <input
+              key={i}
+              id={`staff-otp-${i}`}
+              type="text"
+              inputMode="numeric"
+              maxLength={1}
+              value={digit}
+              onChange={e => handleOtpChange(i, e.target.value)}
+              onKeyDown={e => handleOtpKeyDown(i, e)}
+              autoFocus={i === 0}
+              className="w-11 h-13 text-center text-lg font-bold rounded-xl border-2 border-white/10 bg-white/5 text-white focus:border-accent focus:ring-2 focus:ring-accent/20 focus:outline-none transition-all"
+            />
+          ))}
+        </div>
+
+        <div className="text-center text-sm text-white/40">
+          {countdown > 0 ? (
+            <span>Resend in <strong className="text-accent">{countdown}s</strong></span>
+          ) : (
+            <button type="button" onClick={handleResend} disabled={saving}
+              className="text-accent font-semibold hover:underline cursor-pointer disabled:opacity-50">
+              Resend OTP
+            </button>
+          )}
+        </div>
+
+        <button type="submit" disabled={saving || otp.join('').length !== 6}
+          className="w-full py-3.5 rounded-xl font-bold text-white text-sm cursor-pointer disabled:opacity-50 hover:opacity-90 transition-opacity"
+          style={{ background: 'linear-gradient(135deg, #FF6B35, #e55a27)' }}>
+          {saving ? '⏳ Verifying & Registering...' : '✅ Verify & Create Account'}
+        </button>
+
+        <button type="button" onClick={() => { setStep('form'); setOtp(['', '', '', '', '', '']); setError('') }}
+          className="w-full text-sm text-white/40 hover:text-white/70 cursor-pointer">
+          ← Back to form
+        </button>
+      </form>
+    </motion.div>
   )
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-3">
+    <motion.form initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }}
+      onSubmit={handleSendOTP} className="space-y-3">
       {error && <div className="bg-red-500/10 text-red-400 px-3 py-2.5 rounded-xl text-xs border border-red-500/20">⚠️ {error}</div>}
+
       <input required value={form.fullname} onChange={e => setForm(p => ({ ...p, fullname: e.target.value }))}
         placeholder="Full name *" className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-white/30 text-sm focus:outline-none focus:border-accent/50" />
+
       <input required type="email" value={form.email} onChange={e => setForm(p => ({ ...p, email: e.target.value }))}
         placeholder="Work email *" className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-white/30 text-sm focus:outline-none focus:border-accent/50" />
+
       <input required type="password" minLength={8} value={form.password} onChange={e => setForm(p => ({ ...p, password: e.target.value }))}
         placeholder="Password (min 8 chars) *" className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-white/30 text-sm focus:outline-none focus:border-accent/50" />
+
       <input value={form.phone} onChange={e => setForm(p => ({ ...p, phone: e.target.value }))}
         placeholder="Phone number" className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-white/30 text-sm focus:outline-none focus:border-accent/50" />
-      <div className="grid grid-cols-2 gap-2">
-        <select value={form.role} onChange={e => setForm(p => ({ ...p, role: e.target.value }))}
-          className="px-3 py-3 rounded-xl bg-white/5 border border-white/10 text-white text-sm focus:outline-none focus:border-accent/50">
-          <option value="admin" className="bg-slate-900">Admin (dept)</option>
-          <option value="pillar_member" className="bg-slate-900">Pillar Member</option>
+
+      {/* Role Selection */}
+      <div>
+        <label className="block text-xs font-medium text-white/40 mb-1.5">Select Your Role *</label>
+        <select required value={form.staff_role} onChange={e => setForm(p => ({ ...p, staff_role: e.target.value }))}
+          className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white text-sm focus:outline-none focus:border-accent/50 appearance-none cursor-pointer">
+          <option value="" className="bg-slate-900 text-white/50">Choose a role…</option>
+          {STAFF_ROLES.map(r => (
+            <option key={r.value} value={r.value} className="bg-slate-900">{r.label}</option>
+          ))}
         </select>
-        {form.role === 'admin' ? (
-          <select value={form.department} onChange={e => setForm(p => ({ ...p, department: e.target.value }))}
-            className="px-3 py-3 rounded-xl bg-white/5 border border-white/10 text-white text-sm focus:outline-none focus:border-accent/50">
-            {['operations', 'hr', 'finance', 'marketing', 'digital'].map(d => <option key={d} value={d} className="bg-slate-900">{d}</option>)}
-          </select>
-        ) : (
-          <select value={form.pillar_role} onChange={e => setForm(p => ({ ...p, pillar_role: e.target.value }))}
-            className="px-3 py-3 rounded-xl bg-white/5 border border-white/10 text-white text-sm focus:outline-none focus:border-accent/50">
-            {['campus', 'digital', 'calling', 'government', 'market'].map(p => <option key={p} value={p} className="bg-slate-900">{p}</option>)}
-          </select>
-        )}
       </div>
+
       <div className="bg-amber-500/10 border border-amber-500/20 rounded-xl px-3 py-2 text-xs text-amber-400/80">
-        ℹ️ Your account will be reviewed by the Super Admin before you can log in.
+        ℹ️ After email verification, your account will be reviewed by the Super Admin before you can log in.
       </div>
+
       <button type="submit" disabled={saving}
         className="w-full py-3.5 rounded-xl font-bold text-white text-sm cursor-pointer disabled:opacity-50 hover:opacity-90 transition-opacity"
         style={{ background: 'linear-gradient(135deg, #FF6B35, #e55a27)' }}>
-        {saving ? '⏳ Submitting...' : '✨ Request Access'}
+        {saving ? '⏳ Sending OTP...' : '📧 Verify Email & Register'}
       </button>
-    </form>
+    </motion.form>
   )
 }
 
@@ -112,7 +272,7 @@ export default function StaffLoginPage() {
     )
   }, [])
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+  const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     setLoading(true)
     setError('')
@@ -164,6 +324,8 @@ export default function StaffLoginPage() {
         router.push(`/admin/pillars/${pillarRole}`)
       } else if (role === 'admin' && pillarRole === 'digital') {
         router.push('/admin/digital')
+      } else if (role === 'admin' && pillarRole === 'project_manager') {
+        router.push('/admin/projects')
       } else if (role === 'admin' && dept) {
         router.push(`/admin/${dept}`)
       } else if (role === 'admin') {
@@ -176,8 +338,6 @@ export default function StaffLoginPage() {
       setLoading(false)
     }
   }
-
-
 
   return (
     <div className="min-h-screen bg-[#0a0f1e] flex items-center justify-center p-4 relative overflow-hidden">
@@ -236,7 +396,7 @@ export default function StaffLoginPage() {
                 className="inline-block mb-4 relative"
               >
                 <div className="w-16 h-16 rounded-2xl overflow-hidden shadow-xl shadow-accent/20 mx-auto ring-2 ring-accent/30">
-                  <Image src="/images/karyasaarthi.png" alt="KaryaSaarthi" width={64} height={64} className="w-full h-full object-cover" />
+                  <Image src="/images/karyasaarthi.png" alt="Karya Saarthi" width={64} height={64} className="w-full h-full object-cover" />
                 </div>
                 <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-green-400 rounded-full border-2 border-[#0a0f1e] flex items-center justify-center">
                   <div className="w-2 h-2 bg-white rounded-full" />
@@ -244,101 +404,116 @@ export default function StaffLoginPage() {
               </motion.div>
 
               <h1 className="text-2xl font-bold text-white font-heading">Staff Portal</h1>
-              <p className="text-white/40 text-sm mt-1">KaryaSaarthi Internal Access</p>
+              <p className="text-white/40 text-sm mt-1">Karya Saarthi Internal Access</p>
 
               {/* Tabs */}
               <div className="flex bg-white/5 p-1 rounded-xl mt-6">
-                <button onClick={() => setActiveTab('login')} className={`flex-1 py-2 text-sm font-medium rounded-lg transition-all ${activeTab === 'login' ? 'bg-accent text-white shadow-lg' : 'text-white/40 hover:text-white'}`}>Login</button>
-                <button onClick={() => setActiveTab('register')} className={`flex-1 py-2 text-sm font-medium rounded-lg transition-all ${activeTab === 'register' ? 'bg-accent text-white shadow-lg' : 'text-white/40 hover:text-white'}`}>Register</button>
+                <button onClick={() => { setActiveTab('login'); setError(''); setPending(false) }}
+                  className={`flex-1 py-2 text-sm font-medium rounded-lg transition-all cursor-pointer ${activeTab === 'login' ? 'bg-accent text-white shadow-lg' : 'text-white/40 hover:text-white'}`}>
+                  Login
+                </button>
+                <button onClick={() => { setActiveTab('register'); setError(''); setPending(false) }}
+                  className={`flex-1 py-2 text-sm font-medium rounded-lg transition-all cursor-pointer ${activeTab === 'register' ? 'bg-accent text-white shadow-lg' : 'text-white/40 hover:text-white'}`}>
+                  Register
+                </button>
               </div>
             </div>
 
-            {/* Error / Pending alerts */}
-            <AnimatePresence>
-              {error && (
-                <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
-                  className="bg-red-500/10 text-red-400 px-4 py-3 rounded-xl text-sm mb-5 flex items-start gap-2 border border-red-500/20">
-                  <span className="text-base mt-0.5">⚠️</span>
-                  <span>{error}</span>
+            {/* Tab Content */}
+            <AnimatePresence mode="wait">
+              {activeTab === 'login' ? (
+                <motion.div key="login" initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
+                  {/* Error / Pending alerts */}
+                  <AnimatePresence>
+                    {error && (
+                      <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
+                        className="bg-red-500/10 text-red-400 px-4 py-3 rounded-xl text-sm mb-5 flex items-start gap-2 border border-red-500/20">
+                        <span className="text-base mt-0.5">⚠️</span>
+                        <span>{error}</span>
+                      </motion.div>
+                    )}
+                    {pending && (
+                      <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
+                        className="bg-amber-500/10 text-amber-400 px-4 py-3 rounded-xl text-sm mb-5 border border-amber-500/20">
+                        ⏳ Your account is pending approval by the administrator.
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+
+                  {/* Login Form */}
+                  <form onSubmit={handleLogin} className="space-y-5">
+                    {/* Email */}
+                    <div>
+                      <label className="block text-sm font-medium text-white/60 mb-1.5">Staff Email</label>
+                      <div className="relative">
+                        <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-white/30 text-sm">✉</span>
+                        <input
+                          type="email"
+                          name="email"
+                          required
+                          autoFocus
+                          placeholder="yourname@karyasaarthi.in"
+                          className="w-full pl-10 pr-4 py-3.5 rounded-xl bg-white/5 border border-white/10 text-white placeholder-white/20 focus:border-accent/50 focus:ring-2 focus:ring-accent/10 focus:outline-none text-sm transition-all"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Password */}
+                    <div>
+                      <label className="block text-sm font-medium text-white/60 mb-1.5">Password</label>
+                      <div className="relative">
+                        <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-white/30 text-sm">🔒</span>
+                        <input
+                          type={showPassword ? 'text' : 'password'}
+                          name="password"
+                          required
+                          placeholder="Enter your password"
+                          className="w-full pl-10 pr-12 py-3.5 rounded-xl bg-white/5 border border-white/10 text-white placeholder-white/20 focus:border-accent/50 focus:ring-2 focus:ring-accent/10 focus:outline-none text-sm transition-all"
+                        />
+                        <button type="button" onClick={() => setShowPassword(!showPassword)}
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-white/30 hover:text-white/70 transition-colors cursor-pointer text-lg">
+                          {showPassword ? '🙈' : '👁️'}
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Forgot password */}
+                    <div className="flex justify-end">
+                      <Link href="/forgot-password" className="text-xs text-accent/70 hover:text-accent transition-colors">
+                        Forgot password?
+                      </Link>
+                    </div>
+
+                    {/* Submit */}
+                    <button
+                      type="submit"
+                      disabled={loading}
+                      className="w-full py-4 rounded-xl text-white font-bold text-base transition-all cursor-pointer disabled:opacity-50 relative overflow-hidden group"
+                      style={{ background: 'linear-gradient(135deg, #1B3A6B, #254d8a)' }}
+                    >
+                      <span className="absolute inset-0 bg-accent/0 group-hover:bg-accent/10 transition-colors" />
+                      <span className="relative flex items-center justify-center gap-2">
+                        {loading ? (
+                          <>
+                            <svg className="w-4 h-4 animate-spin" viewBox="0 0 24 24" fill="none">
+                              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                            </svg>
+                            Authenticating...
+                          </>
+                        ) : (
+                          <>🔐 Access Staff Portal</>
+                        )}
+                      </span>
+                    </button>
+                  </form>
                 </motion.div>
-              )}
-              {pending && (
-                <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
-                  className="bg-amber-500/10 text-amber-400 px-4 py-3 rounded-xl text-sm mb-5 border border-amber-500/20">
-                  ⏳ Your account is pending approval by the administrator.
+              ) : (
+                <motion.div key="register" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }}>
+                  <RegisterForm />
                 </motion.div>
               )}
             </AnimatePresence>
-
-            {/* Form */}
-            <form onSubmit={handleSubmit} className="space-y-5">
-              {/* Email */}
-              <div>
-                <label className="block text-sm font-medium text-white/60 mb-1.5">Staff Email</label>
-                <div className="relative">
-                  <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-white/30 text-sm">✉</span>
-                  <input
-                    type="email"
-                    name="email"
-                    required
-                    autoFocus
-                    placeholder="yourname@karyasaarthi.in"
-                    className="w-full pl-10 pr-4 py-3.5 rounded-xl bg-white/5 border border-white/10 text-white placeholder-white/20 focus:border-accent/50 focus:ring-2 focus:ring-accent/10 focus:outline-none text-sm transition-all"
-                  />
-                </div>
-              </div>
-
-              {/* Password */}
-              <div>
-                <label className="block text-sm font-medium text-white/60 mb-1.5">Password</label>
-                <div className="relative">
-                  <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-white/30 text-sm">🔒</span>
-                  <input
-                    type={showPassword ? 'text' : 'password'}
-                    name="password"
-                    required
-                    placeholder={activeTab === 'login' ? 'Enter your password' : 'Create a password'}
-                    className="w-full pl-10 pr-12 py-3.5 rounded-xl bg-white/5 border border-white/10 text-white placeholder-white/20 focus:border-accent/50 focus:ring-2 focus:ring-accent/10 focus:outline-none text-sm transition-all"
-                  />
-                  <button type="button" onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-white/30 hover:text-white/70 transition-colors cursor-pointer text-lg">
-                    {showPassword ? '🙈' : '👁️'}
-                  </button>
-                </div>
-              </div>
-
-              {/* Forgot password */}
-              {activeTab === 'login' && (
-                <div className="flex justify-end">
-                  <Link href="/forgot-password" className="text-xs text-accent/70 hover:text-accent transition-colors">
-                    Forgot password?
-                  </Link>
-                </div>
-              )}
-
-              {/* Submit */}
-              <button
-                type="submit"
-                disabled={loading}
-                className="w-full py-4 rounded-xl text-white font-bold text-base transition-all cursor-pointer disabled:opacity-50 relative overflow-hidden group"
-                style={{ background: 'linear-gradient(135deg, #1B3A6B, #254d8a)' }}
-              >
-                <span className="absolute inset-0 bg-accent/0 group-hover:bg-accent/10 transition-colors" />
-                <span className="relative flex items-center justify-center gap-2">
-                  {loading ? (
-                    <>
-                      <svg className="w-4 h-4 animate-spin" viewBox="0 0 24 24" fill="none">
-                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-                      </svg>
-                      {activeTab === 'login' ? 'Authenticating...' : 'Registering...'}
-                    </>
-                  ) : (
-                    <>{activeTab === 'login' ? '🔐 Access Staff Portal' : '✨ Create Account'}</>
-                  )}
-                </span>
-              </button>
-            </form>
           </div>
 
           {/* Footer */}

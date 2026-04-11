@@ -55,12 +55,19 @@ export async function POST(request: Request) {
     const otp = generateOTP()
     const otpHash = await bcrypt.hash(otp, 10)
 
-    await supabase.from('email_otps').insert({
+    const { error: insertError } = await supabase.from('email_otps').insert({
       email: normalizedEmail,
       otp_hash: otpHash,
       purpose: 'signup_verification',
+      used: false,
+      attempts: 0,
       expires_at: new Date(Date.now() + 10 * 60 * 1000).toISOString(),
     })
+
+    if (insertError) {
+      console.error('OTP insert error:', insertError)
+      return NextResponse.json({ error: 'Failed to generate OTP. Please try again.' }, { status: 500 })
+    }
 
     // Send email
     const emailContent = otpEmail(otp, 'signup_verification', fullname || 'User')

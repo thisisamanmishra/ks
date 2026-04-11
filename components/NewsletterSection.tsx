@@ -21,7 +21,7 @@ export default function NewsletterSection() {
       const data = await res.json()
       if (res.ok) {
         setStatus('success')
-        setMessage('You\'re subscribed! Welcome to the KaryaSaarthi community 🎉')
+        setMessage('You\'re subscribed! Welcome to the Karya Saarthi community 🎉')
         setEmail('')
       } else {
         setStatus('error')

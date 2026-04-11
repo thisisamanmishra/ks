@@ -98,7 +98,7 @@ export default function MeetingPanel({ currentUserId, onClose }: Props) {
 
   // ── Jitsi iframe modal ─────────────────────────────────────
   if (activeMeeting) {
-    const jitsiUrl = `https://meet.jit.si/${activeMeeting.jitsi_room}#userInfo.displayName=${encodeURIComponent('KaryaSaarthi Member')}`
+    const jitsiUrl = `https://meet.jit.si/${activeMeeting.jitsi_room}#userInfo.displayName=${encodeURIComponent('Karya Saarthi Member')}`
     return (
       <motion.div
         initial={{ opacity: 0 }}

@@ -15,7 +15,7 @@ export async function GET() {
   // Pending admins (role = 'pending_admin')
   const { data: pendingAdmins } = await supabase
     .from('users')
-    .select('id, fullname, email, phone, department, pillar_role, role, created_at')
+    .select('id, fullname, email, phone, department, pillar_role, role, designation, created_at')
     .eq('role', 'pending_admin')
     .order('created_at', { ascending: false })
 

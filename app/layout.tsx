@@ -7,7 +7,7 @@ const inter = Inter({ subsets: ['latin'], variable: '--font-inter' })
 const poppins = Poppins({ weight: ['400', '600', '700'], subsets: ['latin'], variable: '--font-poppins' })
 
 export const metadata = {
-  title: 'KaryaSaarthi | Premium Academic & Professional Services',
+  title: 'Karya Saarthi | Premium Academic & Professional Services',
   description: 'Your trusted partner for Thesis Writing, Web Development, SEO, and Digital Marketing.',
 }
 

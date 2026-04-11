@@ -159,7 +159,7 @@ export default function AdminDashboard() {
           <h3 className="font-bold text-navy text-lg mb-4 font-heading">Quick Actions</h3>
           <div className="grid grid-cols-2 gap-3">
             {[
-              { icon: '📩', label: 'Admin Requests', href: '/admin/requests', count: data.stats.pendingRequests },
+              { icon: '📩', label: 'Staff Requests', href: '/admin/staff-requests', count: data.stats.pendingRequests },
               { icon: '👥', label: 'Manage Users', href: '/admin/users' },
               { icon: '📝', label: 'New Blog Post', href: '/admin/blogs/new' },
               { icon: '📋', label: 'All Projects', href: '/admin/projects' },

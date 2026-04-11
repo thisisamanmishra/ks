@@ -11,6 +11,7 @@ interface PendingUser {
   department: string | null
   pillar_role: string | null
   role: string
+  designation: string | null
   created_at: string
 }
 
@@ -34,6 +35,19 @@ const DEPT_COLORS: Record<string, { color: string; bg: string }> = {
   calling: { color: '#FF6B35', bg: '#FFF0EB' },
   government: { color: '#10B981', bg: '#D1FAE5' },
   market: { color: '#F59E0B', bg: '#FEF3C7' },
+}
+
+const ROLE_TITLES: Record<string, string> = {
+  digital: 'Digital Marketing Head',
+  marketing: 'Marketing Head',
+  operations: 'Operation Head',
+}
+
+function getDesignation(u: PendingUser): string {
+  if (u.designation) return u.designation
+  if (u.pillar_role === 'project_manager') return 'Project Manager'
+  if (u.department && ROLE_TITLES[u.department]) return ROLE_TITLES[u.department]
+  return u.department || u.role || 'Staff'
 }
 
 export default function StaffRequestsPage() {
@@ -158,21 +172,42 @@ export default function StaffRequestsPage() {
                             <p className="font-bold text-navy">{u.fullname}</p>
                             <p className="text-xs text-slate-400">{u.email}</p>
                             {u.phone && <p className="text-xs text-slate-400">📞 {u.phone}</p>}
+                            <span className="mt-1 inline-block text-[10px] px-2 py-0.5 rounded-full font-bold" style={{ background: deptCfg.bg, color: deptCfg.color }}>
+                              🏷️ {getDesignation(u)}
+                            </span>
                           </div>
                         </div>
 
                         <div className="flex items-center gap-3 flex-wrap">
                           <div>
-                            <p className="text-[10px] text-slate-400 mb-1 uppercase font-bold">Department</p>
-                            <select value={deptOverride[u.id] || u.department || ''} onChange={e => setDeptOverride(p => ({ ...p, [u.id]: e.target.value }))}
+                            <p className="text-[10px] text-slate-400 mb-1 uppercase font-bold">Role</p>
+                            <select value={deptOverride[u.id] || (u.pillar_role === 'project_manager' ? 'project_manager' : u.department === 'digital' ? 'digital_marketing_head' : u.department === 'marketing' ? 'marketing_head' : u.department === 'operations' ? 'operation_head' : '')}
+                              onChange={e => setDeptOverride(p => ({ ...p, [u.id]: e.target.value }))}
                               className="px-2 py-1.5 rounded-xl border border-slate-200 bg-white text-xs font-bold cursor-pointer focus:outline-none">
-                              <option value="">Select dept…</option>
-                              {['hr', 'finance', 'operations', 'marketing', 'digital'].map(d => <option key={d} value={d}>{d}</option>)}
+                              <option value="">Select role…</option>
+                              <option value="digital_marketing_head">💻 Digital Marketing Head</option>
+                              <option value="marketing_head">📢 Marketing Head</option>
+                              <option value="operation_head">⚙️ Operation Head</option>
+                              <option value="project_manager">📋 Project Manager</option>
                             </select>
                           </div>
 
                           <div className="flex gap-2">
-                            <button onClick={() => handleAction(u.id, 'approve', deptOverride[u.id] || u.department || undefined, 'admin')}
+                            <button onClick={() => {
+                              const selected = deptOverride[u.id] || (u.pillar_role === 'project_manager' ? 'project_manager' : u.department === 'digital' ? 'digital_marketing_head' : u.department === 'marketing' ? 'marketing_head' : u.department === 'operations' ? 'operation_head' : '')
+                              const roleMap: Record<string, { dept: string; pillar?: string }> = {
+                                digital_marketing_head: { dept: 'digital' },
+                                marketing_head: { dept: 'marketing' },
+                                operation_head: { dept: 'operations' },
+                                project_manager: { dept: 'operations', pillar: 'project_manager' },
+                              }
+                              const mapping = roleMap[selected]
+                              if (mapping) {
+                                handleAction(u.id, 'approve', mapping.dept, 'admin')
+                              } else {
+                                handleAction(u.id, 'approve', u.department || undefined, 'admin')
+                              }
+                            }}
                               disabled={!!actionState}
                               className="px-4 py-2 rounded-xl bg-green-500 text-white text-xs font-bold cursor-pointer hover:bg-green-600 transition-colors disabled:opacity-60 flex items-center gap-1.5">
                               {actionState === 'approving' ? '⏳' : '✅'} Approve
@@ -188,7 +223,7 @@ export default function StaffRequestsPage() {
 
                       <div className="mt-3 flex items-center gap-3 text-[10px] text-slate-400">
                         <span>Requested: {new Date(u.created_at).toLocaleDateString('en-IN', { dateStyle: 'medium' })}</span>
-                        {u.department && <span className="px-2 py-0.5 rounded-full font-bold" style={{ background: deptCfg.bg, color: deptCfg.color }}>Requested: {u.department}</span>}
+                        {u.department && <span className="px-2 py-0.5 rounded-full font-bold" style={{ background: deptCfg.bg, color: deptCfg.color }}>Applied for: {getDesignation(u)}</span>}
                       </div>
                     </motion.div>
                   )
@@ -257,7 +292,7 @@ export default function StaffRequestsPage() {
       {/* Info box */}
       <div className="rounded-2xl border border-blue-100 bg-blue-50 p-4 text-xs text-blue-700">
         <p className="font-bold mb-1">📧 Email Notifications</p>
-        <p>Approving or rejecting a staff member automatically sends them a branded email notification from KaryaSaarthi.</p>
+        <p>Approving or rejecting a staff member automatically sends them a branded email notification from Karya Saarthi.</p>
         <p className="mt-1">Approved staff can log in immediately at <code className="bg-blue-100 px-1 rounded">/staff-login</code></p>
       </div>
     </div>

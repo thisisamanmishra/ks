@@ -36,7 +36,7 @@ export default function WhatsAppWidget() {
                 <div className="flex items-center gap-2 mb-2">
                   <div className="w-8 h-8 rounded-full bg-green-500 flex items-center justify-center text-white text-sm font-bold">KS</div>
                   <div>
-                    <p className="text-xs font-bold text-navy">KaryaSaarthi</p>
+                    <p className="text-xs font-bold text-navy">Karya Saarthi</p>
                     <p className="text-[10px] text-green-500 font-medium">● Online — typically replies in minutes</p>
                   </div>
                 </div>

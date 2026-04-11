@@ -122,7 +122,7 @@ export default function Footer() {
         {/* Copyright */}
         <div className="border-t border-white/10 mt-8 pt-6 text-center">
           <p className="text-white/30 text-sm">
-            © {new Date().getFullYear()} KaryaSaarthi. All rights reserved.
+            © {new Date().getFullYear()} Karya Saarthi. All rights reserved.
           </p>
         </div>
       </div>

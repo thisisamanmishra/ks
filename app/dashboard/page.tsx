@@ -217,7 +217,7 @@ function DashboardPage() {
           <div className="flex-1 lg:ml-64 p-6 lg:p-8">
             {/* Mobile Header */}
             <div className="lg:hidden flex items-center justify-between mb-6">
-              <div className="flex items-center gap-3"><Image src="/images/karyasaarthi.png" alt="Logo" width={32} height={32} className="rounded-lg" /><strong className="text-navy font-heading">KaryaSaarthi</strong></div>
+              <div className="flex items-center gap-3"><Image src="/images/karyasaarthi.png" alt="Logo" width={32} height={32} className="rounded-lg" /><strong className="text-navy font-heading">Karya Saarthi</strong></div>
               <div className="flex items-center gap-3">
                 <button onClick={() => { const opening = !showNotifs; setShowNotifs(opening); if (opening && unreadCount > 0) markAllRead() }} className="relative cursor-pointer">
                   🔔 {unreadCount > 0 && <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-red-500 text-white text-[10px] flex items-center justify-center">{unreadCount}</span>}

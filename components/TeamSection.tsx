@@ -5,7 +5,7 @@ import Image from 'next/image'
 import { useState } from 'react'
 
 const teamMembers = [
-  { name: 'Adv. Saloni Kumari', role: 'Founder & Director', img: '/images/team/Saloni.jpeg', email: 'karyasaarthi@gmail.com', vision: 'Leading KaryaSaarthi with vision and dedication to help students and businesses achieve their goals through collaborative learning.' },
+  { name: 'Adv. Saloni Kumari', role: 'Founder & Director', img: '/images/team/Saloni.jpeg', email: 'karyasaarthi@gmail.com', vision: 'Leading Karya Saarthi with vision and dedication to help students and businesses achieve their goals through collaborative learning.' },
   { name: 'Anish', role: 'Co-Founder & Management Head', img: '/images/team/Anish.jpeg', email: 'info.karyasaarthi@gmail.com', vision: 'Overseeing operations and strategic management to ensure excellence in service delivery and client satisfaction.' },
   { name: 'Bhawna', role: 'HR Executive', img: '/images/team/Bhawna.jpeg', email: 'hr.karyasaarthi@gmail.com', vision: 'Managing talent acquisition and ensuring our team delivers exceptional service.' },
   { name: 'Pawandeep Kaur', role: 'Project Manager', img: '/images/team/Pawandeep.jpeg', email: 'pm.karyasarthi@gmail.com', vision: 'Ensuring timely delivery of all client projects with quality and precision.' },

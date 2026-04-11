@@ -159,7 +159,7 @@ export default function PillarsSection() {
           viewport={{ once: true }}
           className="text-center mt-12"
         >
-          <p className="text-white/30 text-sm mb-4">All pillars work together under one platform — KaryaSaarthi</p>
+          <p className="text-white/30 text-sm mb-4">All pillars work together under one platform — Karya Saarthi</p>
           <Link href="/contact"
             className="inline-flex items-center gap-2 px-8 py-3.5 rounded-xl font-bold text-white"
             style={{ background: 'linear-gradient(135deg, #FF6B35, #e0551f)', boxShadow: '0 8px 24px rgba(255,107,53,0.3)' }}>

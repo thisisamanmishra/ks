@@ -73,7 +73,7 @@ export default function ContactSection() {
             {/* CTA Card */}
             <div className="bg-navy rounded-2xl p-8 text-white text-center">
               <h3 className="text-xl font-bold mb-3 font-heading">Ready to Transform Your Work?</h3>
-              <p className="text-white/70 text-sm mb-6">Join 500+ satisfied clients who trust KaryaSaarthi</p>
+              <p className="text-white/70 text-sm mb-6">Join 500+ satisfied clients who trust Karya Saarthi</p>
               <a href="https://wa.me/918595025753" target="_blank" rel="noopener noreferrer" className="inline-block px-8 py-3.5 rounded-xl bg-green-500 text-white font-bold hover:bg-green-600 shadow-lg shadow-green-500/30 transition-all cursor-pointer">
                 💬 WhatsApp Us Now
               </a>

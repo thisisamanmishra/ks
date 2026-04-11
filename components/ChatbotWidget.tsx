@@ -12,8 +12,8 @@ interface Message {
 
 const FAQ_RESPONSES: Record<string, string> = {
   // Greetings
-  'hi': '👋 Hello! Welcome to KaryaSaarthi. I can help you with services, pricing, delivery, and more. What are you looking for?',
-  'hello': '👋 Hi there! I\'m the KaryaSaarthi assistant. Ask me about our services, pricing, or how to get started.',
+  'hi': '👋 Hello! Welcome to Karya Saarthi. I can help you with services, pricing, delivery, and more. What are you looking for?',
+  'hello': '👋 Hi there! I\'m the Karya Saarthi assistant. Ask me about our services, pricing, or how to get started.',
   'hey': '👋 Hey! How can I help you today?',
 
   // Services

@@ -21,7 +21,7 @@ export async function POST(request: Request) {
     const supabase = await createClient()
 
     // Find the latest unused OTP for this email+purpose
-    const { data: otpRecord } = await supabase
+    const { data: otpRecord, error: otpError } = await supabase
       .from('email_otps')
       .select('*')
       .eq('email', normalizedEmail)
@@ -29,9 +29,22 @@ export async function POST(request: Request) {
       .eq('used', false)
       .order('created_at', { ascending: false })
       .limit(1)
-      .single()
+      .maybeSingle()
+
+    if (otpError) {
+      console.error('OTP lookup error:', otpError)
+    }
 
     if (!otpRecord) {
+      // Debug: check if ANY records exist for this email
+      const { data: allRecords, count } = await supabase
+        .from('email_otps')
+        .select('id, email, purpose, used, expires_at, created_at', { count: 'exact' })
+        .eq('email', normalizedEmail)
+        .order('created_at', { ascending: false })
+        .limit(5)
+      console.error('OTP not found for:', normalizedEmail, 'purpose:', purpose)
+      console.error('All records for email:', JSON.stringify(allRecords), 'count:', count)
       return NextResponse.json({ error: 'No valid OTP found. Please request a new one.' }, { status: 400 })
     }
 

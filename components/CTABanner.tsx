@@ -20,7 +20,7 @@ export default function CTABanner() {
             Ready to Get Started?
           </h2>
           <p className="mt-4 text-white/80 text-lg max-w-2xl mx-auto">
-            Join 500+ satisfied clients who trust KaryaSaarthi for their academic
+            Join 500+ satisfied clients who trust Karya Saarthi for their academic
             and professional needs. Get your free quote today.
           </p>
           <div className="mt-8 flex flex-wrap justify-center gap-4">
