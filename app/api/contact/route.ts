@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 
-const supabase = createClient(
+const getSupabase = () => createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_KEY!
+  process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_KEY!
 )
 
 // POST /api/contact — public, saves contact form submission
@@ -16,6 +16,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Name, email and message are required.' }, { status: 400 })
     }
 
+    const supabase = getSupabase()
     const { data, error } = await supabase
       .from('contact_submissions')
       .insert({
@@ -49,6 +50,8 @@ export async function GET(req: NextRequest) {
     const status = url.searchParams.get('status')
     const limit = parseInt(url.searchParams.get('limit') || '100')
 
+    const supabase = getSupabase()
+
     let query = supabase
       .from('contact_submissions')
       .select('*')
@@ -75,6 +78,7 @@ export async function GET(req: NextRequest) {
 export async function PATCH(req: NextRequest) {
   try {
     const { id, status, notes } = await req.json()
+    const supabase = getSupabase()
     const { error } = await supabase
       .from('contact_submissions')
       .update({ status, notes: notes || null, updated_at: new Date().toISOString() })
