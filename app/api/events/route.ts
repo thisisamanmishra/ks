@@ -12,17 +12,34 @@ export async function GET(request: Request) {
   const offset = (page - 1) * limit
 
   const supabase = await createClient()
-  let query = supabase
-    .from('events')
-    .select('id, title, slug, type, short_description, featured_image, event_date, end_date, venue, is_online, max_participants, prize_pool, registration_fee, status, tags, created_at, guest_name, audio_url', { count: 'exact' })
-    .order('event_date', { ascending: true })
-    .range(offset, offset + limit - 1)
 
-  if (type) query = query.eq('type', type)
-  if (status) query = query.eq('status', status)
-  else query = query.neq('status', 'draft')
+  // Full column select - gracefully handles missing optional columns
+  const fullSelect = 'id, title, slug, type, short_description, featured_image, event_date, end_date, venue, is_online, max_participants, prize_pool, registration_fee, status, tags, created_at'
+  const extendedSelect = `${fullSelect}, guest_name, audio_url`
 
-  const { data, error, count } = await query
+  const buildQuery = (selectStr: string) => {
+    let query = supabase
+      .from('events')
+      .select(selectStr, { count: 'exact' })
+      .order('event_date', { ascending: true })
+      .range(offset, offset + limit - 1)
+    if (type) query = query.eq('type', type)
+    if (status) query = query.eq('status', status)
+    else query = query.neq('status', 'draft')
+    return query
+  }
+
+  // Try with extended columns first, fall back to base columns
+  let { data, error, count } = await buildQuery(extendedSelect)
+
+  if (error && (error.code === '42703' || error.message?.includes('column'))) {
+    // Column doesn't exist yet - fall back to base columns
+    const fallback = await buildQuery(fullSelect)
+    data = fallback.data
+    error = fallback.error
+    count = fallback.count
+  }
+
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
 
   return NextResponse.json({ events: data || [], total: count || 0, page, limit })

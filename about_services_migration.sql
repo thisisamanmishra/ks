@@ -128,7 +128,14 @@ ALTER TABLE about_timeline ENABLE ROW LEVEL SECURITY;
 ALTER TABLE about_achievements ENABLE ROW LEVEL SECURITY;
 ALTER TABLE about_members ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY IF NOT EXISTS "about_company_public_read" ON about_company FOR SELECT USING (true);
-CREATE POLICY IF NOT EXISTS "about_timeline_public_read" ON about_timeline FOR SELECT USING (true);
-CREATE POLICY IF NOT EXISTS "about_achievements_public_read" ON about_achievements FOR SELECT USING (true);
-CREATE POLICY IF NOT EXISTS "about_members_public_read" ON about_members FOR SELECT USING (is_active = true);
+DROP POLICY IF EXISTS "about_company_public_read" ON about_company;
+CREATE POLICY "about_company_public_read" ON about_company FOR SELECT USING (true);
+
+DROP POLICY IF EXISTS "about_timeline_public_read" ON about_timeline;
+CREATE POLICY "about_timeline_public_read" ON about_timeline FOR SELECT USING (true);
+
+DROP POLICY IF EXISTS "about_achievements_public_read" ON about_achievements;
+CREATE POLICY "about_achievements_public_read" ON about_achievements FOR SELECT USING (true);
+
+DROP POLICY IF EXISTS "about_members_public_read" ON about_members;
+CREATE POLICY "about_members_public_read" ON about_members FOR SELECT USING (is_active = true);

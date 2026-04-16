@@ -4,7 +4,7 @@ import { getCurrentUser } from '@/lib/auth/middleware'
 
 export async function GET(request: Request) {
   const user = await getCurrentUser()
-  if (!user || user.role !== 'super_admin' && user.role !== 'board_member') {
+  if (!user || (user.role !== 'super_admin' && user.role !== 'board_member' && user.role !== 'admin')) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })
   }
 
@@ -62,6 +62,26 @@ export async function GET(request: Request) {
       user_id: d.users?.id
     }))
     return NextResponse.json({ appraisals: formatted })
+  }
+
+  if (type === 'leaves') {
+    const { data, error } = await supabase
+      .from('leave_requests')
+      .select(`
+        id, leave_type, start_date, end_date, days, reason, status, created_at,
+        users:user_id ( id, fullname )
+      `)
+      .order('created_at', { ascending: false })
+
+    if (error && error.code === '42P01') return NextResponse.json({ leaves: [] })
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+
+    const formatted = (data || []).map((d: any) => ({
+      ...d,
+      fullname: d.users?.fullname,
+      user_id: d.users?.id
+    }))
+    return NextResponse.json({ leaves: formatted })
   }
 
   return NextResponse.json({ error: 'Invalid type' }, { status: 400 })
@@ -141,6 +161,19 @@ export async function PATCH(request: Request) {
       .update({ status, payment_date: status === 'paid' ? new Date().toISOString() : null })
       .eq('id', id)
       
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+    return NextResponse.json({ success: true })
+  }
+
+  if (type === 'leaves') {
+    const { id, status } = body
+    if (!id || !status) return NextResponse.json({ error: 'Missing parameters' }, { status: 400 })
+
+    const { error } = await supabase
+      .from('leave_requests')
+      .update({ status, approved_by: user.userId, approved_at: new Date().toISOString() })
+      .eq('id', id)
+
     if (error) return NextResponse.json({ error: error.message }, { status: 500 })
     return NextResponse.json({ success: true })
   }

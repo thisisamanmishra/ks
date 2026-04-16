@@ -10,29 +10,73 @@ export async function GET(request: Request) {
 
     const supabase = await createClient()
 
+    // Admin access check (for non-public requests)
+    if (!isPublic) {
+      try {
+        await requireDepartment('marketing')
+      } catch {
+        const user = await getCurrentUser()
+        if (!user || !['super_admin', 'board_member', 'admin'].includes(user.role)) {
+          return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })
+        }
+      }
+    }
+
+    // Try query with FK join first
     let query = supabase
       .from('blogs')
       .select(`
-        *,
+        id, title, slug, excerpt, is_featured, is_published, views, created_at, published_at,
         category:blog_categories(id, name, slug),
-        author:users!blogs_author_id_fkey(id, fullname, avatar_url)
+        author:users!blogs_author_id_fkey(id, fullname)
       `)
       .order('created_at', { ascending: false })
 
     if (isPublic) {
       query = query.eq('is_published', true)
-    } else {
-      // Admin access
-      await requireDepartment('marketing')
     }
 
-    const { data, error } = await query
-    if (error) throw error
+    let { data, error } = await query
 
-    return NextResponse.json({ blogs: data || [] })
-  } catch (err) {
-    const { error, status } = authErrorResponse(err)
-    return NextResponse.json({ error }, { status })
+    // If join fails (wrong FK name, missing table, etc.) fall back to plain query
+    if (error) {
+      console.warn('[blogs] Full join failed, trying plain query:', error.message)
+
+      // ⚠️ IMPORTANT: Must assign the result of .eq() back — it's immutable chain
+      let fallbackQuery = supabase
+        .from('blogs')
+        .select('id, title, slug, excerpt, is_featured, is_published, views, created_at, published_at, category_id, author_id')
+        .order('created_at', { ascending: false })
+
+      if (isPublic) {
+        fallbackQuery = fallbackQuery.eq('is_published', true)
+      }
+
+      const fallbackResult = await fallbackQuery
+
+      if (fallbackResult.error) {
+        if (fallbackResult.error.code === '42P01') {
+          // Table doesn't exist yet
+          return NextResponse.json({ blogs: [], debug: 'Table missing' })
+        }
+        console.error('[blogs] Fallback query also failed:', fallbackResult.error.message)
+        return NextResponse.json({ blogs: [], debug: 'fallback failed', error: fallbackResult.error.message })
+      }
+
+      // Map raw data to expected shape (cast to any to avoid join type mismatch)
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      data = (fallbackResult.data || []).map(b => ({
+        ...b,
+        category: null,
+        author: null,
+      })) as any
+      error = null
+    }
+
+    return NextResponse.json({ blogs: data || [], debug: { originalError: error?.message, fallbackUsed: !!error } })
+  } catch (err: any) {
+    console.error('[blogs GET] Unhandled error:', err)
+    return NextResponse.json({ blogs: [], debug: 'catch block', error: String(err) })
   }
 }
 

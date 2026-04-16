@@ -1,5 +1,7 @@
 import type { NextConfig } from 'next'
 
+const isDev = process.env.NODE_ENV !== 'production'
+
 const securityHeaders = [
   // Prevent MIME type sniffing
   { key: 'X-Content-Type-Options', value: 'nosniff' },
@@ -14,29 +16,32 @@ const securityHeaders = [
     key: 'Permissions-Policy',
     value: 'camera=(), microphone=(), geolocation=(), payment=(), usb=(), interest-cohort=()',
   },
-  // Force HTTPS for 2 years (only apply in production — set via env or hardcode for Vercel)
-  {
+  // Force HTTPS for 2 years (production only — localhost doesn\'t use HTTPS)
+  ...(!isDev ? [{
     key: 'Strict-Transport-Security',
     value: 'max-age=63072000; includeSubDomains; preload',
-  },
+  }] : []),
   // Content Security Policy
   {
     key: 'Content-Security-Policy',
     value: [
       "default-src 'self'",
-      // Scripts: self + inline needed for Next.js hydration + Razorpay + Google Fonts
-      "script-src 'self' 'unsafe-eval' 'unsafe-inline' https://checkout.razorpay.com https://www.googletagmanager.com https://www.google-analytics.com",
+      // Scripts: self + inline needed for Next.js hydration + Razorpay + Google Analytics
+      // blob: is required for Turbopack HMR (dev) and some payment scripts
+      "script-src 'self' 'unsafe-eval' 'unsafe-inline' blob: https://checkout.razorpay.com https://www.googletagmanager.com https://www.google-analytics.com",
+      // script-src-elem explicitly set to avoid 'using script-src as fallback' warning
+      "script-src-elem 'self' 'unsafe-inline' blob: https://checkout.razorpay.com https://www.googletagmanager.com https://www.google-analytics.com",
       // Styles: self + inline (Tailwind CSS-in-JS) + Google Fonts
       "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
       // Fonts
       "font-src 'self' https://fonts.gstatic.com data:",
       // Images: self + data URIs + Supabase storage + common image hosts
       "img-src 'self' data: blob: https://*.supabase.co https://*.supabase.in https://images.unsplash.com https://picsum.photos https://placehold.co https://i.pravatar.cc https://via.placeholder.com",
-      // API connections: self + Supabase + Razorpay
+      // API connections: self + Supabase + Razorpay + Google Analytics
       "connect-src 'self' https://*.supabase.co https://*.supabase.in https://api.razorpay.com https://lumberjack.razorpay.com wss://*.supabase.co https://www.google-analytics.com",
       // Iframes: Razorpay checkout
       "frame-src 'self' https://api.razorpay.com https://checkout.razorpay.com",
-      // Workers: only self
+      // Workers: only self + blob (for Turbopack)
       "worker-src 'self' blob:",
       // Objects: block Flash and plugins
       "object-src 'none'",
@@ -44,8 +49,8 @@ const securityHeaders = [
       "base-uri 'self'",
       // Form actions: only self
       "form-action 'self'",
-      // Upgrade HTTP to HTTPS
-      "upgrade-insecure-requests",
+      // Only upgrade insecure requests in production (dev uses plain http)
+      ...(!isDev ? ["upgrade-insecure-requests"] : []),
     ].join('; '),
   },
 ]

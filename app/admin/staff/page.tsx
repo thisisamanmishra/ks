@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, Suspense } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useSearchParams, useRouter } from 'next/navigation'
 
@@ -49,17 +49,23 @@ const TABS = [
   { key: 'leaves', label: '🏖️ Leaves' }
 ] as const
 
-export default function StaffManagementPage() {
+type TabKey = typeof TABS[number]['key']
+const VALID_TABS: TabKey[] = ['directory', 'payroll', 'appraisals', 'leaves']
+
+// ── Inner component that uses useSearchParams ──
+function StaffContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const tabParam = searchParams.get('tab') as string
-  const validTabs = ['directory', 'payroll', 'appraisals', 'leaves']
-  const [activeTab, setActiveTab] = useState(validTabs.includes(tabParam) ? tabParam : 'directory')
-  
+  const tabParam = searchParams.get('tab') as TabKey | null
+  const [activeTab, setActiveTab] = useState<TabKey>(
+    tabParam && VALID_TABS.includes(tabParam) ? tabParam : 'directory'
+  )
+
   const [staff, setStaff] = useState<StaffMember[]>([])
   const [payrolls, setPayrolls] = useState<PayrollRecord[]>([])
   const [appraisals, setAppraisals] = useState<AppraisalRecord[]>([])
   const [loading, setLoading] = useState(true)
+  const [toast, setToast] = useState<string | null>(null)
 
   // Forms
   const [showPayrollForm, setShowPayrollForm] = useState(false)
@@ -69,6 +75,16 @@ export default function StaffManagementPage() {
   const [showApprForm, setShowApprForm] = useState(false)
   const [apprForm, setApprForm] = useState({ user_id: '', period: 'Q1 ' + new Date().getFullYear(), score: '8', feedback: '', goals: '', areas: '' })
   const [savingAppr, setSavingAppr] = useState(false)
+
+  // Sync tab from URL
+  useEffect(() => {
+    if (tabParam && VALID_TABS.includes(tabParam)) setActiveTab(tabParam)
+  }, [tabParam])
+
+  const showToast = (msg: string) => {
+    setToast(msg)
+    setTimeout(() => setToast(null), 3000)
+  }
 
   const loadData = useCallback(async () => {
     setLoading(true)
@@ -89,13 +105,8 @@ export default function StaffManagementPage() {
   }, [])
 
   useEffect(() => { loadData() }, [loadData])
-  
-  useEffect(() => {
-    if (validTabs.includes(tabParam)) setActiveTab(tabParam)
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tabParam])
 
-  const setTab = (t: string) => {
+  const setTab = (t: TabKey) => {
     setActiveTab(t)
     router.push(`/admin/staff?tab=${t}`)
   }
@@ -116,9 +127,17 @@ export default function StaffManagementPage() {
     }
     try {
       const res = await fetch('/api/admin/staff?type=payroll', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) })
-      if (res.ok) { const { record } = await res.json(); setPayrolls(p => [record, ...p]) }
-      setShowPayrollForm(false)
-    } catch {} finally { setSavingPay(false) }
+      if (res.ok) {
+        const { record } = await res.json()
+        setPayrolls(p => [record, ...p])
+        setShowPayrollForm(false)
+        setPayForm({ user_id: '', month: 'January', year: new Date().getFullYear(), base: '0', bonus: '0', ded: '0' })
+        showToast('✅ Salary slip generated successfully!')
+      } else {
+        const { error } = await res.json()
+        showToast(`❌ Error: ${error}`)
+      }
+    } catch { showToast('❌ Failed to save payroll') } finally { setSavingPay(false) }
   }
 
   const saveAppraisal = async (e: React.FormEvent) => {
@@ -135,30 +154,61 @@ export default function StaffManagementPage() {
     }
     try {
       const res = await fetch('/api/admin/staff?type=appraisals', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) })
-      if (res.ok) { const { record } = await res.json(); setAppraisals(p => [record, ...p]) }
-      setShowApprForm(false)
-    } catch {} finally { setSavingAppr(false) }
+      if (res.ok) {
+        const { record } = await res.json()
+        setAppraisals(p => [record, ...p])
+        setShowApprForm(false)
+        setApprForm({ user_id: '', period: 'Q1 ' + new Date().getFullYear(), score: '8', feedback: '', goals: '', areas: '' })
+        showToast('✅ Appraisal submitted!')
+      } else {
+        showToast('❌ Failed to submit appraisal')
+      }
+    } catch { showToast('❌ Error occurred') } finally { setSavingAppr(false) }
   }
 
   const markPaid = async (id: number) => {
     const res = await fetch('/api/admin/staff?type=payroll', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id, status: 'paid' }) })
-    if (res.ok) { setPayrolls(p => p.map(r => r.id === id ? { ...r, status: 'paid', payment_date: new Date().toISOString() } : r)) }
+    if (res.ok) {
+      setPayrolls(p => p.map(r => r.id === id ? { ...r, status: 'paid', payment_date: new Date().toISOString() } : r))
+      showToast('✅ Marked as paid')
+    }
   }
 
-  if (loading) return <div className="p-8 text-center animate-pulse text-slate-400">Loading Staff Management...</div>
+  if (loading) return (
+    <div className="flex items-center justify-center py-20">
+      <div className="flex flex-col items-center gap-3">
+        <div className="w-10 h-10 border-3 border-slate-200 border-t-navy rounded-full animate-spin" style={{ borderWidth: 3 }} />
+        <p className="text-slate-400 text-sm">Loading Staff Management...</p>
+      </div>
+    </div>
+  )
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      {/* Toast */}
+      <AnimatePresence>
+        {toast && (
+          <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
+            className="fixed top-5 right-5 z-50 px-5 py-3 rounded-xl shadow-xl text-white text-sm font-bold"
+            style={{ background: toast.startsWith('✅') ? '#10B981' : '#EF4444' }}>
+            {toast}
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-navy font-heading">Staff & HR Management</h1>
-          <p className="text-slate-500 text-sm">Manage team, payroll, appraisals, and leaves.</p>
+          <h1 className="text-2xl font-bold text-navy font-heading">Staff &amp; HR Management</h1>
+          <p className="text-slate-500 text-sm">Manage team, payroll, appraisals and leaves • {staff.length} staff members</p>
         </div>
+        <button onClick={loadData} className="px-4 py-2 rounded-xl bg-white border border-slate-200 text-xs font-bold text-slate-600 hover:bg-slate-50 cursor-pointer transition-all">↻ Refresh</button>
       </div>
 
-      <div className="bg-white rounded-2xl p-2 shadow-sm border border-slate-100 flex overflow-x-auto hide-scrollbar">
+      {/* Tab Strip */}
+      <div className="bg-white rounded-2xl p-2 shadow-sm border border-slate-100 flex overflow-x-auto" style={{ scrollbarWidth: 'thin' }}>
         {TABS.map(tab => (
-          <button key={tab.key} onClick={() => setTab(tab.key)} className={`flex-1 min-w-[150px] py-3 text-sm font-bold rounded-xl transition-all cursor-pointer ${activeTab === tab.key ? 'bg-navy text-white shadow-lg' : 'text-slate-500 hover:bg-slate-50 hover:text-navy'}`}>
+          <button key={tab.key} onClick={() => setTab(tab.key)}
+            className={`flex-1 min-w-[140px] py-3 text-sm font-bold rounded-xl transition-all cursor-pointer ${activeTab === tab.key ? 'bg-navy text-white shadow-lg' : 'text-slate-500 hover:bg-slate-50 hover:text-navy'}`}>
             {tab.label}
           </button>
         ))}
@@ -166,112 +216,193 @@ export default function StaffManagementPage() {
 
       <AnimatePresence mode="wait">
         <motion.div key={activeTab} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}>
-          
+
           {/* DIRECTORY TAB */}
           {activeTab === 'directory' && (
             <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
-              <div className="p-5 border-b border-slate-100">
-                <h3 className="font-bold text-navy">Team Directory ({staff.length})</h3>
+              <div className="p-5 border-b border-slate-100 flex items-center justify-between">
+                <h3 className="font-bold text-navy font-heading">Team Directory</h3>
+                <span className="px-3 py-1 rounded-full bg-navy/10 text-navy text-xs font-bold">{staff.length} members</span>
               </div>
-              <div className="overflow-x-auto">
-                <table className="w-full text-left text-sm">
-                  <thead className="bg-slate-50 text-slate-500">
-                    <tr><th className="p-4">Name</th><th className="p-4">Role</th><th className="p-4">Department / Pillar</th><th className="p-4">Status</th></tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-100">
-                    {staff.map(s => (
-                      <tr key={s.id} className="hover:bg-slate-50">
-                        <td className="p-4">
-                          <p className="font-bold text-navy">{s.fullname}</p>
-                          <p className="text-xs text-slate-400">{s.email}</p>
-                        </td>
-                        <td className="p-4">
-                          <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-blue-100 text-blue-700 capitalize">{s.role.replace('_', ' ')}</span>
-                        </td>
-                        <td className="p-4 text-slate-600 capitalize">
-                          {s.department || s.pillar_role || '-'}
-                        </td>
-                        <td className="p-4">
-                          {s.is_approved ? <span className="text-green-600 font-bold text-xs">✓ Active</span> : <span className="text-amber-500 font-bold text-xs">⏳ Pending</span>}
-                        </td>
+              {staff.length === 0 ? (
+                <div className="text-center py-16">
+                  <span className="text-5xl block mb-3">👥</span>
+                  <p className="text-slate-400 text-sm">No staff records found</p>
+                </div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-sm">
+                    <thead className="bg-slate-50 text-slate-500">
+                      <tr>
+                        <th className="p-4">Name</th>
+                        <th className="p-4">Role</th>
+                        <th className="p-4">Department / Pillar</th>
+                        <th className="p-4">Joined</th>
+                        <th className="p-4">Status</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100">
+                      {staff.map(s => (
+                        <tr key={s.id} className="hover:bg-slate-50 transition-colors">
+                          <td className="p-4">
+                            <div className="flex items-center gap-3">
+                              <div className="w-9 h-9 rounded-xl bg-navy/10 flex items-center justify-center text-sm font-bold text-navy">
+                                {s.fullname?.[0]?.toUpperCase() || '?'}
+                              </div>
+                              <div>
+                                <p className="font-bold text-navy">{s.fullname}</p>
+                                <p className="text-xs text-slate-400">{s.email}</p>
+                              </div>
+                            </div>
+                          </td>
+                          <td className="p-4">
+                            <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-blue-100 text-blue-700 capitalize">{s.role.replace(/_/g, ' ')}</span>
+                          </td>
+                          <td className="p-4 text-slate-600 capitalize">{s.department || s.pillar_role || '—'}</td>
+                          <td className="p-4 text-slate-400 text-xs">{new Date(s.created_at).toLocaleDateString('en-IN')}</td>
+                          <td className="p-4">
+                            {s.is_approved
+                              ? <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-green-100 text-green-700">✓ Active</span>
+                              : <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-amber-100 text-amber-700">⏳ Pending</span>}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
             </div>
           )}
 
           {/* PAYROLL TAB */}
           {activeTab === 'payroll' && (
             <div className="space-y-6">
-               <div className="flex justify-end">
-                 <button onClick={() => setShowPayrollForm(!showPayrollForm)} className="px-5 py-2.5 bg-accent text-white font-bold rounded-xl shadow-lg hover:shadow-xl transition-all cursor-pointer">
-                   + Generate Salary Slip
-                 </button>
-               </div>
+              {/* Summary cards */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                {[
+                  { label: 'Total Slips', v: payrolls.length, color: '#3B82F6', bg: '#EFF6FF' },
+                  { label: 'Paid', v: payrolls.filter(p => p.status === 'paid').length, color: '#10B981', bg: '#ECFDF5' },
+                  { label: 'Pending', v: payrolls.filter(p => p.status === 'unpaid').length, color: '#F59E0B', bg: '#FFFBEB' },
+                  { label: 'Total Payout', v: `₹${payrolls.filter(p => p.status === 'paid').reduce((a, b) => a + b.net_salary, 0).toLocaleString('en-IN')}`, color: '#8B5CF6', bg: '#F5F3FF' },
+                ].map(k => (
+                  <div key={k.label} className="rounded-2xl p-4 border" style={{ background: k.bg, borderColor: `${k.color}20` }}>
+                    <p className="text-2xl font-extrabold" style={{ color: k.color }}>{k.v}</p>
+                    <p className="text-xs text-slate-500 mt-0.5">{k.label}</p>
+                  </div>
+                ))}
+              </div>
 
-               {showPayrollForm && (
-                 <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100">
-                   <h3 className="font-bold text-navy mb-4">💰 Generate Salary Slip</h3>
-                   <form onSubmit={savePayroll} className="space-y-4">
-                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                       <select required value={payForm.user_id} onChange={e=>setPayForm(p=>({...p, user_id: e.target.value}))} className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200">
-                         <option value="">Select Employee</option>
-                         {staff.map(s => <option key={s.id} value={s.id}>{s.fullname} ({s.role})</option>)}
-                       </select>
-                       <div className="flex gap-2">
-                         <select required value={payForm.month} onChange={e=>setPayForm(p=>({...p, month: e.target.value}))} className="flex-1 px-4 py-3 rounded-xl bg-slate-50 border border-slate-200">
-                           {['January','February','March','April','May','June','July','August','September','October','November','December'].map(m => <option key={m} value={m}>{m}</option>)}
-                         </select>
-                         <input type="number" required value={payForm.year} onChange={e=>setPayForm(p=>({...p, year: Number(e.target.value)}))} className="w-24 px-4 py-3 rounded-xl bg-slate-50 border border-slate-200" />
-                       </div>
-                       <input type="number" required placeholder="Base Salary (₹)" value={payForm.base} onChange={e=>setPayForm(p=>({...p, base: e.target.value}))} className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200" />
-                       <div className="flex gap-2">
-                         <input type="number" placeholder="Bonuses (₹)" value={payForm.bonus} onChange={e=>setPayForm(p=>({...p, bonus: e.target.value}))} className="flex-1 px-4 py-3 rounded-xl bg-slate-50 border border-slate-200" />
-                         <input type="number" placeholder="Deductions (₹)" value={payForm.ded} onChange={e=>setPayForm(p=>({...p, ded: e.target.value}))} className="flex-1 px-4 py-3 rounded-xl bg-slate-50 border border-slate-200" />
-                       </div>
-                     </div>
-                     <div className="flex justify-end gap-3 pt-2">
-                       <button type="button" onClick={() => setShowPayrollForm(false)} className="px-5 py-2 hover:bg-slate-100 rounded-xl font-bold text-slate-500 cursor-pointer">Cancel</button>
-                       <button type="submit" disabled={savingPay} className="px-5 py-2 bg-navy text-white font-bold rounded-xl cursor-pointer">Generate Slip</button>
-                     </div>
-                   </form>
-                 </div>
-               )}
+              <div className="flex justify-end">
+                <button onClick={() => setShowPayrollForm(!showPayrollForm)}
+                  className="px-5 py-2.5 text-white font-bold rounded-xl shadow-md hover:shadow-lg transition-all cursor-pointer"
+                  style={{ background: 'linear-gradient(135deg, #1B3A6B, #3B82F6)' }}>
+                  + Generate Salary Slip
+                </button>
+              </div>
 
-               <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
-                 <div className="overflow-x-auto">
-                   <table className="w-full text-left text-sm">
-                     <thead className="bg-slate-50 text-slate-500">
-                       <tr><th className="p-4">Employee</th><th className="p-4">Period</th><th className="p-4">Base Salary</th><th className="p-4">Bonus / Ded.</th><th className="p-4">Net Salary</th><th className="p-4">Status</th><th className="p-4">Action</th></tr>
-                     </thead>
-                     <tbody className="divide-y divide-slate-100">
-                       {payrolls.map(p => (
-                         <tr key={p.id}>
-                           <td className="p-4 font-semibold text-navy">{p.fullname}</td>
-                           <td className="p-4">{p.month} {p.year}</td>
-                           <td className="p-4">₹{p.base_salary.toLocaleString('en-IN')}</td>
-                           <td className="p-4 text-xs">
-                             <span className="text-green-600">+₹{p.bonuses}</span> / <span className="text-red-500">-₹{p.deductions}</span>
-                           </td>
-                           <td className="p-4 font-bold text-navy text-base">₹{p.net_salary.toLocaleString('en-IN')}</td>
-                           <td className="p-4">
-                             {p.status === 'paid' ? <span className="px-2 py-0.5 rounded textxs bg-green-100 text-green-700 font-bold">Paid</span> : <span className="px-2 py-0.5 rounded text-xs bg-amber-100 text-amber-700 font-bold">Unpaid</span>}
-                           </td>
-                           <td className="p-4">
-                             {p.status === 'unpaid' && (
-                               <button onClick={() => markPaid(p.id)} className="text-xs bg-accent/10 text-accent font-bold px-3 py-1.5 rounded-lg hover:bg-accent hover:text-white transition-colors cursor-pointer">
+              {showPayrollForm && (
+                <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }}
+                  className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100">
+                  <h3 className="font-bold text-navy font-heading mb-4">💰 Generate Salary Slip</h3>
+                  <form onSubmit={savePayroll} className="space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <select required value={payForm.user_id} onChange={e => setPayForm(p => ({ ...p, user_id: e.target.value }))}
+                        className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 focus:outline-none focus:border-navy">
+                        <option value="">Select Employee</option>
+                        {staff.map(s => <option key={s.id} value={s.id}>{s.fullname} ({s.role.replace(/_/g,' ')})</option>)}
+                      </select>
+                      <div className="flex gap-2">
+                        <select required value={payForm.month} onChange={e => setPayForm(p => ({ ...p, month: e.target.value }))}
+                          className="flex-1 px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 focus:outline-none">
+                          {['January','February','March','April','May','June','July','August','September','October','November','December'].map(m => <option key={m}>{m}</option>)}
+                        </select>
+                        <input type="number" required value={payForm.year}
+                          onChange={e => setPayForm(p => ({ ...p, year: Number(e.target.value) }))}
+                          className="w-24 px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 focus:outline-none" />
+                      </div>
+                      <input type="number" required placeholder="Base Salary (₹)" value={payForm.base}
+                        onChange={e => setPayForm(p => ({ ...p, base: e.target.value }))}
+                        className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 focus:outline-none" />
+                      <div className="flex gap-2">
+                        <input type="number" placeholder="Bonuses (₹)" value={payForm.bonus}
+                          onChange={e => setPayForm(p => ({ ...p, bonus: e.target.value }))}
+                          className="flex-1 px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 focus:outline-none" />
+                        <input type="number" placeholder="Deductions (₹)" value={payForm.ded}
+                          onChange={e => setPayForm(p => ({ ...p, ded: e.target.value }))}
+                          className="flex-1 px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 focus:outline-none" />
+                      </div>
+                    </div>
+                    {payForm.base && (
+                      <div className="rounded-xl bg-navy/5 border border-navy/10 p-4">
+                        <p className="text-sm text-slate-600">Net Salary Preview: <span className="text-2xl font-extrabold text-navy">₹{(Number(payForm.base) + Number(payForm.bonus) - Number(payForm.ded)).toLocaleString('en-IN')}</span></p>
+                      </div>
+                    )}
+                    <div className="flex justify-end gap-3 pt-2">
+                      <button type="button" onClick={() => setShowPayrollForm(false)} className="px-5 py-2 hover:bg-slate-100 rounded-xl font-bold text-slate-500 cursor-pointer">Cancel</button>
+                      <button type="submit" disabled={savingPay} className="px-5 py-2 bg-navy text-white font-bold rounded-xl cursor-pointer disabled:opacity-50">
+                        {savingPay ? 'Generating...' : 'Generate Slip'}
+                      </button>
+                    </div>
+                  </form>
+                </motion.div>
+              )}
+
+              <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+                {payrolls.length === 0 ? (
+                  <div className="text-center py-16">
+                    <span className="text-5xl block mb-3">💰</span>
+                    <p className="text-slate-400 text-sm mb-3">No payroll records yet</p>
+                    <button onClick={() => setShowPayrollForm(true)}
+                      className="px-4 py-2 rounded-xl text-xs font-bold text-white bg-navy cursor-pointer">
+                      Generate First Slip
+                    </button>
+                  </div>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left text-sm">
+                      <thead className="bg-slate-50 text-slate-500">
+                        <tr>
+                          <th className="p-4">Employee</th>
+                          <th className="p-4">Period</th>
+                          <th className="p-4">Base</th>
+                          <th className="p-4">Bonus / Ded.</th>
+                          <th className="p-4">Net Salary</th>
+                          <th className="p-4">Status</th>
+                          <th className="p-4">Action</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-100">
+                        {payrolls.map(p => (
+                          <tr key={p.id} className="hover:bg-slate-50/60">
+                            <td className="p-4 font-semibold text-navy">{p.fullname}</td>
+                            <td className="p-4 text-slate-500">{p.month} {p.year}</td>
+                            <td className="p-4">₹{Number(p.base_salary).toLocaleString('en-IN')}</td>
+                            <td className="p-4 text-xs">
+                              <span className="text-green-600">+₹{Number(p.bonuses).toLocaleString('en-IN')}</span>
+                              {' / '}
+                              <span className="text-red-500">-₹{Number(p.deductions).toLocaleString('en-IN')}</span>
+                            </td>
+                            <td className="p-4 font-bold text-navy text-base">₹{Number(p.net_salary).toLocaleString('en-IN')}</td>
+                            <td className="p-4">
+                              {p.status === 'paid'
+                                ? <span className="px-2 py-0.5 rounded-full text-xs bg-green-100 text-green-700 font-bold">Paid{p.payment_date ? ` · ${new Date(p.payment_date).toLocaleDateString('en-IN')}` : ''}</span>
+                                : <span className="px-2 py-0.5 rounded-full text-xs bg-amber-100 text-amber-700 font-bold">Unpaid</span>}
+                            </td>
+                            <td className="p-4">
+                              {p.status === 'unpaid' && (
+                                <button onClick={() => markPaid(p.id)}
+                                  className="text-xs bg-green-500/10 text-green-700 font-bold px-3 py-1.5 rounded-lg hover:bg-green-500 hover:text-white transition-colors cursor-pointer">
                                   Mark Paid
-                               </button>
-                             )}
-                           </td>
-                         </tr>
-                       ))}
-                     </tbody>
-                   </table>
-                 </div>
-               </div>
+                                </button>
+                              )}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
             </div>
           )}
 
@@ -279,52 +410,170 @@ export default function StaffManagementPage() {
           {activeTab === 'appraisals' && (
             <div className="space-y-6">
               <div className="flex justify-end">
-                <button onClick={() => setShowApprForm(!showApprForm)} className="px-5 py-2.5 bg-accent text-white font-bold rounded-xl shadow-lg hover:shadow-xl transition-all cursor-pointer">
+                <button onClick={() => setShowApprForm(!showApprForm)}
+                  className="px-5 py-2.5 text-white font-bold rounded-xl shadow-md hover:shadow-lg transition-all cursor-pointer"
+                  style={{ background: 'linear-gradient(135deg, #F59E0B, #F97316)' }}>
                   + New Appraisal Review
                 </button>
               </div>
 
               {showApprForm && (
-                <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100">
-                  <h3 className="font-bold text-navy mb-4">⭐ Complete Performance Appraisal</h3>
+                <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }}
+                  className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100">
+                  <h3 className="font-bold text-navy font-heading mb-4">⭐ Performance Appraisal</h3>
                   <form onSubmit={saveAppraisal} className="space-y-4">
-                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                       <select required value={apprForm.user_id} onChange={e=>setApprForm(p=>({...p, user_id: e.target.value}))} className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 md:col-span-1">
-                         <option value="">Select Employee</option>
-                         {staff.map(s => <option key={s.id} value={s.id}>{s.fullname}</option>)}
-                       </select>
-                       <input type="text" placeholder="Period (e.g., Q1 2026)" required value={apprForm.period} onChange={e=>setApprForm(p=>({...p, period: e.target.value}))} className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 md:col-span-1" />
-                       <input type="number" min="1" max="10" placeholder="Rating out of 10" required value={apprForm.score} onChange={e=>setApprForm(p=>({...p, score: e.target.value}))} className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 md:col-span-1" />
-                     </div>
-                     <textarea required rows={2} placeholder="General Feedback" value={apprForm.feedback} onChange={e=>setApprForm(p=>({...p, feedback: e.target.value}))} className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200" />
-                     <textarea required rows={2} placeholder="Key Goals Achieved" value={apprForm.goals} onChange={e=>setApprForm(p=>({...p, goals: e.target.value}))} className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200" />
-                     <textarea required rows={2} placeholder="Areas of Improvement" value={apprForm.areas} onChange={e=>setApprForm(p=>({...p, areas: e.target.value}))} className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200" />
-                     
-                     <div className="flex justify-end gap-3 pt-2">
-                       <button type="button" onClick={() => setShowApprForm(false)} className="px-5 py-2 hover:bg-slate-100 rounded-xl font-bold text-slate-500 cursor-pointer">Cancel</button>
-                       <button type="submit" disabled={savingAppr} className="px-5 py-2 bg-navy text-white font-bold rounded-xl cursor-pointer">Submit Appraisal</button>
-                     </div>
-                  </form>
-                </div>
-              )}
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {appraisals.length === 0 && <p className="text-slate-400 p-4">No appraisals submitted yet.</p>}
-                {appraisals.map(a => (
-                  <div key={a.id} className="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 hover:shadow-md transition-shadow">
-                    <div className="flex justify-between items-start mb-3">
-                      <div>
-                        <h4 className="font-bold text-navy text-lg">{a.fullname}</h4>
-                        <p className="text-xs text-slate-500">{a.review_period}</p>
-                      </div>
-                      <div className="w-12 h-12 rounded-xl bg-amber-50 border border-amber-200 flex items-center justify-center text-xl font-bold text-amber-500">
-                        {a.performance_score}<span className="text-[10px] text-amber-300">/10</span>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <select required value={apprForm.user_id} onChange={e => setApprForm(p => ({ ...p, user_id: e.target.value }))}
+                        className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 focus:outline-none">
+                        <option value="">Select Employee</option>
+                        {staff.map(s => <option key={s.id} value={s.id}>{s.fullname}</option>)}
+                      </select>
+                      <input type="text" placeholder="Period (e.g., Q1 2026)" required value={apprForm.period}
+                        onChange={e => setApprForm(p => ({ ...p, period: e.target.value }))}
+                        className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 focus:outline-none" />
+                      <div className="relative">
+                        <input type="number" min="1" max="10" placeholder="Rating (1–10)" required value={apprForm.score}
+                          onChange={e => setApprForm(p => ({ ...p, score: e.target.value }))}
+                          className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 focus:outline-none" />
+                        {apprForm.score && <span className="absolute right-3 top-1/2 -translate-y-1/2 text-amber-500 font-bold text-sm">{'⭐'.repeat(Math.min(Number(apprForm.score), 10))}</span>}
                       </div>
                     </div>
-                    <div className="space-y-2 mt-4 text-sm mt-4">
-                      <div><strong className="text-navy text-xs">Feedback:</strong> <p className="text-slate-600 line-clamp-2">{a.feedback}</p></div>
-                      <div><strong className="text-green-600 text-xs">Wins:</strong> <p className="text-slate-600 line-clamp-1">{a.goals_achieved}</p></div>
-                      <div><strong className="text-red-500 text-xs">Needs Focus:</strong> <p className="text-slate-600 line-clamp-1">{a.areas_of_improvement}</p></div>
+                    <textarea required rows={2} placeholder="General Feedback" value={apprForm.feedback}
+                      onChange={e => setApprForm(p => ({ ...p, feedback: e.target.value }))}
+                      className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 focus:outline-none resize-none" />
+                    <textarea required rows={2} placeholder="Key Goals Achieved" value={apprForm.goals}
+                      onChange={e => setApprForm(p => ({ ...p, goals: e.target.value }))}
+                      className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 focus:outline-none resize-none" />
+                    <textarea required rows={2} placeholder="Areas of Improvement" value={apprForm.areas}
+                      onChange={e => setApprForm(p => ({ ...p, areas: e.target.value }))}
+                      className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 focus:outline-none resize-none" />
+                    <div className="flex justify-end gap-3 pt-2">
+                      <button type="button" onClick={() => setShowApprForm(false)} className="px-5 py-2 hover:bg-slate-100 rounded-xl font-bold text-slate-500 cursor-pointer">Cancel</button>
+                      <button type="submit" disabled={savingAppr} className="px-5 py-2 bg-amber-500 text-white font-bold rounded-xl cursor-pointer disabled:opacity-50">
+                        {savingAppr ? 'Submitting...' : 'Submit Appraisal'}
+                      </button>
+                    </div>
+                  </form>
+                </motion.div>
+              )}
+
+              {appraisals.length === 0 ? (
+                <div className="text-center py-16 bg-white rounded-2xl border border-slate-100">
+                  <span className="text-5xl block mb-3">⭐</span>
+                  <p className="text-slate-400 text-sm mb-3">No appraisals submitted yet</p>
+                  <button onClick={() => setShowApprForm(true)} className="px-4 py-2 rounded-xl text-xs font-bold text-white bg-amber-500 cursor-pointer">+ Create First Appraisal</button>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {appraisals.map(a => (
+                    <div key={a.id} className="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 hover:shadow-md transition-shadow">
+                      <div className="flex justify-between items-start mb-3">
+                        <div>
+                          <h4 className="font-bold text-navy text-lg">{a.fullname}</h4>
+                          <p className="text-xs text-slate-500">{a.review_period}</p>
+                        </div>
+                        <div className="w-14 h-14 rounded-2xl bg-amber-50 border-2 border-amber-200 flex items-center justify-center flex-col">
+                          <span className="text-2xl font-extrabold text-amber-500">{a.performance_score}</span>
+                          <span className="text-[9px] text-amber-400">/10</span>
+                        </div>
+                      </div>
+                      <div className="w-full bg-slate-100 rounded-full h-1.5 mb-3">
+                        <div className="h-1.5 rounded-full bg-amber-400" style={{ width: `${a.performance_score * 10}%` }} />
+                      </div>
+                      <div className="space-y-2 text-sm">
+                        {a.feedback && <div><strong className="text-xs text-navy">Feedback:</strong><p className="text-slate-600 line-clamp-2">{a.feedback}</p></div>}
+                        {a.goals_achieved && <div><strong className="text-xs text-green-600">✓ Goals:</strong><p className="text-slate-600 line-clamp-1">{a.goals_achieved}</p></div>}
+                        {a.areas_of_improvement && <div><strong className="text-xs text-red-500">↑ Improve:</strong><p className="text-slate-600 line-clamp-1">{a.areas_of_improvement}</p></div>}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* LEAVES TAB */}
+          {activeTab === 'leaves' && <LeavesAdminTab />}
+
+        </motion.div>
+      </AnimatePresence>
+    </div>
+  )
+}
+
+// ── Leave admin sub-component ──
+function LeavesAdminTab() {
+  const [leaves, setLeaves] = useState<{ id: number; fullname: string; leave_type: string; start_date: string; end_date: string; days: number; reason: string; status: string; created_at: string }[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    fetch('/api/admin/staff?type=leaves')
+      .then(r => r.json())
+      .then(d => setLeaves(d.leaves || []))
+      .catch(() => {})
+      .finally(() => setLoading(false))
+  }, [])
+
+  const updateLeave = async (id: number, status: 'approved' | 'rejected') => {
+    const res = await fetch('/api/admin/staff?type=leaves', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id, status })
+    })
+    if (res.ok) setLeaves(l => l.map(r => r.id === id ? { ...r, status } : r))
+  }
+
+  const pending = leaves.filter(l => l.status === 'pending')
+  const processed = leaves.filter(l => l.status !== 'pending')
+
+  if (loading) return <div className="text-center py-12 text-slate-400">Loading leaves...</div>
+
+  return (
+    <div className="space-y-6">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        {[
+          { label: 'Total Requests', v: leaves.length, color: '#3B82F6', bg: '#EFF6FF' },
+          { label: 'Pending', v: pending.length, color: '#F59E0B', bg: '#FFFBEB' },
+          { label: 'Approved', v: leaves.filter(l => l.status === 'approved').length, color: '#10B981', bg: '#ECFDF5' },
+          { label: 'Rejected', v: leaves.filter(l => l.status === 'rejected').length, color: '#EF4444', bg: '#FEF2F2' },
+        ].map(k => (
+          <div key={k.label} className="rounded-2xl p-4 border" style={{ background: k.bg, borderColor: `${k.color}20` }}>
+            <p className="text-2xl font-extrabold" style={{ color: k.color }}>{k.v}</p>
+            <p className="text-xs text-slate-500 mt-0.5">{k.label}</p>
+          </div>
+        ))}
+      </div>
+
+      {leaves.length === 0 ? (
+        <div className="text-center py-16 bg-white rounded-2xl border border-slate-100">
+          <span className="text-5xl block mb-3">🏖️</span>
+          <p className="text-slate-400 text-sm">No leave requests submitted yet</p>
+        </div>
+      ) : (
+        <div className="space-y-4">
+          {pending.length > 0 && (
+            <div>
+              <h3 className="text-xs font-bold text-amber-600 uppercase tracking-wider mb-3">🕐 Pending Approval ({pending.length})</h3>
+              <div className="space-y-3">
+                {pending.map(l => (
+                  <div key={l.id} className="bg-white rounded-2xl p-5 border border-amber-200/60 shadow-sm flex flex-wrap gap-4 items-start justify-between">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-2">
+                        <span className="font-bold text-navy">{l.fullname}</span>
+                        <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-700 capitalize">{l.leave_type.replace('_', ' ')}</span>
+                      </div>
+                      <p className="text-sm text-slate-600">{new Date(l.start_date).toLocaleDateString('en-IN')} → {new Date(l.end_date).toLocaleDateString('en-IN')} · <strong>{l.days} day{l.days !== 1 ? 's' : ''}</strong></p>
+                      <p className="text-xs text-slate-400 mt-1">{l.reason}</p>
+                    </div>
+                    <div className="flex gap-2">
+                      <button onClick={() => updateLeave(l.id, 'approved')}
+                        className="px-4 py-2 text-xs font-bold bg-green-500 text-white rounded-xl hover:bg-green-600 cursor-pointer transition-colors">
+                        ✓ Approve
+                      </button>
+                      <button onClick={() => updateLeave(l.id, 'rejected')}
+                        className="px-4 py-2 text-xs font-bold bg-red-500 text-white rounded-xl hover:bg-red-600 cursor-pointer transition-colors">
+                        ✕ Reject
+                      </button>
                     </div>
                   </div>
                 ))}
@@ -332,17 +581,55 @@ export default function StaffManagementPage() {
             </div>
           )}
 
-          {/* LEAVES TAB */}
-          {activeTab === 'leaves' && (
-            <div className="bg-white rounded-2xl p-10 text-center border border-slate-100">
-              <span className="text-5xl block mb-4">🏖️</span>
-              <h3 className="text-lg font-bold text-navy mb-2">Leave Management Module</h3>
-              <p className="text-slate-500 text-sm max-w-md mx-auto">This module is part of the final employee self-service package. Currently, internal tracking is done manually.</p>
+          {processed.length > 0 && (
+            <div>
+              <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">History ({processed.length})</h3>
+              <div className="bg-white rounded-2xl border border-slate-100 overflow-hidden">
+                <div className="overflow-x-auto">
+                  <table className="w-full text-xs">
+                    <thead><tr className="bg-slate-50 border-b border-slate-100">
+                      {['Employee', 'Type', 'From', 'To', 'Days', 'Reason', 'Status'].map(h => (
+                        <th key={h} className="px-4 py-3 text-left font-bold text-slate-400 uppercase text-[10px]">{h}</th>
+                      ))}
+                    </tr></thead>
+                    <tbody>
+                      {processed.map(l => {
+                        const styles: Record<string, { bg: string; text: string }> = {
+                          approved: { bg: '#D1FAE5', text: '#065F46' },
+                          rejected: { bg: '#FEE2E2', text: '#991B1B' },
+                        }
+                        const s = styles[l.status] || { bg: '#F3F4F6', text: '#6B7280' }
+                        return (
+                          <tr key={l.id} className="border-b border-slate-50 hover:bg-slate-50/60">
+                            <td className="px-4 py-3 font-semibold text-navy">{l.fullname}</td>
+                            <td className="px-4 py-3 capitalize">{l.leave_type.replace('_', ' ')}</td>
+                            <td className="px-4 py-3 text-slate-500">{new Date(l.start_date).toLocaleDateString('en-IN')}</td>
+                            <td className="px-4 py-3 text-slate-500">{new Date(l.end_date).toLocaleDateString('en-IN')}</td>
+                            <td className="px-4 py-3 font-bold">{l.days}</td>
+                            <td className="px-4 py-3 text-slate-500 max-w-[180px] truncate">{l.reason}</td>
+                            <td className="px-4 py-3">
+                              <span className="px-2 py-0.5 rounded-full text-[10px] font-bold capitalize" style={{ background: s.bg, color: s.text }}>{l.status}</span>
+                            </td>
+                          </tr>
+                        )
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
             </div>
           )}
-          
-        </motion.div>
-      </AnimatePresence>
+        </div>
+      )}
     </div>
+  )
+}
+
+// ── Default export with Suspense boundary ──
+export default function StaffManagementPage() {
+  return (
+    <Suspense fallback={<div className="flex items-center justify-center py-20"><div className="w-10 h-10 border-4 border-slate-200 border-t-navy rounded-full animate-spin" style={{ borderWidth: 3 }} /></div>}>
+      <StaffContent />
+    </Suspense>
   )
 }

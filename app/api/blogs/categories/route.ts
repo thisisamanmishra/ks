@@ -10,11 +10,18 @@ export async function GET() {
       .select('*')
       .order('name')
 
-    if (error) throw error
+    // If table doesn't exist yet, return empty array instead of 500
+    if (error) {
+      if (error.code === '42P01') { // undefined_table
+        return NextResponse.json({ categories: [] })
+      }
+      console.error('Categories fetch error:', error.message)
+      return NextResponse.json({ categories: [] })
+    }
 
     return NextResponse.json({ categories: data || [] })
   } catch (err) {
     console.error('Categories fetch error:', err)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    return NextResponse.json({ categories: [] })
   }
 }

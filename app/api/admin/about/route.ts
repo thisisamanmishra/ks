@@ -2,29 +2,46 @@ import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { getCurrentUser } from '@/lib/auth/middleware'
 
-// GET /api/admin/about — public, fetches all about page content
-export async function GET() {
+// GET /api/admin/about — fetches all about page content
+// Public callers get only active members; admins get all
+export async function GET(request: Request) {
   const supabase = await createClient()
+  const { searchParams } = new URL(request.url)
+  const adminView = searchParams.get('admin') === 'true'
+
+  // Check if caller is an admin (board member or super admin)
+  let isAdmin = false
+  if (adminView) {
+    const user = await getCurrentUser()
+    isAdmin = !!(user && ['super_admin', 'board_member', 'admin'].includes(user.role))
+  }
+
+  // Build members query — admins see all, public sees only active
+  const membersQuery = supabase
+    .from('about_members')
+    .select('*')
+    .order('sort_order', { ascending: true })
 
   const [companyRes, timelineRes, achievementsRes, membersRes] = await Promise.all([
-    supabase.from('about_company').select('*').limit(1).single(),
+    supabase.from('about_company').select('*').order('id', { ascending: true }).limit(1),
     supabase.from('about_timeline').select('*').order('sort_order', { ascending: true }),
     supabase.from('about_achievements').select('*').order('sort_order', { ascending: true }),
-    supabase.from('about_members').select('*').eq('is_active', true).order('sort_order', { ascending: true }),
+    isAdmin ? membersQuery : membersQuery.eq('is_active', true),
   ])
 
-  return NextResponse.json({
-    company: companyRes.data || {},
-    timeline: timelineRes.data || [],
-    achievements: achievementsRes.data || [],
-    members: membersRes.data || [],
-  })
+  // Gracefully handle if tables don't exist yet (42P01 = undefined_table)
+  const company = (companyRes.data && companyRes.data.length > 0) ? companyRes.data[0] : {}
+  const timeline = timelineRes.error ? [] : (timelineRes.data || [])
+  const achievements = achievementsRes.error ? [] : (achievementsRes.data || [])
+  const members = membersRes.error ? [] : (membersRes.data || [])
+
+  return NextResponse.json({ company, timeline, achievements, members })
 }
 
 // POST /api/admin/about — create items
 export async function POST(request: Request) {
   const user = await getCurrentUser()
-  if (!user || !['super_admin', 'board_member'].includes(user.role)) {
+  if (!user || !['super_admin', 'board_member', 'admin'].includes(user.role)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })
   }
 
@@ -33,6 +50,7 @@ export async function POST(request: Request) {
   const supabase = await createClient()
 
   if (type === 'company') {
+    // Upsert company row (singleton)
     const { data: existing } = await supabase.from('about_company').select('id').limit(1).single()
     if (existing) {
       const { data: updated, error } = await supabase
@@ -71,7 +89,7 @@ export async function POST(request: Request) {
 // PATCH /api/admin/about — update items
 export async function PATCH(request: Request) {
   const user = await getCurrentUser()
-  if (!user || !['super_admin', 'board_member'].includes(user.role)) {
+  if (!user || !['super_admin', 'board_member', 'admin'].includes(user.role)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })
   }
 
@@ -105,7 +123,7 @@ export async function PATCH(request: Request) {
 // DELETE /api/admin/about
 export async function DELETE(request: Request) {
   const user = await getCurrentUser()
-  if (!user || !['super_admin', 'board_member'].includes(user.role)) {
+  if (!user || !['super_admin', 'board_member', 'admin'].includes(user.role)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })
   }
 

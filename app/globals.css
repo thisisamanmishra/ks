@@ -22,6 +22,11 @@ html {
   scroll-behavior: smooth;
 }
 
+/* Next.js: add data-scroll-behavior to preserve smooth scroll across route transitions */
+html[data-scroll-behavior='smooth'] {
+  scroll-behavior: smooth;
+}
+
 body {
   font-family: var(--font-body);
   color: #1e293b;
@@ -45,12 +50,10 @@ video {
   content-visibility: auto;
 }
 
-/* ===== Performance: GPU layer promotion for animated elements ===== */
+/* ===== Performance: Only promote specific animated elements ===== */
 .glass,
-.glass-dark,
-[data-animate] {
-  will-change: transform;
-  transform: translateZ(0);
+.glass-dark {
+  will-change: auto;
 }
 
 /* Smooth page load */
@@ -92,15 +95,15 @@ section {
 /* ===== Glassmorphism ===== */
 .glass {
   background: var(--color-glass);
-  backdrop-filter: blur(20px) saturate(180%);
-  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   border: 1px solid rgba(255, 255, 255, 0.3);
 }
 
 .glass-dark {
   background: var(--color-glass-dark);
-  backdrop-filter: blur(20px) saturate(180%);
-  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   border: 1px solid rgba(255, 255, 255, 0.1);
   color: white;
 }

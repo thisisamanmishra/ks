@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, Suspense } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 
 interface Doc { id: number; title: string; doc_type: string; content?: string; doc_url?: string; tags: string[]; department?: string; is_pinned: boolean; created_at: string; author?: { fullname: string } }
@@ -10,6 +10,18 @@ const TYPE_ICONS: Record<string, string> = { document:'📄', wiki:'📖', sop:'
 const TYPE_COLORS: Record<string, string> = { document:'#3B82F6', wiki:'#8B5CF6', sop:'#FF6B35', template:'#F59E0B', resource:'#10B981', guide:'#06B6D4' }
 
 export default function WorkspacePage() {
+  return (
+    <Suspense fallback={
+      <div className="flex items-center justify-center py-20">
+        <div className="w-10 h-10 border-4 border-slate-200 border-t-navy rounded-full animate-spin" style={{ borderWidth: 3 }} />
+      </div>
+    }>
+      <WorkspaceContent />
+    </Suspense>
+  )
+}
+
+function WorkspaceContent() {
   const [docs, setDocs] = useState<Doc[]>([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')

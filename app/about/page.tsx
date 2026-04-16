@@ -46,28 +46,71 @@ interface AboutData {
   members: Member[]
 }
 
+// ── Static fallback data (shown when DB is empty / migration not run yet) ──
+const FALLBACK: AboutData = {
+  company: {
+    vision: 'To create a global platform where knowledge meets opportunity, making quality education and professional services accessible to every student and business across India and beyond.',
+    mission: 'To empower 10 million students and 1 million businesses by 2030 through collaborative learning and affordable professional services.',
+    story: 'Karya Saarthi was founded with a vision to bridge the gap between what education teaches and what the industry demands.',
+    tagline: 'From a small idea to India\'s most trusted work companion — powered by passion, driven by purpose.',
+  },
+  timeline: [
+    { id: 1, year: '2024', title: 'Karya Saarthi Founded', description: 'Started with a vision to make professional services accessible to every student and business.', sort_order: 1 },
+    { id: 2, year: '2024', title: 'First 100 Clients', description: 'Crossed 100 happy clients within 6 months of launch.', sort_order: 2 },
+    { id: 3, year: '2025', title: '500+ Projects Done', description: 'Expanded to 50+ service categories across academic, tech, and design.', sort_order: 3 },
+    { id: 4, year: '2025', title: 'Going Digital', description: 'Launched online platform with AI-powered service matching and project tracking.', sort_order: 4 },
+  ],
+  achievements: [
+    { id: 1, icon: '🏆', value: '500+', label: 'Projects Delivered' },
+    { id: 2, icon: '⭐', value: '4.9/5', label: 'Average Rating' },
+    { id: 3, icon: '🎓', value: '50+', label: 'Service Categories' },
+    { id: 4, icon: '🌐', value: '10+', label: 'Cities Served' },
+    { id: 5, icon: '👨‍💼', value: '100+', label: 'Verified Experts' },
+    { id: 6, icon: '🔄', value: '80%', label: 'Repeat Rate' },
+  ],
+  members: [
+    { id: 1, name: 'Adv. Saloni Kumari', role: 'Founder & Director', image_url: '/images/team/Saloni.jpg',
+      vision: 'To create a global platform where knowledge meets opportunity.',
+      mission: 'To empower 10 million students and 1 million businesses by 2030.',
+      statement: 'As a legal professional turned entrepreneur, I\'ve witnessed the gap between what education teaches and what the industry demands. Karya Saarthi bridges that gap.' },
+    { id: 2, name: 'Pawandeep Kaur', role: 'Co-Founder & Project Manager Head', image_url: '/images/team/Pawandeep.jpg',
+      vision: 'To build the most efficient and customer-centric project delivery system in India.',
+      mission: 'To ensure 100% on-time delivery with 98%+ customer satisfaction.',
+      statement: 'Project management is not about deadlines alone - it\'s about people. Every project has a student behind it with dreams.' },
+    { id: 3, name: 'Bhawna', role: 'HR Executive', image_url: '/images/team/Bhawna.jpeg',
+      vision: 'To build the strongest network of verified experts where talent meets opportunity.',
+      mission: 'To recruit, train, and retain the best talent with 1000+ verified experts by 2027.',
+      statement: 'People are our biggest asset. Every vendor we hire, every intern we train - they all contribute to the Karya Saarthi family.' },
+    { id: 4, name: 'Rakhi Bhatt', role: 'Operations Manager', image_url: '/images/team/Rakhi.jpeg',
+      vision: 'To create the most streamlined operational framework where every customer query is resolved within hours.',
+      mission: 'To maintain 99% operational efficiency through daily monitoring and continuous improvement.',
+      statement: 'Operations is the backbone of any business. I monitor, I improve, I optimize - daily.' },
+  ],
+}
+
 export default function AboutPage() {
   const [flipped, setFlipped] = useState<number | null>(null)
-  const [data, setData] = useState<AboutData>({
-    company: { vision: '', mission: '', story: '', tagline: '' },
-    timeline: [],
-    achievements: [],
-    members: [],
-  })
+  const [data, setData] = useState<AboutData>(FALLBACK)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    fetch('/api/admin/about')
+    fetch('/api/admin/about?public=true')
       .then(r => r.json())
       .then(d => {
         setData({
-          company: d.company || {},
-          timeline: d.timeline || [],
-          achievements: d.achievements || [],
-          members: d.members || [],
+          // Use DB data if available, otherwise keep fallback
+          company: (d.company && Object.keys(d.company).length > 0 && d.company.vision)
+            ? d.company
+            : FALLBACK.company,
+          timeline: (d.timeline && d.timeline.length > 0) ? d.timeline : FALLBACK.timeline,
+          achievements: (d.achievements && d.achievements.length > 0) ? d.achievements : FALLBACK.achievements,
+          members: (d.members && d.members.length > 0) ? d.members : FALLBACK.members,
         })
       })
-      .catch(() => {})
+      .catch(() => {
+        // On network error keep fallback data
+        setData(FALLBACK)
+      })
       .finally(() => setLoading(false))
   }, [])
 

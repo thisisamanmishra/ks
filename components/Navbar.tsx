@@ -91,7 +91,7 @@ export default function Navbar() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16 lg:h-20">
           <Link href="/" className="flex items-center gap-2 group">
-            <Image src="/images/karyasaarthi.png" alt="Karya Saarthi" width={36} height={36} className="rounded-lg shadow-md group-hover:scale-105 transition-transform flex-shrink-0" />
+            <Image src="/images/karyasaarthi.png" alt="Karya Saarthi" width={36} height={36} className="rounded-lg shadow-md group-hover:scale-105 transition-transform flex-shrink-0" style={{ width: 36, height: 'auto' }} />
             <div className="leading-none">
               <span className={`text-lg font-bold font-heading tracking-tight transition-colors block ${logoText}`}>
                 Karya <span className="text-accent">Saarthi</span>

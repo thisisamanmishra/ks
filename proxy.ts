@@ -146,7 +146,9 @@ export async function proxy(request: NextRequest) {
     (p === '/api/services' && pathname.startsWith('/api/services')) ||
     (p === '/api/events' && pathname.startsWith('/api/events')) ||
     (p === '/api/public' && pathname.startsWith('/api/public'))
-  )
+  ) || 
+  (pathname.startsWith('/api/admin/blogs') && request.nextUrl.searchParams.get('public') === 'true') ||
+  (pathname.startsWith('/api/admin/about') && request.nextUrl.searchParams.get('public') === 'true')
 
   if (isPublic) return NextResponse.next()
 
@@ -188,7 +190,7 @@ export async function proxy(request: NextRequest) {
     if (user.role === 'super_admin') return NextResponse.next()
 
     if (user.role === 'board_member') {
-      if (pathname.startsWith('/admin/board') || pathname.startsWith('/api/admin/board')) {
+      if (pathname.startsWith('/admin/board') || pathname.startsWith('/api/admin/board') || pathname.startsWith('/api/admin/about') || pathname.startsWith('/api/admin/announcements')) {
         return NextResponse.next()
       }
       return NextResponse.redirect(new URL('/admin/board', request.url))

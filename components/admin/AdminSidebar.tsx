@@ -260,7 +260,7 @@ export default function AdminSidebar({ user }: { user: UserData }) {
   const roleBadge = getRoleBadge()
 
   const SidebarContent = () => (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-screen">
       {/* Logo */}
       <div className="p-5 border-b border-white/8 flex-shrink-0">
         <Link href="/admin" className="flex items-center gap-3">
@@ -291,7 +291,7 @@ export default function AdminSidebar({ user }: { user: UserData }) {
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 overflow-y-auto px-2 py-2 space-y-0.5 scrollbar-thin scrollbar-thumb-white/10">
+      <nav className="flex-1 overflow-y-auto px-2 py-2 space-y-0.5" style={{ scrollbarWidth: 'thin', scrollbarColor: 'rgba(255,255,255,0.12) transparent' }}>
         {navGroups.map(group => (
           <div key={group.title} className="mb-1">
             {/* Group header */}
@@ -363,7 +363,7 @@ export default function AdminSidebar({ user }: { user: UserData }) {
   return (
     <>
       {/* Desktop sidebar */}
-      <aside className="hidden lg:flex w-64 min-h-screen fixed top-0 left-0 z-30 flex-col"
+      <aside className="hidden lg:flex w-64 h-screen fixed top-0 left-0 z-30 flex-col overflow-hidden"
         style={{ background: '#0d1829', borderRight: '1px solid rgba(255,255,255,0.06)' }}>
         <SidebarContent />
       </aside>
@@ -389,7 +389,7 @@ export default function AdminSidebar({ user }: { user: UserData }) {
             <motion.aside
               initial={{ x: -280 }} animate={{ x: 0 }} exit={{ x: -280 }}
               transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-              className="lg:hidden fixed top-0 left-0 bottom-0 w-72 z-50 flex flex-col"
+              className="lg:hidden fixed top-0 left-0 bottom-0 w-72 z-50 flex flex-col overflow-hidden"
               style={{ background: '#0d1829' }}
             >
               <SidebarContent />

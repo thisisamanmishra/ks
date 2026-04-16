@@ -107,16 +107,25 @@ export default function BlogsPage() {
             </div>
           ) : filtered.length === 0 ? (
             <div className="text-center py-24 text-slate-400">
-              <span className="text-5xl block mb-4">📝</span>
-              <p className="font-medium">No articles found.</p>
-              {search || activeCategory !== 'All' ? (
-                <button
-                  onClick={() => { setSearch(''); setActiveCategory('All') }}
-                  className="mt-4 px-5 py-2 rounded-xl bg-navy text-white text-sm font-bold cursor-pointer hover:opacity-90"
-                >
-                  Clear filters
-                </button>
-              ) : null}
+              <span className="text-5xl block mb-4">{blogs.length === 0 ? '📝' : '🔍'}</span>
+              {blogs.length === 0 ? (
+                <>
+                  <p className="font-semibold text-slate-600 text-lg">Blog articles coming soon!</p>
+                  <p className="text-slate-400 text-sm mt-2 max-w-sm mx-auto">
+                    Our team is crafting insightful articles on academics, technology, business & more. Check back shortly!
+                  </p>
+                </>
+              ) : (
+                <>
+                  <p className="font-medium">No articles match your search.</p>
+                  <button
+                    onClick={() => { setSearch(''); setActiveCategory('All') }}
+                    className="mt-4 px-5 py-2 rounded-xl bg-navy text-white text-sm font-bold cursor-pointer hover:opacity-90"
+                  >
+                    Clear filters
+                  </button>
+                </>
+              )}
             </div>
           ) : (
             /* Square card grid */

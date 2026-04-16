@@ -243,13 +243,17 @@ export default function OperationsPage() {
       )}
 
       {/* Tabs */}
-      <div className="flex gap-1 border-b border-slate-200 overflow-x-auto">
-        {TABS.map(t => (
-          <button key={t.key} onClick={() => setActiveTab(t.key)}
-            className={`px-4 py-2.5 text-sm font-bold cursor-pointer transition-all border-b-2 -mb-px whitespace-nowrap ${activeTab === t.key ? 'border-accent text-accent' : 'border-transparent text-slate-500 hover:text-navy'}`}>
-            {t.label}
-          </button>
-        ))}
+      <div className="relative border-b border-slate-200">
+        <div className="flex gap-1 overflow-x-auto" style={{ scrollbarWidth: 'thin', scrollbarColor: 'rgba(0,0,0,0.15) transparent' }}>
+          {TABS.map(t => (
+            <button key={t.key} onClick={() => setActiveTab(t.key)}
+              className={`px-4 py-2.5 text-sm font-bold cursor-pointer transition-all border-b-2 -mb-px whitespace-nowrap ${activeTab === t.key ? 'border-accent text-accent' : 'border-transparent text-slate-500 hover:text-navy'}`}>
+              {t.label}
+            </button>
+          ))}
+        </div>
+        {/* Gradient fade indicating more tabs to the right */}
+        <div className="pointer-events-none absolute right-0 top-0 bottom-0 w-12 bg-gradient-to-l from-[#fafafa] to-transparent" />
       </div>
 
       {/* ── OPS DASHBOARD ── */}
