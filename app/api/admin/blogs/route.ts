@@ -73,7 +73,7 @@ export async function GET(request: Request) {
       error = null
     }
 
-    return NextResponse.json({ blogs: data || [], debug: { originalError: error?.message, fallbackUsed: !!error } })
+    return NextResponse.json({ blogs: data || [], debug: { originalError: (error as any)?.message, fallbackUsed: !!error } })
   } catch (err: any) {
     console.error('[blogs GET] Unhandled error:', err)
     return NextResponse.json({ blogs: [], debug: 'catch block', error: String(err) })
