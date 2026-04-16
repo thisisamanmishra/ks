@@ -25,7 +25,7 @@ export async function GET(request: Request) {
     .eq('is_active', true)
     .range(offset, offset + limit - 1)
 
-  if (category && category !== 'all') query = query.eq('category', category)
+  if (category && category !== 'all') query = query.ilike('category', category)
   if (search) query = query.ilike('title', `%${search}%`)
   if (minPrice) query = query.gte('price_min', parseFloat(minPrice))
   if (maxPrice) query = query.lte('price_max', parseFloat(maxPrice))

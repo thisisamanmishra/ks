@@ -64,12 +64,10 @@ export default function WhatsAppWidget() {
             className="w-14 h-14 rounded-full flex items-center justify-center text-white text-2xl shadow-2xl cursor-pointer relative"
             style={{ background: '#25D366', boxShadow: '0 8px 24px rgba(37,211,102,0.4)' }}
           >
-            {/* Pulse ring */}
-            <motion.div
-              className="absolute inset-0 rounded-full"
-              style={{ border: '2px solid rgba(37,211,102,0.5)' }}
-              animate={{ scale: [1, 1.4], opacity: [0.8, 0] }}
-              transition={{ duration: 1.5, repeat: Infinity }}
+            {/* Pulse ring — CSS only, no JS overhead */}
+            <div
+              className="absolute inset-0 rounded-full animate-ping"
+              style={{ border: '2px solid rgba(37,211,102,0.4)', animationDuration: '1.5s' }}
             />
             💬
           </motion.button>

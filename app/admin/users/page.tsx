@@ -29,6 +29,20 @@ const roleColors: Record<string, string> = {
   pending_admin: 'bg-amber-100 text-amber-700',
 }
 
+const roleLabel = (user: User) => {
+  if (user.designation) return user.designation
+  if (user.role === 'admin' && user.department) {
+    if (user.department === 'operations' && user.pillar_role === 'project_manager') return 'Project Manager'
+    if (user.department === 'operations') return 'Operation Head'
+    if (user.department === 'digital') return 'Digital Marketing Head'
+    if (user.department === 'marketing') return 'Marketing Head'
+    return `${user.department} Head`
+  }
+  if (user.role === 'pillar_member' && user.pillar_role)
+    return `${user.pillar_role.replace('_', ' ')} Saarthi`
+  return user.role.replace('_', ' ')
+}
+
 export default function UsersPage() {
   const [users, setUsers] = useState<User[]>([])
   const [loading, setLoading] = useState(true)
@@ -39,13 +53,26 @@ export default function UsersPage() {
   const [actionLoading, setActionLoading] = useState<number | null>(null)
   const [profileUserId, setProfileUserId] = useState<number | null>(null)
   const [profileVendorId, setProfileVendorId] = useState<number | null>(null)
+  // Current user role — determines if role-change controls show
+  const [myRole, setMyRole] = useState<string>('')
+
+  // Fetch logged-in user's role first
+  useEffect(() => {
+    fetch('/api/auth/me').then(r => r.json()).then(d => setMyRole(d.role || '')).catch(() => {})
+  }, [])
+
+  const isSuperAdmin = myRole === 'super_admin'
 
   const fetchUsers = async () => {
     setLoading(true)
     const params = new URLSearchParams({ page: String(page), limit: '20' })
     if (search) params.set('search', search)
-    if (roleFilter) params.set('role', roleFilter)
-
+    // Non-super-admins only see customers & vendors (their CRM view)
+    if (!isSuperAdmin) {
+      params.set('role', roleFilter || 'customer,vendor')
+    } else if (roleFilter) {
+      params.set('role', roleFilter)
+    }
     const res = await fetch(`/api/admin/users?${params}`)
     const data = await res.json()
     setUsers(data.users || [])
@@ -53,7 +80,10 @@ export default function UsersPage() {
     setLoading(false)
   }
 
-  useEffect(() => { fetchUsers() }, [page, roleFilter])
+  useEffect(() => {
+    if (myRole) fetchUsers()
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [page, roleFilter, myRole])
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault()
@@ -92,8 +122,14 @@ export default function UsersPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-navy font-heading">👥 User Management</h1>
-          <p className="text-slate-500 text-sm mt-1">{total} total users</p>
+          <h1 className="text-2xl font-bold text-navy font-heading">
+            {isSuperAdmin ? '👥 User Management' : '👤 Clients & Vendors'}
+          </h1>
+          <p className="text-slate-500 text-sm mt-1">
+            {isSuperAdmin
+              ? `${total} total users — full access`
+              : `${total} clients & vendors in your CRM`}
+          </p>
         </div>
       </div>
 
@@ -102,24 +138,40 @@ export default function UsersPage() {
         <form onSubmit={handleSearch} className="flex-1">
           <input
             type="text"
-            placeholder="Search by name, email, or phone..."
+            placeholder={isSuperAdmin ? 'Search by name, email, or phone...' : 'Search clients & vendors...'}
             value={search}
             onChange={e => setSearch(e.target.value)}
             className="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 focus:outline-none focus:border-navy focus:ring-2 focus:ring-navy/10 text-sm shadow-sm"
           />
         </form>
-        <select
-          value={roleFilter}
-          onChange={e => { setRoleFilter(e.target.value); setPage(1) }}
-          className="px-4 py-3 rounded-xl bg-white border border-slate-200 text-sm focus:outline-none focus:border-navy"
-        >
-          <option value="">All Roles</option>
-          <option value="super_admin">Super Admin</option>
-          <option value="admin">Admin</option>
-          <option value="vendor">Vendor</option>
-          <option value="customer">Customer</option>
-          <option value="pending_admin">Pending Admin</option>
-        </select>
+        {/* Only super admin sees role filter */}
+        {isSuperAdmin && (
+          <select
+            value={roleFilter}
+            onChange={e => { setRoleFilter(e.target.value); setPage(1) }}
+            className="px-4 py-3 rounded-xl bg-white border border-slate-200 text-sm focus:outline-none focus:border-navy"
+          >
+            <option value="">All Roles</option>
+            <option value="super_admin">Super Admin</option>
+            <option value="board_member">Board Member</option>
+            <option value="admin">Admin</option>
+            <option value="pillar_member">Pillar Member</option>
+            <option value="vendor">Vendor</option>
+            <option value="customer">Customer</option>
+            <option value="pending_admin">Pending Admin</option>
+          </select>
+        )}
+        {!isSuperAdmin && (
+          <select
+            value={roleFilter}
+            onChange={e => { setRoleFilter(e.target.value); setPage(1) }}
+            className="px-4 py-3 rounded-xl bg-white border border-slate-200 text-sm focus:outline-none focus:border-navy"
+          >
+            <option value="">All (Clients + Vendors)</option>
+            <option value="customer">Clients</option>
+            <option value="vendor">Vendors</option>
+          </select>
+        )}
       </div>
 
       {/* Table */}
@@ -165,8 +217,9 @@ export default function UsersPage() {
                           <button
                             onClick={() => {
                               if (user.role === 'customer') setProfileUserId(user.id)
+                              else if (user.role === 'vendor') setProfileVendorId(user.id)
                             }}
-                            className={`font-medium text-navy ${user.role === 'customer' ? 'hover:text-accent hover:underline cursor-pointer' : 'cursor-default'}`}
+                            className={`font-medium text-navy ${['customer','vendor'].includes(user.role) ? 'hover:text-accent hover:underline cursor-pointer' : 'cursor-default'}`}
                           >
                             {user.fullname}
                           </button>
@@ -175,24 +228,8 @@ export default function UsersPage() {
                       </div>
                     </td>
                     <td className="p-4">
-                      <span className={`inline-block px-2.5 py-1 rounded-full text-xs font-bold ${roleColors[user.role] || 'bg-slate-100 text-slate-600'}`}>
-                        {user.designation
-                           ? user.designation
-                           : user.role === 'admin' && user.department 
-                           ? (user.department === 'operations' && user.pillar_role === 'project_manager' ? 'Project Manager'
-                              : user.department === 'operations' ? 'Operation Head'
-                              : user.department === 'digital' ? 'Digital Marketing Head'
-                              : user.department === 'marketing' ? 'Marketing Head'
-                              : `${user.department} Head`)
-                           : user.role === 'pending_admin' && user.department
-                           ? (user.department === 'operations' && user.pillar_role === 'project_manager' ? 'Project Manager'
-                              : user.department === 'operations' ? 'Operation Head'
-                              : user.department === 'digital' ? 'Digital Marketing Head'
-                              : user.department === 'marketing' ? 'Marketing Head'
-                              : `${user.department} Head`)
-                           : user.role === 'pillar_member' && user.pillar_role
-                           ? `${user.pillar_role.replace('_', ' ')} Saarthi`
-                           : user.role.replace('_', ' ')}
+                      <span className={`inline-block px-2.5 py-1 rounded-full text-xs font-bold capitalize ${roleColors[user.role] || 'bg-slate-100 text-slate-600'}`}>
+                        {roleLabel(user)}
                       </span>
                       {user.role === 'pending_admin' && (
                         <span className="ml-1.5 text-[10px] text-amber-500 font-bold">⏳ Pending</span>
@@ -207,66 +244,81 @@ export default function UsersPage() {
                     </td>
                     <td className="p-4 text-right">
                       <div className="flex items-center justify-end gap-2">
-                        {user.role !== 'super_admin' && (
-                          <>
-                            <button
-                              onClick={() => updateUser(user.id, { status: user.status === 'blocked' ? 'active' : 'blocked' })}
-                              disabled={actionLoading === user.id}
-                              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors cursor-pointer ${
-                                user.status === 'blocked'
-                                  ? 'bg-green-50 text-green-600 hover:bg-green-100'
-                                  : 'bg-red-50 text-red-600 hover:bg-red-100'
-                              }`}
-                            >
-                              {actionLoading === user.id ? '...' : user.status === 'blocked' ? 'Unblock' : 'Block'}
-                            </button>
-                            <button
-                              onClick={() => deleteUser(user.id, user.fullname)}
-                              disabled={actionLoading === user.id}
-                              className="px-3 py-1.5 rounded-lg text-xs font-medium transition-colors cursor-pointer bg-red-500 text-white hover:bg-red-600"
-                            >
-                              {actionLoading === user.id ? '...' : '🗑 Delete'}
-                            </button>
-                            {(
-                              <select
-                                value={
-                                  user.role === 'board_member' ? 'board_member' :
-                                  user.role === 'admin' && (user.department === 'digital' || user.pillar_role === 'digital') ? 'digital_head' :
-                                  user.role === 'admin' && user.department === 'operations' && user.pillar_role === 'project_manager' ? 'pm' :
-                                  user.role === 'admin' && user.department === 'operations' ? 'ops_head' :
-                                  user.role === 'admin' && user.department === 'marketing' ? 'marketing_head' :
-                                  user.role === 'pillar_member' && user.pillar_role ? `pillar_${user.pillar_role}` :
-                                  user.role
-                                }
-                                onChange={e => {
-                                  const val = e.target.value
-                                  if (val === 'digital_head') updateUser(user.id, { role: 'admin', department: null, pillar_role: 'digital' })
-                                  else if (val === 'ops_head') updateUser(user.id, { role: 'admin', department: 'operations', pillar_role: 'operation_head' })
-                                  else if (val === 'pm') updateUser(user.id, { role: 'admin', department: 'operations', pillar_role: 'project_manager' }) 
-                                  else if (val === 'marketing_head') updateUser(user.id, { role: 'admin', department: 'marketing', pillar_role: null })
-                                  else if (val.startsWith('pillar_')) updateUser(user.id, { role: 'pillar_member', department: null, pillar_role: val.split('_')[1] })
-                                  else updateUser(user.id, { role: val, department: null, pillar_role: null })
-                                }}
-                                className="px-2 py-1.5 rounded-lg text-xs border border-slate-200 bg-white focus:outline-none cursor-pointer"
-                              >
-                                <option value="customer">Customer</option>
-                                <option value="vendor">Vendor</option>
-                                <option value="board_member">👔 Board Member</option>
-                                <option disabled>── Staff Roles ──</option>
-                                <option value="admin">Global Admin</option>
-                                <option value="digital_head">Digital Marketing Head</option>
-                                <option value="ops_head">Operation Head</option>
-                                <option value="pm">Project Manager</option>
-                                <option value="marketing_head">Marketing Head</option>
-                                <option disabled>── 5 Pillars ──</option>
-                                <option value="pillar_campus">Campus Saarthi</option>
-                                <option value="pillar_digital">Digital Saarthi</option>
-                                <option value="pillar_calling">Calling Saarthi</option>
-                                <option value="pillar_government">Government Saarthi</option>
-                                <option value="pillar_market">Market Saarthi</option>
-                              </select>
-                            )}
-                          </>
+                        {/* Block/Unblock — super admin only */}
+                        {isSuperAdmin && user.role !== 'super_admin' && (
+                          <button
+                            onClick={() => updateUser(user.id, { status: user.status === 'blocked' ? 'active' : 'blocked' })}
+                            disabled={actionLoading === user.id}
+                            className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors cursor-pointer ${
+                              user.status === 'blocked'
+                                ? 'bg-green-50 text-green-600 hover:bg-green-100'
+                                : 'bg-red-50 text-red-600 hover:bg-red-100'
+                            }`}
+                          >
+                            {actionLoading === user.id ? '...' : user.status === 'blocked' ? 'Unblock' : 'Block'}
+                          </button>
+                        )}
+                        {/* Delete — super admin only */}
+                        {isSuperAdmin && user.role !== 'super_admin' && (
+                          <button
+                            onClick={() => deleteUser(user.id, user.fullname)}
+                            disabled={actionLoading === user.id}
+                            className="px-3 py-1.5 rounded-lg text-xs font-medium transition-colors cursor-pointer bg-red-500 text-white hover:bg-red-600"
+                          >
+                            {actionLoading === user.id ? '...' : '🗑 Delete'}
+                          </button>
+                        )}
+                        {/* Role change — super admin ONLY */}
+                        {isSuperAdmin && user.role !== 'super_admin' && (
+                          <select
+                            value={
+                              user.role === 'board_member' ? 'board_member' :
+                              user.role === 'admin' && (user.department === 'digital' || user.pillar_role === 'digital') ? 'digital_head' :
+                              user.role === 'admin' && user.department === 'operations' && user.pillar_role === 'project_manager' ? 'pm' :
+                              user.role === 'admin' && user.department === 'operations' ? 'ops_head' :
+                              user.role === 'admin' && user.department === 'marketing' ? 'marketing_head' :
+                              user.role === 'pillar_member' && user.pillar_role ? `pillar_${user.pillar_role}` :
+                              user.role
+                            }
+                            onChange={e => {
+                              const val = e.target.value
+                              if (val === 'digital_head') updateUser(user.id, { role: 'admin', department: null, pillar_role: 'digital' })
+                              else if (val === 'ops_head') updateUser(user.id, { role: 'admin', department: 'operations', pillar_role: 'operation_head' })
+                              else if (val === 'pm') updateUser(user.id, { role: 'admin', department: 'operations', pillar_role: 'project_manager' })
+                              else if (val === 'marketing_head') updateUser(user.id, { role: 'admin', department: 'marketing', pillar_role: null })
+                              else if (val.startsWith('pillar_')) updateUser(user.id, { role: 'pillar_member', department: null, pillar_role: val.split('_')[1] })
+                              else updateUser(user.id, { role: val, department: null, pillar_role: null })
+                            }}
+                            className="px-2 py-1.5 rounded-lg text-xs border border-slate-200 bg-white focus:outline-none cursor-pointer"
+                          >
+                            <option value="customer">Customer</option>
+                            <option value="vendor">Vendor</option>
+                            <option value="board_member">👔 Board Member</option>
+                            <option disabled>── Staff Roles ──</option>
+                            <option value="admin">Global Admin</option>
+                            <option value="digital_head">Digital Marketing Head</option>
+                            <option value="ops_head">Operation Head</option>
+                            <option value="pm">Project Manager</option>
+                            <option value="marketing_head">Marketing Head</option>
+                            <option disabled>── 5 Pillars ──</option>
+                            <option value="pillar_campus">Campus Saarthi</option>
+                            <option value="pillar_digital">Digital Saarthi</option>
+                            <option value="pillar_calling">Calling Saarthi</option>
+                            <option value="pillar_government">Government Saarthi</option>
+                            <option value="pillar_market">Market Saarthi</option>
+                          </select>
+                        )}
+                        {/* Non-super-admin: read-only view action */}
+                        {!isSuperAdmin && (
+                          <button
+                            onClick={() => {
+                              if (user.role === 'customer') setProfileUserId(user.id)
+                              else if (user.role === 'vendor') setProfileVendorId(user.id)
+                            }}
+                            className="px-3 py-1.5 rounded-lg text-xs font-medium bg-slate-50 text-slate-600 hover:bg-slate-100 cursor-pointer"
+                          >
+                            👁 View
+                          </button>
                         )}
                       </div>
                     </td>

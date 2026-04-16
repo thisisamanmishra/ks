@@ -1,21 +1,25 @@
 import Navbar from '@/components/Navbar'
 import HeroSection from '@/components/HeroSection'
 import LiveStatsBar from '@/components/LiveStatsBar'
-import ServiceTiles from '@/components/ServiceTiles'
-import HowItWorks from '@/components/HowItWorks'
-import PillarsSection from '@/components/PillarsSection'
-import StatsSection from '@/components/StatsSection'
-import EventsPreviewSection from '@/components/EventsPreviewSection'
-import HackathonsSection from '@/components/HackathonsSection'
-import PodcastsSection from '@/components/PodcastsSection'
-import BlogSection from '@/components/BlogSection'
-import TestimonialsSection from '@/components/TestimonialsSection'
-import QuickAccessDashboard from '@/components/QuickAccessDashboard'
-import CTABanner from '@/components/CTABanner'
-import NewsletterSection from '@/components/NewsletterSection'
-import Footer from '@/components/Footer'
-import Chatbot from '@/components/Chatbot'
-import WhatsAppWidget from '@/components/WhatsAppWidget'
+import dynamic from 'next/dynamic'
+
+// Lazy load below-the-fold components to improve initial load performance
+const ServiceTiles = dynamic(() => import('@/components/ServiceTiles'), { ssr: true })
+const HowItWorks = dynamic(() => import('@/components/HowItWorks'), { ssr: true })
+const PillarsSection = dynamic(() => import('@/components/PillarsSection'), { ssr: true })
+const StatsSection = dynamic(() => import('@/components/StatsSection'), { ssr: true })
+const EventsPreviewSection = dynamic(() => import('@/components/EventsPreviewSection'))
+const HackathonsSection = dynamic(() => import('@/components/HackathonsSection'))
+const PodcastsSection = dynamic(() => import('@/components/PodcastsSection'))
+const TestimonialsSection = dynamic(() => import('@/components/TestimonialsSection'), { ssr: true })
+const QuickAccessDashboard = dynamic(() => import('@/components/QuickAccessDashboard'))
+const CTABanner = dynamic(() => import('@/components/CTABanner'), { ssr: true })
+const NewsletterSection = dynamic(() => import('@/components/NewsletterSection'), { ssr: true })
+const Footer = dynamic(() => import('@/components/Footer'), { ssr: true })
+
+// These are client-heavy widgets, definitely lazy load them
+const Chatbot = dynamic(() => import('@/components/Chatbot'))
+const WhatsAppWidget = dynamic(() => import('@/components/WhatsAppWidget'))
 
 export const metadata = {
   title: 'Karya Saarthi — Hum Hai Aapke Saathi | Academic, Technical & Business Services',
@@ -35,7 +39,6 @@ export default function Home() {
       <EventsPreviewSection />
       <HackathonsSection />
       <PodcastsSection />
-      <BlogSection />
       <TestimonialsSection />
       <QuickAccessDashboard />
       <CTABanner />

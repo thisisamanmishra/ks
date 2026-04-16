@@ -35,7 +35,7 @@ function TopBar({ user }: { user: UserData }) {
       try {
         const res = await fetch('/api/notifications?limit=1')
         if (res.ok) { const d = await res.json(); setUnread(d.unread || 0) }
-      } catch {}
+      } catch { }
     }
     fetchUnread()
     const i = setInterval(fetchUnread, 15000)

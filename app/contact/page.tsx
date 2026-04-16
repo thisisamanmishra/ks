@@ -1,15 +1,41 @@
 'use client'
 
+import { useState } from 'react'
 import { motion } from 'framer-motion'
 import Navbar from '@/components/Navbar'
 import Footer from '@/components/Footer'
 import Chatbot from '@/components/Chatbot'
 
 export default function ContactPage() {
-  const handleSubmit = (e: React.FormEvent) => {
+  const [form, setForm] = useState({ name: '', email: '', phone: '', service: '', message: '' })
+  const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle')
+  const [msg, setMsg] = useState('')
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    alert('Thank you! We\'ll get back to you within 2 hours.')
+    setStatus('loading')
+    try {
+      const res = await fetch('/api/contact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(form),
+      })
+      if (res.ok) {
+        setStatus('success')
+        setMsg("Thank you! We'll get back to you within 2 hours. 🎉")
+        setForm({ name: '', email: '', phone: '', service: '', message: '' })
+      } else {
+        const d = await res.json()
+        setStatus('error')
+        setMsg(d.error || 'Something went wrong. Please try again.')
+      }
+    } catch {
+      setStatus('error')
+      setMsg('Network error. Please try again.')
+    }
   }
+
+  const inp = 'w-full px-4 py-3.5 rounded-xl bg-surface border border-slate-200 focus:outline-none focus:border-navy focus:ring-2 focus:ring-navy/10 text-sm transition-all'
 
   return (
     <>
@@ -28,26 +54,57 @@ export default function ContactPage() {
               <form onSubmit={handleSubmit} className="bg-white rounded-2xl p-8 shadow-sm border border-slate-100">
                 <h3 className="font-bold text-navy text-xl mb-6 font-heading">Send Us a Message</h3>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
-                  <input type="text" placeholder="Your Name" required className="px-4 py-3.5 rounded-xl bg-surface border border-slate-200 focus:outline-none focus:border-navy focus:ring-2 focus:ring-navy/10 text-sm transition-all" />
-                  <input type="email" placeholder="Email Address" required className="px-4 py-3.5 rounded-xl bg-surface border border-slate-200 focus:outline-none focus:border-navy focus:ring-2 focus:ring-navy/10 text-sm transition-all" />
+                  <input
+                    type="text" placeholder="Your Name" required value={form.name}
+                    onChange={e => setForm(p => ({ ...p, name: e.target.value }))}
+                    className={inp} />
+                  <input
+                    type="email" placeholder="Email Address" required value={form.email}
+                    onChange={e => setForm(p => ({ ...p, email: e.target.value }))}
+                    className={inp} />
                 </div>
-                <input type="tel" placeholder="Phone Number" required className="w-full px-4 py-3.5 rounded-xl bg-surface border border-slate-200 focus:outline-none focus:border-navy focus:ring-2 focus:ring-navy/10 text-sm mb-4 transition-all" />
-                <select defaultValue="" required className="w-full px-4 py-3.5 rounded-xl bg-surface border border-slate-200 focus:outline-none focus:border-navy text-sm text-slate-500 mb-4">
-                  <option value="" disabled>Select Service Category</option>
-                  <option>Programming & Tech</option>
-                  <option>Graphics & Design</option>
+                <input
+                  type="tel" placeholder="Phone Number" value={form.phone}
+                  onChange={e => setForm(p => ({ ...p, phone: e.target.value }))}
+                  className={`${inp} mb-4`} />
+                <select
+                  value={form.service}
+                  onChange={e => setForm(p => ({ ...p, service: e.target.value }))}
+                  className={`${inp} mb-4 text-slate-500`}>
+                  <option value="">Select Service Category</option>
+                  <option>Programming &amp; Tech</option>
+                  <option>Graphics &amp; Design</option>
                   <option>Digital Marketing</option>
-                  <option>Writing & Translation</option>
-                  <option>Video & Animation</option>
+                  <option>Writing &amp; Translation</option>
+                  <option>Video &amp; Animation</option>
                   <option>AI Services</option>
-                  <option>Music & Audio</option>
+                  <option>Music &amp; Audio</option>
                   <option>Business</option>
                   <option>Consulting</option>
                   <option>Other</option>
                 </select>
-                <textarea rows={5} placeholder="Tell us about your project..." required className="w-full px-4 py-3.5 rounded-xl bg-surface border border-slate-200 focus:outline-none focus:border-navy focus:ring-2 focus:ring-navy/10 text-sm mb-4 resize-none transition-all" />
-                <button type="submit" className="w-full py-4 rounded-xl bg-accent text-white font-bold text-base hover:bg-accent-dark shadow-lg shadow-accent/25 hover:shadow-accent/40 transition-all duration-300 cursor-pointer">
-                  Get Free Quote →
+                <textarea
+                  rows={5} placeholder="Tell us about your project..." required
+                  value={form.message}
+                  onChange={e => setForm(p => ({ ...p, message: e.target.value }))}
+                  className={`${inp} mb-4 resize-none`} />
+
+                {status === 'success' && (
+                  <div className="mb-4 p-3 rounded-xl bg-green-50 border border-green-200 text-green-700 text-sm font-medium">
+                    ✅ {msg}
+                  </div>
+                )}
+                {status === 'error' && (
+                  <div className="mb-4 p-3 rounded-xl bg-red-50 border border-red-200 text-red-600 text-sm font-medium">
+                    ❌ {msg}
+                  </div>
+                )}
+
+                <button
+                  type="submit"
+                  disabled={status === 'loading' || status === 'success'}
+                  className="w-full py-4 rounded-xl bg-accent text-white font-bold text-base hover:bg-accent-dark shadow-lg shadow-accent/25 hover:shadow-accent/40 transition-all duration-300 cursor-pointer disabled:opacity-60">
+                  {status === 'loading' ? '⏳ Sending...' : status === 'success' ? '✅ Sent!' : 'Get Free Quote →'}
                 </button>
               </form>
             </motion.div>
@@ -83,8 +140,7 @@ export default function ContactPage() {
                   href="https://wa.me/918595025753"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-block px-8 py-3.5 rounded-xl bg-white text-green-600 font-bold hover:bg-green-50 shadow-lg transition-all cursor-pointer"
-                >
+                  className="inline-block px-8 py-3.5 rounded-xl bg-white text-green-600 font-bold hover:bg-green-50 shadow-lg transition-all cursor-pointer">
                   💬 WhatsApp Us Now
                 </a>
               </div>

@@ -109,6 +109,54 @@ export default function DigitalPage() {
   const [calMonth, setCalMonth] = useState(new Date().toISOString().slice(0, 7))
   const [loading, setLoading] = useState(false)
 
+  // ── Computed SEO stats from real keyword data ─────────────────────────────
+  const computedSeo = (() => {
+    if (keywords.length === 0) return { traffic: 0, avgPos: 0, ctr: 0, indexed: 0, trafficChange: null }
+    // Estimated organic traffic: sum(volume * (0.316 / position)) — standard CTR curve
+    const traffic = Math.round(keywords.reduce((acc, kw) => {
+      const pos = Number(kw.position) || 50
+      const vol = Number(kw.volume) || 0
+      const ctrEstimate = pos === 1 ? 0.316 : pos === 2 ? 0.158 : pos <= 5 ? 0.09 : pos <= 10 ? 0.05 : 0.01
+      return acc + vol * ctrEstimate
+    }, 0))
+    const avgPos = keywords.reduce((a, k) => a + (Number(k.position) || 50), 0) / keywords.length
+    // Estimated CTR based on avg position (standard industry curve)
+    const ctr = avgPos <= 1 ? 31.6 : avgPos <= 2 ? 15.8 : avgPos <= 3 ? 9.5 : avgPos <= 5 ? 5.1 : avgPos <= 10 ? 3.1 : 1.1
+    // Top 10 keywords = indexed estimation proxy (not perfect but indicative)
+    const top10 = keywords.filter(k => Number(k.position) <= 10).length
+    const indexed = traffic > 0 ? Math.max(keywords.length * 3, top10 * 12) : 0
+    // Week-over-week traffic change from keyword position changes
+    const avgChange = keywords.reduce((a, k) => a + (Number(k.change) || 0), 0) / Math.max(keywords.length, 1)
+    const trafficChange = avgChange > 0 ? `+${avgChange.toFixed(1)}` : avgChange < 0 ? avgChange.toFixed(1) : null
+    return { traffic, avgPos, ctr, indexed, trafficChange }
+  })()
+
+  // ── Computed funnel from real data ────────────────────────────────────────
+  const computedFunnel = (() => {
+    const totalLeads = leads.reduce((a, b) => a + b.lead_count, 0)
+    const totalClicks = adCampaigns.reduce((a, b) => a + b.clicks, 0)
+    const totalConversions = adCampaigns.reduce((a, b) => a + b.conversions, 0)
+    // Estimate visitors from total clicks + organic traffic
+    const visitors = computedSeo.traffic + totalClicks
+    // Interested = leads with engagement (non-organic, or has platform)
+    const interested = Math.round(totalLeads * 0.45)
+    // Proposals = leads that converted to projects (use revenue records as proxy)
+    const proposals = revenue.length > 0 ? revenue.reduce((a, b) => a + b.conversions, 0) : Math.round(totalConversions * 1.5)
+    const conversions = totalConversions
+    // Build funnel ensuring monotonically decreasing
+    const v = Math.max(visitors, totalLeads * 7)
+    const l = Math.max(totalLeads, conversions * 4)
+    const int_ = Math.max(interested, conversions * 2)
+    const p = Math.max(proposals, conversions)
+    return [
+      { stage: 'Visitors', count: v || 0, color: '#3B82F6' },
+      { stage: 'Leads', count: l || 0, color: '#8B5CF6' },
+      { stage: 'Interested', count: int_ || 0, color: '#F59E0B' },
+      { stage: 'Proposals', count: p || 0, color: '#FF6B35' },
+      { stage: 'Conversions', count: conversions || 0, color: '#10B981' },
+    ]
+  })()
+
   // Forms
   const [newKw, setNewKw] = useState({ keyword: '', position: '', volume: '' })
   const [newAd, setNewAd] = useState({ name: '', platform: 'Google', spend: '', clicks: '', conversions: '' })
@@ -276,15 +324,9 @@ export default function DigitalPage() {
     setCalendar(p => p.map(e => e.id === id ? { ...e, status } : e))
   }
 
-  // Funnel / overview stats
-  const funnelStages = [
-    { stage: 'Visitors', count: 12450, color: '#3B82F6' },
-    { stage: 'Leads', count: 1867, color: '#8B5CF6' },
-    { stage: 'Interested', count: 742, color: '#F59E0B' },
-    { stage: 'Proposals', count: 281, color: '#FF6B35' },
-    { stage: 'Conversions', count: 94, color: '#10B981' },
-  ]
-  const maxFunnel = funnelStages[0].count
+  // Funnel / overview stats — computed from real data
+  const funnelStages = computedFunnel
+  const maxFunnel = funnelStages[0]?.count || 1
 
   // Calendar grid builder
   const buildCalGrid = () => {
@@ -325,7 +367,7 @@ export default function DigitalPage() {
             <MetricCard icon="💰" label="Revenue Attributed" value={`₹${revenue.reduce((a, b) => a + b.revenue_amount, 0).toLocaleString('en-IN')}` || '—'} color="#10B981" />
           </div>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <MetricCard icon="🔍" label="Organic Traffic" value="4,821" change="+12%" color="#3B82F6" />
+            <MetricCard icon="🔍" label="Organic Traffic" value={computedSeo.traffic > 0 ? computedSeo.traffic.toLocaleString() : '—'} change={computedSeo.trafficChange ? `${computedSeo.trafficChange}%` : undefined} color="#3B82F6" />
             <MetricCard icon="💰" label="Ad Spend" value={`₹${adCampaigns.reduce((a, b) => a + b.spend, 0).toLocaleString('en-IN')}`} color="#EF4444" />
             <MetricCard icon="✅" label="Conversions" value={adCampaigns.reduce((a, b) => a + b.conversions, 0).toString()} color="#10B981" />
             <MetricCard icon="🎨" label="Pending Creatives" value={creatives.filter(c => c.status === 'pending').length.toString()} color="#8B5CF6" />
@@ -360,10 +402,10 @@ export default function DigitalPage() {
       {activeTab === 'seo' && (
         <div className="space-y-5">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <MetricCard icon="🔍" label="Organic Traffic" value="4,821" change="+12%" color="#3B82F6" />
-            <MetricCard icon="🏆" label="Avg. Position" value="#14.3" change="+3.1" color="#8B5CF6" />
-            <MetricCard icon="🖱️" label="Click-Through Rate" value="3.8%" change="+0.5%" color="#10B981" />
-            <MetricCard icon="📈" label="Indexed Pages" value="287" change="+23" color="#FF6B35" />
+            <MetricCard icon="🔍" label="Organic Traffic (est.)" value={computedSeo.traffic > 0 ? computedSeo.traffic.toLocaleString() : keywords.length > 0 ? '< 100' : '—'} change={computedSeo.trafficChange ? `${computedSeo.trafficChange}%` : undefined} color="#3B82F6" />
+            <MetricCard icon="🏆" label="Avg. Position" value={keywords.length > 0 ? `#${computedSeo.avgPos.toFixed(1)}` : '—'} color="#8B5CF6" />
+            <MetricCard icon="🖱️" label="Est. Click-Through Rate" value={keywords.length > 0 ? `${computedSeo.ctr.toFixed(1)}%` : '—'} color="#10B981" />
+            <MetricCard icon="📈" label="Keywords Tracked" value={keywords.length > 0 ? keywords.length.toString() : '—'} color="#FF6B35" />
           </div>
           <div className="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm">
             <div className="flex items-center justify-between mb-4">

@@ -195,10 +195,10 @@ export default function VendorDashboard() {
       </div>
 
       {/* Tab Navigation */}
-      <div className="flex gap-2 border-b border-slate-200 pb-0">
+      <div className="flex gap-2 border-b border-slate-200 pb-0 overflow-x-auto">
         {(['projects', 'earnings', 'reviews'] as const).map(tab => (
           <button key={tab} onClick={() => setActiveTab(tab)}
-            className={`px-5 py-2.5 text-sm font-bold capitalize cursor-pointer transition-all border-b-2 -mb-px ${
+            className={`px-5 py-2.5 text-sm font-bold capitalize cursor-pointer transition-all border-b-2 -mb-px whitespace-nowrap ${
               activeTab === tab ? 'border-accent text-accent' : 'border-transparent text-slate-500 hover:text-navy'
             }`}>
             {tab === 'projects' ? '📋' : tab === 'earnings' ? '💰' : '⭐'} {tab}

@@ -57,7 +57,6 @@ export async function POST(req: Request) {
       is_approved: false,
       created_at: new Date().toISOString(),
     }
-    console.log('Staff register insert payload:', { ...insertPayload, password: '[REDACTED]' })
 
     const { data: newUser, error } = await supabase
       .from('users')
@@ -70,14 +69,11 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Failed to create account: ' + error.message }, { status: 500 })
     }
 
-    console.log('Staff register SUCCESS - user created:', newUser)
-
     // Double-check the role was set correctly (paranoia check)
     if (newUser.role !== 'pending_admin') {
       console.error('ROLE MISMATCH! Expected pending_admin but got:', newUser.role)
       // Force update the role
       await supabase.from('users').update({ role: 'pending_admin', is_approved: false }).eq('id', newUser.id)
-      console.log('Force-updated role to pending_admin for user:', newUser.id)
     }
 
     // Notify super admin(s) about new registration

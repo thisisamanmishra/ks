@@ -52,11 +52,10 @@ export default function ServicesSection() {
             <button
               key={c.key}
               onClick={() => setActive(c.key)}
-              className={`px-5 py-2.5 rounded-full text-sm font-semibold transition-all duration-300 cursor-pointer ${
-                active === c.key
+              className={`px-5 py-2.5 rounded-full text-sm font-semibold transition-all duration-300 cursor-pointer ${active === c.key
                   ? 'bg-navy text-white shadow-lg shadow-navy/20'
                   : 'bg-white text-slate-600 hover:bg-navy/5 hover:text-navy border border-slate-200'
-              }`}
+                }`}
             >
               {c.icon} {c.label}
             </button>

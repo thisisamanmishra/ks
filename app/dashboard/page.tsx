@@ -333,12 +333,14 @@ function DashboardPage() {
             )}
 
             {/* Filter Tabs */}
-            <div className="flex gap-2 mb-4">
+            <div className="flex gap-2 mb-4 overflow-x-auto pb-1">
+              <div className="flex gap-2 flex-nowrap">
               {(['all','active','completed','pending'] as const).map(f => (
-                <button key={f} onClick={() => setFilter(f)} className={`px-4 py-2 rounded-full text-xs font-semibold transition-all cursor-pointer ${filter === f ? 'bg-navy text-white shadow-lg' : 'bg-white text-slate-600 border border-slate-200 hover:bg-navy/5'}`}>
+                <button key={f} onClick={() => setFilter(f)} className={`px-4 py-2 rounded-full text-xs font-semibold transition-all cursor-pointer whitespace-nowrap ${filter === f ? 'bg-navy text-white shadow-lg' : 'bg-white text-slate-600 border border-slate-200 hover:bg-navy/5'}`}>
                   {f === 'all' ? `All (${projects.length})` : f === 'active' ? `Active (${activeCount})` : f === 'completed' ? `Completed (${completedCount})` : `Pending (${projects.filter(p => p.status === 'pending').length})`}
                 </button>
               ))}
+              </div>
             </div>
 
             {/* Projects */}
@@ -508,7 +510,7 @@ function DashboardPage() {
             )}
 
             {/* Quick Actions */}
-            <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
               <button onClick={() => setShowNewProject(true)} className="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 text-center group cursor-pointer"><span className="text-3xl block mb-2 group-hover:scale-110 transition-transform">📝</span><span className="font-semibold text-navy text-sm">New Project</span></button>
               <button onClick={() => setShowDMPanel(v => !v)} className="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 text-center group cursor-pointer"><span className="text-3xl block mb-2 group-hover:scale-110 transition-transform">🎧</span><span className="font-semibold text-navy text-sm">Chat Support</span></button>
               <a href="https://wa.me/918595025753" target="_blank" rel="noopener noreferrer" className="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 text-center group"><span className="text-3xl block mb-2 group-hover:scale-110 transition-transform">💬</span><span className="font-semibold text-navy text-sm">WhatsApp</span></a>

@@ -82,6 +82,7 @@ const TABS = [
   { key: 'announce', label: '📢 Announcements' },
   { key: 'boarddocs', label: '📋 Board Docs' },
   { key: 'brand', label: '🎨 Brand Assets' },
+  { key: 'about', label: '🌐 About Page' },
 ] as const
 
 type Tab = typeof TABS[number]['key']
@@ -121,6 +122,14 @@ function BoardDashboard() {
   const [showAssetForm, setShowAssetForm] = useState(false)
   const [assetForm, setAssetForm] = useState({ name: '', category: 'logo', file_url: '', description: '' })
   const [savingAsset, setSavingAsset] = useState(false)
+  // About Page state
+  const [aboutData, setAboutData] = useState<{ company: Record<string,string>; timeline: { id:number;year:string;title:string;description:string }[]; members: { id:number;name:string;role:string;image_url:string|null;vision:string|null;mission:string|null;statement:string|null }[]; achievements: { id:number;icon:string;value:string;label:string }[] }>({ company: {}, timeline: [], members: [], achievements: [] })
+  const [aboutLoading, setAboutLoading] = useState(false)
+  const [aboutSection, setAboutSection] = useState<'company'|'timeline'|'members'|'achievements'>('company')
+  const [aboutForm, setAboutForm] = useState<Record<string,string>>({})
+  const [savingAbout, setSavingAbout] = useState(false)
+  const [showAboutForm, setShowAboutForm] = useState<string|null>(null) // 'timeline'|'member'|'achievement'
+  const [editingAboutId, setEditingAboutId] = useState<number|null>(null)
 
   useEffect(() => {
     const t = searchParams.get('tab') as Tab
@@ -152,6 +161,10 @@ function BoardDashboard() {
     if (activeTab === 'brand') {
       setAssetLoading(true)
       fetch('/api/admin/board/brand').then(r => r.json()).then(d => setBrandAssets(d.assets || [])).catch(() => { }).finally(() => setAssetLoading(false))
+    }
+    if (activeTab === 'about') {
+      setAboutLoading(true)
+      fetch('/api/admin/about').then(r => r.json()).then(d => setAboutData(d)).catch(() => {}).finally(() => setAboutLoading(false))
     }
   }, [activeTab])
 
@@ -868,6 +881,240 @@ function BoardDashboard() {
                 </motion.div>
               ))}
             </div>
+          )}
+        </div>
+      )}
+
+      {/* ── ABOUT PAGE TAB ── */}
+      {activeTab === 'about' && (
+        <div className="space-y-6">
+          <div className="flex items-center justify-between flex-wrap gap-3">
+            <h2 className="text-xl font-bold text-navy font-heading">🌐 About Page Content Manager</h2>
+            <span className="text-xs text-slate-400 bg-slate-100 rounded-lg px-3 py-1.5">Changes reflect immediately on /about</span>
+          </div>
+
+          {/* Sub-nav */}
+          <div className="flex gap-2 flex-wrap">
+            {(['company', 'timeline', 'members', 'achievements'] as const).map(s => (
+              <button key={s} onClick={() => setAboutSection(s)}
+                className={`px-4 py-2 rounded-xl text-xs font-bold cursor-pointer transition-all capitalize ${aboutSection === s ? 'bg-navy text-white' : 'bg-white border border-slate-200 text-slate-500 hover:bg-slate-50'}`}>
+                {s === 'company' ? '🏢 Company Info' : s === 'timeline' ? '📅 Timeline' : s === 'members' ? '👥 Team Members' : '🏆 Achievements'}
+              </button>
+            ))}
+          </div>
+
+          {aboutLoading ? (
+            <div className="space-y-3">{[1,2,3].map(i => <div key={i} className="h-20 bg-white rounded-2xl animate-pulse border border-slate-100" />)}</div>
+          ) : (
+            <>
+              {/* ── COMPANY INFO ── */}
+              {aboutSection === 'company' && (
+                <div className="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm space-y-4">
+                  <h3 className="font-bold text-navy font-heading">🏢 Company Vision, Mission & Story</h3>
+                  {(['vision', 'mission', 'story', 'tagline'] as const).map(field => (
+                    <div key={field}>
+                      <label className="block text-xs font-bold text-slate-500 uppercase mb-1.5">{field}</label>
+                      <textarea rows={field === 'tagline' ? 2 : 4}
+                        defaultValue={aboutData.company[field] || ''}
+                        onChange={e => setAboutForm(p => ({ ...p, [field]: e.target.value }))}
+                        className="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-sm focus:outline-none focus:border-navy resize-none"
+                        placeholder={`Enter company ${field}...`} />
+                    </div>
+                  ))}
+                  <button
+                    disabled={savingAbout}
+                    onClick={async () => {
+                      setSavingAbout(true)
+                      const merged = { ...aboutData.company, ...aboutForm }
+                      await fetch('/api/admin/about', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ type: 'company', ...merged }) })
+                      const d = await fetch('/api/admin/about').then(r => r.json())
+                      setAboutData(d)
+                      setSavingAbout(false)
+                    }}
+                    className="px-6 py-2.5 rounded-xl font-bold text-white text-sm cursor-pointer disabled:opacity-60 hover:opacity-90"
+                    style={{ background: '#1B3A6B' }}>
+                    {savingAbout ? '⏳ Saving...' : '💾 Save Company Info'}
+                  </button>
+                </div>
+              )}
+
+              {/* ── TIMELINE ── */}
+              {aboutSection === 'timeline' && (
+                <div className="space-y-4">
+                  <div className="flex justify-between items-center">
+                    <p className="text-sm text-slate-500">{aboutData.timeline.length} timeline events</p>
+                    <button onClick={() => { setShowAboutForm('timeline'); setEditingAboutId(null); setAboutForm({ year: '', title: '', description: '' }) }}
+                      className="px-4 py-2 rounded-xl font-bold text-white text-sm cursor-pointer hover:opacity-90" style={{ background: '#FF6B35' }}>+ Add Event</button>
+                  </div>
+                  <AnimatePresence>
+                    {showAboutForm === 'timeline' && (
+                      <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
+                        className="bg-white rounded-2xl p-5 border border-slate-100 shadow-sm">
+                        <h4 className="font-bold text-navy mb-3">{editingAboutId ? 'Edit Event' : 'New Timeline Event'}</h4>
+                        <div className="grid grid-cols-2 gap-3 mb-3">
+                          <input value={aboutForm.year || ''} onChange={e => setAboutForm(p => ({ ...p, year: e.target.value }))} placeholder="Year (e.g. 2025)" className="px-3 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-sm focus:outline-none" />
+                          <input value={aboutForm.title || ''} onChange={e => setAboutForm(p => ({ ...p, title: e.target.value }))} placeholder="Event title *" className="px-3 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-sm focus:outline-none" />
+                        </div>
+                        <textarea rows={2} value={aboutForm.description || ''} onChange={e => setAboutForm(p => ({ ...p, description: e.target.value }))} placeholder="Brief description..." className="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-sm focus:outline-none resize-none mb-3" />
+                        <div className="flex gap-3">
+                          <button disabled={savingAbout || !aboutForm.title} onClick={async () => {
+                            setSavingAbout(true)
+                            if (editingAboutId) {
+                              await fetch('/api/admin/about', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ type: 'timeline', id: editingAboutId, ...aboutForm }) })
+                            } else {
+                              await fetch('/api/admin/about', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ type: 'timeline', ...aboutForm, sort_order: aboutData.timeline.length + 1 }) })
+                            }
+                            const d = await fetch('/api/admin/about').then(r => r.json()); setAboutData(d); setShowAboutForm(null); setSavingAbout(false)
+                          }} className="px-4 py-2 rounded-xl bg-navy text-white text-xs font-bold cursor-pointer disabled:opacity-60">{savingAbout ? '⏳' : '💾 Save'}</button>
+                          <button onClick={() => setShowAboutForm(null)} className="text-sm text-slate-400 cursor-pointer">Cancel</button>
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                  <div className="space-y-3">
+                    {aboutData.timeline.map((item) => (
+                      <div key={item.id} className="bg-white rounded-2xl p-4 border border-slate-100 shadow-sm flex items-start gap-4">
+                        <div className="w-14 h-14 rounded-xl bg-accent/10 flex items-center justify-center flex-shrink-0">
+                          <span className="text-accent font-extrabold text-sm">{item.year}</span>
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="font-bold text-navy text-sm">{item.title}</p>
+                          <p className="text-slate-400 text-xs mt-0.5 line-clamp-2">{item.description}</p>
+                        </div>
+                        <div className="flex gap-2 flex-shrink-0">
+                          <button onClick={() => { setAboutForm({ year: item.year, title: item.title, description: item.description }); setEditingAboutId(item.id); setShowAboutForm('timeline') }}
+                            className="w-8 h-8 rounded-lg bg-blue-50 text-blue-500 text-xs flex items-center justify-center cursor-pointer hover:bg-blue-100">✏️</button>
+                          <button onClick={async () => {
+                            await fetch(`/api/admin/about?type=timeline&id=${item.id}`, { method: 'DELETE' })
+                            setAboutData(p => ({ ...p, timeline: p.timeline.filter(t => t.id !== item.id) }))
+                          }} className="w-8 h-8 rounded-lg bg-red-50 text-red-400 text-xs flex items-center justify-center cursor-pointer hover:bg-red-100">🗑</button>
+                        </div>
+                      </div>
+                    ))}
+                    {aboutData.timeline.length === 0 && <div className="text-center py-10 text-slate-400 bg-white rounded-2xl border border-slate-100">No timeline events yet</div>}
+                  </div>
+                </div>
+              )}
+
+              {/* ── TEAM MEMBERS ── */}
+              {aboutSection === 'members' && (
+                <div className="space-y-4">
+                  <div className="flex justify-between items-center">
+                    <p className="text-sm text-slate-500">{aboutData.members.length} team members</p>
+                    <button onClick={() => { setShowAboutForm('member'); setEditingAboutId(null); setAboutForm({ name: '', role: '', image_url: '', vision: '', mission: '', statement: '' }) }}
+                      className="px-4 py-2 rounded-xl font-bold text-white text-sm cursor-pointer hover:opacity-90" style={{ background: '#8B5CF6' }}>+ Add Member</button>
+                  </div>
+                  <AnimatePresence>
+                    {showAboutForm === 'member' && (
+                      <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
+                        className="bg-white rounded-2xl p-5 border border-slate-100 shadow-sm">
+                        <h4 className="font-bold text-navy mb-3">{editingAboutId ? 'Edit Member' : 'Add Team Member'}</h4>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
+                          <input value={aboutForm.name || ''} onChange={e => setAboutForm(p => ({ ...p, name: e.target.value }))} placeholder="Full name *" className="px-3 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-sm focus:outline-none" />
+                          <input value={aboutForm.role || ''} onChange={e => setAboutForm(p => ({ ...p, role: e.target.value }))} placeholder="Role / Designation *" className="px-3 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-sm focus:outline-none" />
+                          <input value={aboutForm.image_url || ''} onChange={e => setAboutForm(p => ({ ...p, image_url: e.target.value }))} placeholder="Image URL (or /images/team/name.jpg)" className="col-span-full px-3 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-sm focus:outline-none" />
+                        </div>
+                        {['vision', 'mission', 'statement'].map(field => (
+                          <textarea key={field} rows={2} value={aboutForm[field] || ''} onChange={e => setAboutForm(p => ({ ...p, [field]: e.target.value }))}
+                            placeholder={`${field.charAt(0).toUpperCase() + field.slice(1)}...`}
+                            className="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-sm focus:outline-none resize-none mb-3" />
+                        ))}
+                        <div className="flex gap-3">
+                          <button disabled={savingAbout || !aboutForm.name} onClick={async () => {
+                            setSavingAbout(true)
+                            if (editingAboutId) {
+                              await fetch('/api/admin/about', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ type: 'member', id: editingAboutId, ...aboutForm }) })
+                            } else {
+                              await fetch('/api/admin/about', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ type: 'member', ...aboutForm, sort_order: aboutData.members.length + 1, is_active: true }) })
+                            }
+                            const d = await fetch('/api/admin/about').then(r => r.json()); setAboutData(d); setShowAboutForm(null); setSavingAbout(false)
+                          }} className="px-4 py-2 rounded-xl bg-navy text-white text-xs font-bold cursor-pointer disabled:opacity-60">{savingAbout ? '⏳' : '💾 Save'}</button>
+                          <button onClick={() => setShowAboutForm(null)} className="text-sm text-slate-400 cursor-pointer">Cancel</button>
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {aboutData.members.map(m => (
+                      <div key={m.id} className="bg-white rounded-2xl p-5 border border-slate-100 shadow-sm">
+                        <div className="flex items-start gap-3 mb-3">
+                          <div className="w-12 h-12 rounded-xl bg-navy/10 flex items-center justify-center text-navy font-bold text-lg flex-shrink-0">
+                            {m.name.charAt(0)}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="font-bold text-navy text-sm truncate">{m.name}</p>
+                            <p className="text-accent text-xs font-semibold mt-0.5 truncate">{m.role}</p>
+                          </div>
+                        </div>
+                        {m.vision && <p className="text-xs text-slate-400 line-clamp-2 mb-3">{m.vision}</p>}
+                        <div className="flex gap-2">
+                          <button onClick={() => { setAboutForm({ name: m.name, role: m.role, image_url: m.image_url || '', vision: m.vision || '', mission: m.mission || '', statement: m.statement || '' }); setEditingAboutId(m.id); setShowAboutForm('member') }}
+                            className="flex-1 py-1.5 rounded-lg bg-blue-50 text-blue-500 text-xs font-bold cursor-pointer hover:bg-blue-100">✏️ Edit</button>
+                          <button onClick={async () => {
+                            await fetch(`/api/admin/about?type=member&id=${m.id}`, { method: 'DELETE' })
+                            setAboutData(p => ({ ...p, members: p.members.filter(x => x.id !== m.id) }))
+                          }} className="w-8 h-8 rounded-lg bg-red-50 text-red-400 text-xs flex items-center justify-center cursor-pointer hover:bg-red-100">🗑</button>
+                        </div>
+                      </div>
+                    ))}
+                    {aboutData.members.length === 0 && <div className="col-span-3 text-center py-10 text-slate-400 bg-white rounded-2xl border border-slate-100">No team members yet</div>}
+                  </div>
+                </div>
+              )}
+
+              {/* ── ACHIEVEMENTS ── */}
+              {aboutSection === 'achievements' && (
+                <div className="space-y-4">
+                  <div className="flex justify-between items-center">
+                    <p className="text-sm text-slate-500">{aboutData.achievements.length} achievements</p>
+                    <button onClick={() => { setShowAboutForm('achievement'); setEditingAboutId(null); setAboutForm({ icon: '🏆', value: '', label: '' }) }}
+                      className="px-4 py-2 rounded-xl font-bold text-white text-sm cursor-pointer hover:opacity-90" style={{ background: '#10B981' }}>+ Add Achievement</button>
+                  </div>
+                  <AnimatePresence>
+                    {showAboutForm === 'achievement' && (
+                      <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
+                        className="bg-white rounded-2xl p-5 border border-slate-100 shadow-sm">
+                        <div className="grid grid-cols-3 gap-3 mb-3">
+                          <input value={aboutForm.icon || ''} onChange={e => setAboutForm(p => ({ ...p, icon: e.target.value }))} placeholder="Icon emoji 🏆" className="px-3 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-sm focus:outline-none" />
+                          <input value={aboutForm.value || ''} onChange={e => setAboutForm(p => ({ ...p, value: e.target.value }))} placeholder="Value e.g. 500+" className="px-3 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-sm focus:outline-none" />
+                          <input value={aboutForm.label || ''} onChange={e => setAboutForm(p => ({ ...p, label: e.target.value }))} placeholder="Label e.g. Projects Done" className="px-3 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-sm focus:outline-none" />
+                        </div>
+                        <div className="flex gap-3">
+                          <button disabled={savingAbout || !aboutForm.value} onClick={async () => {
+                            setSavingAbout(true)
+                            if (editingAboutId) {
+                              await fetch('/api/admin/about', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ type: 'achievement', id: editingAboutId, ...aboutForm }) })
+                            } else {
+                              await fetch('/api/admin/about', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ type: 'achievement', ...aboutForm, sort_order: aboutData.achievements.length + 1 }) })
+                            }
+                            const d = await fetch('/api/admin/about').then(r => r.json()); setAboutData(d); setShowAboutForm(null); setSavingAbout(false)
+                          }} className="px-4 py-2 rounded-xl bg-navy text-white text-xs font-bold cursor-pointer disabled:opacity-60">{savingAbout ? '⏳' : '💾 Save'}</button>
+                          <button onClick={() => setShowAboutForm(null)} className="text-sm text-slate-400 cursor-pointer">Cancel</button>
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+                    {aboutData.achievements.map(a => (
+                      <div key={a.id} className="bg-white rounded-2xl p-5 border border-slate-100 shadow-sm text-center">
+                        <div className="text-3xl mb-2">{a.icon}</div>
+                        <p className="text-2xl font-extrabold text-navy font-heading">{a.value}</p>
+                        <p className="text-slate-400 text-xs mt-1">{a.label}</p>
+                        <div className="flex gap-2 mt-3">
+                          <button onClick={() => { setAboutForm({ icon: a.icon, value: a.value, label: a.label }); setEditingAboutId(a.id); setShowAboutForm('achievement') }}
+                            className="flex-1 py-1 rounded-lg bg-blue-50 text-blue-500 text-[10px] font-bold cursor-pointer">✏️</button>
+                          <button onClick={async () => {
+                            await fetch(`/api/admin/about?type=achievement&id=${a.id}`, { method: 'DELETE' })
+                            setAboutData(p => ({ ...p, achievements: p.achievements.filter(x => x.id !== a.id) }))
+                          }} className="flex-1 py-1 rounded-lg bg-red-50 text-red-400 text-[10px] font-bold cursor-pointer">🗑</button>
+                        </div>
+                      </div>
+                    ))}
+                    {aboutData.achievements.length === 0 && <div className="col-span-4 text-center py-10 text-slate-400 bg-white rounded-2xl border border-slate-100">No achievements yet</div>}
+                  </div>
+                </div>
+              )}
+            </>
           )}
         </div>
       )}

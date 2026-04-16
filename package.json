@@ -4,9 +4,12 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "dev:turbo": "next dev --turbo",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint .",
+    "type-check": "tsc --noEmit",
+    "clean": "Remove-Item -Recurse -Force .next -ErrorAction SilentlyContinue"
   },
   "dependencies": {
     "@react-three/drei": "^10.7.7",
@@ -55,6 +58,7 @@
     "@types/nodemailer": "^7.0.11",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "cross-env": "^10.1.0",
     "eslint": "^9",
     "eslint-config-next": "16.2.1",
     "typescript": "^5"

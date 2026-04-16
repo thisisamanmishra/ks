@@ -1,105 +1,109 @@
 import { createClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
 import bcrypt from 'bcryptjs'
+import { safeJson, sanitizeEmail, sanitizeName, sanitizePhone, validatePassword, truncate } from '@/lib/security/sanitize'
 
 export async function POST(request: Request) {
   try {
-    const { fullname, email, phone, user_type, password, role: requestedRole, department, email_verified } = await request.json()
-
-    if (!fullname || !email || !phone || !password) {
-      return NextResponse.json({ error: 'All fields are required' }, { status: 400 })
+    // ── Input validation ─────────────────────────────────────────────────────
+    const { data: body, error: parseError } = await safeJson(request)
+    if (parseError || !body) {
+      return NextResponse.json({ error: parseError || 'Invalid request' }, { status: 400 })
     }
 
-    if (password.length < 6) {
-      return NextResponse.json({ error: 'Password must be at least 6 characters' }, { status: 400 })
+    const fullname = sanitizeName(body.fullname)
+    if (!fullname) {
+      return NextResponse.json({ error: 'Please enter a valid full name' }, { status: 400 })
     }
+
+    const email = sanitizeEmail(body.email)
+    if (!email) {
+      return NextResponse.json({ error: 'Please enter a valid email address' }, { status: 400 })
+    }
+
+    const phone = sanitizePhone(body.phone)
+    if (!phone) {
+      return NextResponse.json({ error: 'Please enter a valid phone number' }, { status: 400 })
+    }
+
+    const pwCheck = validatePassword(body.password)
+    if (!pwCheck.valid) {
+      return NextResponse.json({ error: pwCheck.reason }, { status: 400 })
+    }
+    const password = body.password as string
+
+    // ── Role sanitisation (prevent external role escalation) ──────────────────
+    const requestedRole = typeof body.role === 'string' ? body.role : 'customer'
+    const allowedPublicRoles = ['customer', 'vendor']
+    const pillars = ['campus', 'digital', 'calling', 'government', 'market']
+    const isSafeRole = allowedPublicRoles.includes(requestedRole) || pillars.includes(requestedRole)
+
+    const user_type = truncate(body.user_type, 50) || null
+    const email_verified = body.email_verified === true
 
     const supabase = await createClient()
 
-    // Check if email already exists
+    // ── Duplicate check ───────────────────────────────────────────────────────
     const { data: existing } = await supabase
       .from('users')
       .select('id')
       .eq('email', email)
-      .single()
+      .maybeSingle()
 
     if (existing) {
       return NextResponse.json({ error: 'Email is already registered' }, { status: 409 })
     }
 
-    // Hash password
-    const hashedPassword = await bcrypt.hash(password, 10)
+    // ── Hash password (bcrypt rounds=12) ──────────────────────────────────────
+    const hashedPassword = await bcrypt.hash(password, 12)
 
-    // Determine role
+    // ── Determine final role ──────────────────────────────────────────────────
     let role = 'customer'
-    let isApproved = false
-    const pillars = ['campus', 'digital', 'calling', 'government', 'market']
+    let isApproved = true
 
-    if (requestedRole === 'vendor') {
+    if (isSafeRole && requestedRole === 'vendor') {
       role = 'vendor'
-    } else if (pillars.includes(requestedRole)) {
-      role = requestedRole
-      isApproved = true // Pillar customers are automatically approved
-    } else if (requestedRole === 'admin') {
-      role = 'pending_admin'
-      if (!department || !['hr', 'finance', 'operations', 'marketing', 'digital'].includes(department)) {
-        return NextResponse.json({ error: 'Valid department is required for admin registration' }, { status: 400 })
-      }
-    } else {
-      // Default customer
-      isApproved = true
+      isApproved = false
     }
+    // All other public signups → customer
 
-    // Insert user
+    // ── Insert user ───────────────────────────────────────────────────────────
     const { data: user, error: insertErr } = await supabase
       .from('users')
       .insert({
         fullname,
         email,
         phone,
-        user_type: user_type || null,
+        user_type,
         password: hashedPassword,
         role,
-        department: requestedRole === 'admin' ? department : null,
+        department: null,
         is_approved: isApproved,
         status: 'active',
-        email_verified: email_verified === true,
+        email_verified,
       })
-      .select('id, fullname, email, role, department')
+      .select('id, fullname, email, role')
       .single()
 
     if (insertErr) {
-      console.error('Signup insert error:', insertErr)
+      console.error('[signup] insert error:', insertErr.message)
       return NextResponse.json({ error: 'Failed to create account. Please try again.' }, { status: 500 })
     }
 
-    // If admin registration, create admin request
-    if (role === 'pending_admin' && user) {
-      await supabase.from('admin_requests').insert({
-        user_id: user.id,
-        requested_department: department,
-        message: `${fullname} has requested admin access for the ${department} department.`,
-        status: 'pending',
-      })
-    }
-
-    // If vendor registration, create vendor profile
     if (role === 'vendor' && user) {
-      await supabase.from('vendors').insert({
-        user_id: user.id,
-        is_approved: false,
-      })
+      await supabase.from('vendors').insert({ user_id: user.id, is_approved: false })
     }
 
-    const message = role === 'pending_admin'
-      ? 'Registration submitted! Your admin request is pending approval by the Super Admin.'
-      : role === 'vendor'
-        ? 'Vendor account created! You can now login.'
-        : 'Account created successfully! Please login.'
+    const message = role === 'vendor'
+      ? 'Vendor account created! You can now login.'
+      : 'Account created successfully! Please login.'
 
-    return NextResponse.json({ message, user }, { status: 201 })
+    return NextResponse.json({
+      message,
+      user: { id: user?.id, fullname: user?.fullname, email: user?.email, role: user?.role },
+    }, { status: 201 })
   } catch (err) {
-    console.error('Signup error:', err)
+    console.error('[signup] exception:', err)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }

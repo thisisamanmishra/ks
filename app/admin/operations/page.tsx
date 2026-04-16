@@ -6,10 +6,28 @@ import { motion, AnimatePresence } from 'framer-motion'
 interface Vendor { id: number; fullname: string; email: string; phone: string; activeJobs: number }
 interface SOP { id: number; title: string; content: string | null; category: string; version: string; is_published: boolean; updated_at: string }
 interface InventoryItem { id: string; name: string; type: string; cost: number; renewal_date: string | null; status: string; vendor: string }
+interface ServiceItem {
+  id: number
+  title: string
+  slug: string
+  category: string
+  short_description: string
+  price_min: number | null
+  price_max: number | null
+  delivery_days: number
+  featured_image: string | null
+  is_featured: boolean
+  is_active: boolean
+  tags: string[]
+  created_at: string
+}
 
 const TABS = [
   { key: 'dashboard', label: '📊 Ops Dashboard' },
+  { key: 'contact_leads', label: '📬 Contact Leads' },
+  { key: 'subscribers', label: '📧 Subscribers' },
   { key: 'vendors', label: '👷 Vendors' },
+  { key: 'services', label: '🛒 Services' },
   { key: 'sop', label: '📚 SOP Library' },
   { key: 'resources', label: '🗂️ Resources' },
   { key: 'inventory', label: '🛠️ Inventory' },
@@ -18,6 +36,12 @@ const TABS = [
 type Tab = typeof TABS[number]['key']
 
 interface SLAData { breached: number; atRisk: number; onTrack: number }
+interface ContactLead {
+  id: number; name: string; email: string; phone: string | null
+  service: string | null; message: string; status: string
+  notes: string | null; created_at: string
+}
+interface Subscriber { id: number; email: string; status: string; created_at: string }
 
 export default function OperationsPage() {
   const [activeTab, setActiveTab] = useState<Tab>('dashboard')
@@ -43,6 +67,20 @@ export default function OperationsPage() {
   // Inter-dept tasks
   const [interTasks, setInterTasks] = useState<{ id: string; task: string; from: string; to: string; due: string; status: string }[]>([])
   const [newInterTask, setNewInterTask] = useState({ task: '', from: 'operations', to: 'marketing', due: '' })
+  // Contact leads & newsletter subscribers
+  const [contactLeads, setContactLeads] = useState<ContactLead[]>([])
+  const [contactLoading, setContactLoading] = useState(false)
+  const [subscribers, setSubscribers] = useState<Subscriber[]>([])
+  const [subLoading, setSubLoading] = useState(false)
+  // Services management
+  const [services, setServices] = useState<ServiceItem[]>([])
+  const [servicesLoading, setServicesLoading] = useState(false)
+  const [servicesCatFilter, setServicesCatFilter] = useState('all')
+  const [servicesSearch, setServicesSearch] = useState('')
+  const [showServiceForm, setShowServiceForm] = useState(false)
+  const [editingServiceId, setEditingServiceId] = useState<number|null>(null)
+  const [savingService, setSavingService] = useState(false)
+  const [serviceForm, setServiceForm] = useState({ title: '', category: 'Academic', short_description: '', price_min: '', price_max: '', delivery_days: '3', featured_image: '', tags: '', is_featured: false, is_active: true })
   // Chat/meetings
   const [showDMChat, setShowDMChat] = useState(false)
   const [showMeetings, setShowMeetings] = useState(false)
@@ -82,7 +120,24 @@ export default function OperationsPage() {
       setSopLoading(true)
       fetch('/api/admin/sop').then(r => r.json()).then(d => setSops(d.sops || [])).catch(() => {}).finally(() => setSopLoading(false))
     }
+    if (activeTab === 'services') {
+      setServicesLoading(true)
+      fetch('/api/admin/services').then(r => r.json()).then(d => setServices(d.services || [])).catch(() => {}).finally(() => setServicesLoading(false))
+    }
+    if (activeTab === 'contact_leads') {
+      setContactLoading(true)
+      fetch('/api/contact').then(r => r.json()).then(d => setContactLeads(d.submissions || [])).catch(() => {}).finally(() => setContactLoading(false))
+    }
+    if (activeTab === 'subscribers') {
+      setSubLoading(true)
+      fetch('/api/newsletter/subscribers?limit=500').then(r => r.json()).then(d => setSubscribers(d.subscribers || [])).catch(() => {}).finally(() => setSubLoading(false))
+    }
   }, [activeTab])
+
+  const updateContactStatus = async (id: number, status: string) => {
+    await fetch('/api/contact', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id, status }) })
+    setContactLeads(p => p.map(c => c.id === id ? { ...c, status } : c))
+  }
 
   const saveSOP = async (e: React.FormEvent) => {
     e.preventDefault(); setSavingSop(true)
@@ -165,7 +220,7 @@ export default function OperationsPage() {
       </div>
 
       {/* SLA KPIs */}
-      <div className="grid grid-cols-3 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         {[
           { label: 'SLA Breached', v: slaData.breached, icon: '🔴', c: '#EF4444', bg: '#FEE2E2' },
           { label: 'At Risk (< 24h)', v: slaData.atRisk, icon: '⚠️', c: '#F59E0B', bg: '#FEF3C7' },
@@ -491,6 +546,302 @@ export default function OperationsPage() {
         </div>
       )}
 
+
+      {/* ── SERVICES TAB ── */}
+      {activeTab === 'services' && (() => {
+        const SERVICE_CATEGORIES = ['Academic', 'Technical', 'Business', 'Government', 'Design', 'Marketing', 'Legal', 'Other']
+        const filteredServices = services.filter(s => {
+          const catMatch = servicesCatFilter === 'all' || s.category === servicesCatFilter
+          const searchMatch = !servicesSearch.trim() || s.title.toLowerCase().includes(servicesSearch.toLowerCase())
+          return catMatch && searchMatch
+        })
+        const CAT_COLORS: Record<string,string> = { Academic:'#8B5CF6', Technical:'#3B82F6', Business:'#10B981', Government:'#F59E0B', Design:'#EC4899', Marketing:'#EF4444', Legal:'#6B7280', Other:'#FF6B35' }
+
+        const saveService = async () => {
+          setSavingService(true)
+          const method = editingServiceId ? 'PATCH' : 'POST'
+          const body = editingServiceId ? { id: editingServiceId, ...serviceForm } : serviceForm
+          await fetch('/api/admin/services', { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
+          const d = await fetch('/api/admin/services').then(r => r.json())
+          setServices(d.services || [])
+          setShowServiceForm(false); setEditingServiceId(null)
+          setServiceForm({ title: '', category: 'Academic', short_description: '', price_min: '', price_max: '', delivery_days: '3', featured_image: '', tags: '', is_featured: false, is_active: true })
+          setSavingService(false)
+        }
+
+        return (
+          <div className="space-y-5">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div>
+                <h2 className="text-xl font-bold text-navy font-heading">🛒 Services Manager</h2>
+                <p className="text-slate-400 text-sm mt-0.5">{services.length} services · {services.filter(s=>s.is_active).length} active</p>
+              </div>
+              <button onClick={() => { setShowServiceForm(true); setEditingServiceId(null); setServiceForm({ title: '', category: 'Academic', short_description: '', price_min: '', price_max: '', delivery_days: '3', featured_image: '', tags: '', is_featured: false, is_active: true }) }}
+                className="px-4 py-2.5 rounded-xl font-bold text-white text-sm cursor-pointer hover:opacity-90 flex items-center gap-2 self-start sm:self-auto"
+                style={{ background: '#FF6B35' }}>
+                <span>+</span> Add New Service
+              </button>
+            </div>
+
+            {/* Filter bar */}
+            <div className="flex flex-col sm:flex-row gap-3">
+              <input value={servicesSearch} onChange={e => setServicesSearch(e.target.value)} placeholder="Search services..."
+                className="flex-1 px-4 py-2.5 rounded-xl bg-white border border-slate-200 text-sm focus:outline-none focus:border-navy" />
+              <div className="flex flex-wrap gap-2">
+                <button onClick={() => setServicesCatFilter('all')}
+                  className={`px-3 py-2 rounded-xl text-xs font-bold cursor-pointer transition-all ${servicesCatFilter === 'all' ? 'bg-navy text-white' : 'bg-white border border-slate-200 text-slate-500'}`}>All</button>
+                {SERVICE_CATEGORIES.map(c => (
+                  <button key={c} onClick={() => setServicesCatFilter(c)}
+                    className={`px-3 py-2 rounded-xl text-xs font-bold cursor-pointer transition-all ${servicesCatFilter === c ? 'text-white' : 'bg-white border border-slate-200 text-slate-500'}`}
+                    style={servicesCatFilter === c ? { background: CAT_COLORS[c] } : {}}>
+                    {c}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Add/Edit form */}
+            <AnimatePresence>
+              {showServiceForm && (
+                <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
+                  className="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm">
+                  <h3 className="font-bold text-navy mb-4 font-heading">{editingServiceId ? '✏️ Edit Service' : '+ Add New Service'}</h3>
+                  <div className="space-y-3">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <input value={serviceForm.title} onChange={e => setServiceForm(p => ({ ...p, title: e.target.value }))}
+                        placeholder="Service title *" className="px-3 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-sm focus:outline-none" />
+                      <select value={serviceForm.category} onChange={e => setServiceForm(p => ({ ...p, category: e.target.value }))}
+                        className="px-3 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-sm focus:outline-none">
+                        {SERVICE_CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
+                      </select>
+                    </div>
+                    <textarea rows={2} value={serviceForm.short_description} onChange={e => setServiceForm(p => ({ ...p, short_description: e.target.value }))}
+                      placeholder="Short description..." className="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-sm focus:outline-none resize-none" />
+                    <div className="grid grid-cols-3 gap-3">
+                      <input value={serviceForm.price_min} onChange={e => setServiceForm(p => ({ ...p, price_min: e.target.value }))}
+                        placeholder="Min price (₹)" type="number" className="px-3 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-sm focus:outline-none" />
+                      <input value={serviceForm.price_max} onChange={e => setServiceForm(p => ({ ...p, price_max: e.target.value }))}
+                        placeholder="Max price (₹)" type="number" className="px-3 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-sm focus:outline-none" />
+                      <input value={serviceForm.delivery_days} onChange={e => setServiceForm(p => ({ ...p, delivery_days: e.target.value }))}
+                        placeholder="Delivery days" type="number" className="px-3 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-sm focus:outline-none" />
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <input value={serviceForm.featured_image} onChange={e => setServiceForm(p => ({ ...p, featured_image: e.target.value }))}
+                        placeholder="Image URL (https://... or /images/...)" className="px-3 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-sm focus:outline-none" />
+                      <input value={serviceForm.tags} onChange={e => setServiceForm(p => ({ ...p, tags: e.target.value }))}
+                        placeholder="Tags (comma-separated)" className="px-3 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-sm focus:outline-none" />
+                    </div>
+                    <div className="flex gap-4">
+                      <label className="flex items-center gap-2 text-sm text-slate-600 cursor-pointer">
+                        <input type="checkbox" checked={serviceForm.is_featured} onChange={e => setServiceForm(p => ({ ...p, is_featured: e.target.checked }))} className="w-4 h-4 rounded" />
+                        Mark as Featured
+                      </label>
+                      <label className="flex items-center gap-2 text-sm text-slate-600 cursor-pointer">
+                        <input type="checkbox" checked={serviceForm.is_active} onChange={e => setServiceForm(p => ({ ...p, is_active: e.target.checked }))} className="w-4 h-4 rounded" />
+                        Active / Published
+                      </label>
+                    </div>
+                    {serviceForm.featured_image && (
+                      <div className="mt-1">
+                        <p className="text-xs text-slate-400 mb-1">Image preview:</p>
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src={serviceForm.featured_image} alt="preview" className="h-24 rounded-xl object-cover border border-slate-200" onError={e => (e.currentTarget.style.display='none')} />
+                      </div>
+                    )}
+                    <div className="flex gap-3 pt-2">
+                      <button disabled={savingService || !serviceForm.title} onClick={saveService}
+                        className="px-5 py-2.5 rounded-xl bg-navy text-white text-sm font-bold cursor-pointer disabled:opacity-60">
+                        {savingService ? '⏳ Saving...' : editingServiceId ? '💾 Update Service' : '✅ Create Service'}
+                      </button>
+                      <button onClick={() => { setShowServiceForm(false); setEditingServiceId(null) }} className="text-sm text-slate-400 cursor-pointer">Cancel</button>
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            {/* Services list */}
+            {servicesLoading ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                {[1,2,3,4,5,6].map(i => <div key={i} className="h-48 bg-white rounded-2xl animate-pulse border border-slate-100" />)}
+              </div>
+            ) : filteredServices.length === 0 ? (
+              <div className="text-center py-16 bg-white rounded-2xl border border-slate-100 text-slate-400">
+                <span className="text-4xl block mb-3">🛒</span>
+                <p>No services found. Add your first service above!</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                {filteredServices.map(s => (
+                  <motion.div key={s.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
+                    className={`bg-white rounded-2xl border shadow-sm hover:shadow-md transition-shadow overflow-hidden ${!s.is_active ? 'opacity-60' : ''} ${s.is_featured ? 'border-accent/30' : 'border-slate-100'}`}>
+                    {/* Image */}
+                    <div className="h-32 relative overflow-hidden flex-shrink-0"
+                      style={{ background: `${CAT_COLORS[s.category] || '#1B3A6B'}15` }}>
+                      {s.featured_image ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={s.featured_image} alt={s.title} className="w-full h-full object-cover" onError={e => (e.currentTarget.style.display='none')} />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center">
+                          <span className="text-4xl opacity-30">🛒</span>
+                        </div>
+                      )}
+                      {s.is_featured && <span className="absolute top-2 left-2 px-2 py-0.5 rounded-full bg-accent text-white text-[9px] font-bold">⭐ Featured</span>}
+                      {!s.is_active && <span className="absolute top-2 right-2 px-2 py-0.5 rounded-full bg-black/50 text-white text-[9px] font-bold">Inactive</span>}
+                    </div>
+                    <div className="p-4">
+                      <div className="flex items-start justify-between gap-2 mb-2">
+                        <div>
+                          <h4 className="font-bold text-navy text-sm line-clamp-1 font-heading">{s.title}</h4>
+                          <span className="inline-block mt-1 px-2 py-0.5 rounded-full text-[9px] font-bold text-white" style={{ background: CAT_COLORS[s.category] || '#1B3A6B' }}>{s.category}</span>
+                        </div>
+                        <div className="text-right flex-shrink-0">
+                          {s.price_min ? <p className="text-xs font-bold text-navy">₹{s.price_min.toLocaleString('en-IN')}{s.price_max ? ` – ₹${s.price_max.toLocaleString('en-IN')}` : '+'}</p> : <p className="text-xs text-slate-400">Custom</p>}
+                          <p className="text-[10px] text-slate-400 mt-0.5">{s.delivery_days}d delivery</p>
+                        </div>
+                      </div>
+                      {s.short_description && <p className="text-xs text-slate-400 line-clamp-2 mb-3">{s.short_description}</p>}
+                      <div className="flex gap-2">
+                        <button onClick={() => {
+                          setServiceForm({ title: s.title, category: s.category, short_description: s.short_description || '', price_min: s.price_min?.toString() || '', price_max: s.price_max?.toString() || '', delivery_days: s.delivery_days.toString(), featured_image: s.featured_image || '', tags: (s.tags || []).join(', '), is_featured: s.is_featured, is_active: s.is_active })
+                          setEditingServiceId(s.id); setShowServiceForm(true)
+                        }} className="flex-1 py-1.5 rounded-lg bg-blue-50 text-blue-500 text-xs font-bold cursor-pointer hover:bg-blue-100">✏️ Edit</button>
+                        <button onClick={async () => {
+                          await fetch(`/api/admin/services?id=${s.id}`, { method: 'DELETE' })
+                          setServices(p => p.filter(x => x.id !== s.id))
+                        }} className="w-8 h-8 rounded-lg bg-red-50 text-red-400 text-xs flex items-center justify-center cursor-pointer hover:bg-red-100">🗑</button>
+                      </div>
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
+            )}
+          </div>
+        )
+      })()}
+
+      {/* ── CONTACT LEADS ── */}
+      {activeTab === 'contact_leads' && (
+        <div className="space-y-4">
+          <div className="flex items-center justify-between flex-wrap gap-3">
+            <div>
+              <h3 className="font-bold text-navy font-heading">📬 Contact Form Leads</h3>
+              <p className="text-xs text-slate-400 mt-0.5">{contactLeads.length} submissions from the public contact page</p>
+            </div>
+            <div className="flex gap-2 flex-wrap">
+              <div className="flex gap-1">
+                {['all','new','contacted','converted','closed'].map(s => (
+                  <button key={s} onClick={() => { setContactLoading(true); fetch(`/api/contact${s !== 'all' ? `?status=${s}` : ''}`).then(r => r.json()).then(d => setContactLeads(d.submissions || [])).finally(() => setContactLoading(false)) }}
+                    className="px-3 py-1.5 rounded-lg text-[10px] font-bold capitalize cursor-pointer bg-white border border-slate-200 text-slate-600 hover:bg-slate-50">{s}</button>
+                ))}
+              </div>
+              <button onClick={() => { setContactLoading(true); fetch('/api/contact').then(r => r.json()).then(d => setContactLeads(d.submissions || [])).finally(() => setContactLoading(false)) }}
+                className="px-3 py-2 rounded-xl bg-navy text-white text-xs font-bold cursor-pointer hover:opacity-90">🔄 Refresh</button>
+            </div>
+          </div>
+          {contactLoading ? (
+            <div className="space-y-3">{Array.from({ length: 5 }).map((_, i) => <div key={i} className="h-16 bg-white rounded-xl animate-pulse border border-slate-100" />)}</div>
+          ) : contactLeads.length === 0 ? (
+            <div className="bg-white rounded-2xl p-12 text-center border border-slate-100">
+              <span className="text-5xl block mb-3">📬</span>
+              <p className="text-slate-400 text-sm font-medium">No contact form submissions yet.</p>
+              <p className="text-slate-300 text-xs mt-1">They appear here when users fill the "Get In Touch" form.</p>
+            </div>
+          ) : (
+            <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+              <div className="overflow-x-auto">
+                <table className="w-full text-xs">
+                  <thead><tr className="border-b border-slate-100 bg-slate-50">
+                    {['Name','Email','Phone','Service','Message','Status','Date','Actions'].map(h => (
+                      <th key={h} className="px-3 py-3 text-left font-bold text-slate-400 uppercase text-[10px]">{h}</th>
+                    ))}
+                  </tr></thead>
+                  <tbody>
+                    {contactLeads.map(lead => {
+                      const statusCfg: Record<string,{bg:string;color:string}> = {
+                        new: { bg: '#DBEAFE', color: '#1D4ED8' },
+                        contacted: { bg: '#FEF3C7', color: '#92400E' },
+                        converted: { bg: '#D1FAE5', color: '#065F46' },
+                        closed: { bg: '#F3F4F6', color: '#6B7280' },
+                      }
+                      const cfg = statusCfg[lead.status] || statusCfg.new
+                      return (
+                        <tr key={lead.id} className="border-b border-slate-50 hover:bg-slate-50/60">
+                          <td className="px-3 py-3 font-semibold text-navy whitespace-nowrap">{lead.name}</td>
+                          <td className="px-3 py-3 text-blue-600"><a href={`mailto:${lead.email}`}>{lead.email}</a></td>
+                          <td className="px-3 py-3 text-slate-500">{lead.phone ? <a href={`tel:${lead.phone}`} className="text-green-600 font-medium">{lead.phone}</a> : '—'}</td>
+                          <td className="px-3 py-3 text-slate-500 max-w-[100px] truncate">{lead.service || '—'}</td>
+                          <td className="px-3 py-3 text-slate-500 max-w-[200px]"><p className="truncate" title={lead.message}>{lead.message}</p></td>
+                          <td className="px-3 py-3">
+                            <span className="px-2 py-1 rounded-full text-[10px] font-bold capitalize" style={{ background: cfg.bg, color: cfg.color }}>{lead.status}</span>
+                          </td>
+                          <td className="px-3 py-3 text-slate-400 whitespace-nowrap">{new Date(lead.created_at).toLocaleDateString('en-IN')}</td>
+                          <td className="px-3 py-3">
+                            <div className="flex gap-1 flex-wrap">
+                              {lead.status === 'new' && <button onClick={() => updateContactStatus(lead.id, 'contacted')} className="px-2 py-1 rounded-lg bg-amber-50 text-amber-700 text-[10px] font-bold cursor-pointer hover:bg-amber-100">📞 Contacted</button>}
+                              {lead.status === 'contacted' && <button onClick={() => updateContactStatus(lead.id, 'converted')} className="px-2 py-1 rounded-lg bg-green-50 text-green-600 text-[10px] font-bold cursor-pointer hover:bg-green-100">✅ Converted</button>}
+                              {lead.status !== 'closed' && <button onClick={() => updateContactStatus(lead.id, 'closed')} className="px-2 py-1 rounded-lg bg-slate-50 text-slate-500 text-[10px] font-bold cursor-pointer hover:bg-slate-100">✕ Close</button>}
+                            </div>
+                          </td>
+                        </tr>
+                      )
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ── NEWSLETTER SUBSCRIBERS ── */}
+      {activeTab === 'subscribers' && (
+        <div className="space-y-4">
+          <div className="flex items-center justify-between flex-wrap gap-3">
+            <div>
+              <h3 className="font-bold text-navy font-heading">📧 Newsletter Subscribers</h3>
+              <p className="text-xs text-slate-400 mt-0.5">{subscribers.length} people subscribed via the homepage "Stay in the Loop" form</p>
+            </div>
+            <button onClick={() => { setSubLoading(true); fetch('/api/newsletter/subscribers?limit=500').then(r => r.json()).then(d => setSubscribers(d.subscribers || [])).finally(() => setSubLoading(false)) }}
+              className="px-3 py-2 rounded-xl bg-navy text-white text-xs font-bold cursor-pointer hover:opacity-90">🔄 Refresh</button>
+          </div>
+          {subLoading ? (
+            <div className="space-y-3">{Array.from({ length: 5 }).map((_, i) => <div key={i} className="h-12 bg-white rounded-xl animate-pulse border border-slate-100" />)}</div>
+          ) : subscribers.length === 0 ? (
+            <div className="bg-white rounded-2xl p-12 text-center border border-slate-100">
+              <span className="text-5xl block mb-3">📧</span>
+              <p className="text-slate-400 text-sm">No subscribers yet.</p>
+            </div>
+          ) : (
+            <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+              <div className="overflow-x-auto">
+                <table className="w-full text-xs">
+                  <thead><tr className="border-b border-slate-100 bg-slate-50">
+                    {['#','Email','Status','Subscribed On'].map(h => (
+                      <th key={h} className="px-4 py-3 text-left font-bold text-slate-400 uppercase text-[10px]">{h}</th>
+                    ))}
+                  </tr></thead>
+                  <tbody>
+                    {subscribers.map((s, i) => (
+                      <tr key={s.id} className="border-b border-slate-50 hover:bg-slate-50/60">
+                        <td className="px-4 py-3 text-slate-400 font-mono">{i + 1}</td>
+                        <td className="px-4 py-3 font-semibold text-navy">{s.email}</td>
+                        <td className="px-4 py-3">
+                          <span className={`px-2 py-1 rounded-full text-[10px] font-bold ${s.status === 'active' ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-500'}`}>
+                            {s.status === 'active' ? '● Active' : '○ Unsubscribed'}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3 text-slate-400">{new Date(s.created_at).toLocaleDateString('en-IN')}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Panels */}
       <AnimatePresence>
         {showGroupChat && GCComp && meId > 0 && <GCComp currentUserId={meId} isAdmin={['super_admin', 'admin'].includes(meRole)} onClose={() => setShowGroupChat(false)} />}
@@ -499,4 +850,5 @@ export default function OperationsPage() {
       </AnimatePresence>
     </div>
   )
+
 }

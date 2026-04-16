@@ -18,7 +18,10 @@
 }
 
 /* ===== Base ===== */
-html { scroll-behavior: smooth; }
+html {
+  scroll-behavior: smooth;
+}
+
 body {
   font-family: var(--font-body);
   color: #1e293b;
@@ -26,21 +29,59 @@ body {
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
 }
-h1, h2, h3, h4, h5, h6 { font-family: var(--font-heading); }
 
-/* GPU-accelerated transitions */
-img, video { content-visibility: auto; }
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: var(--font-heading);
+}
+
+/* GPU-accelerated media */
+img,
+video {
+  content-visibility: auto;
+}
+
+/* ===== Performance: GPU layer promotion for animated elements ===== */
+.glass,
+.glass-dark,
+[data-animate] {
+  will-change: transform;
+  transform: translateZ(0);
+}
 
 /* Smooth page load */
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(8px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
-main, [data-animate] { animation: fadeIn 0.3s ease-out; }
+
+main,
+[data-animate] {
+  animation: fadeIn 0.3s ease-out;
+}
+
+/* ===== Performance: Contain paint for heavy sections ===== */
+section {
+  contain: layout style;
+}
 
 /* Reduced motion for accessibility */
 @media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after {
+
+  *,
+  *::before,
+  *::after {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
@@ -55,6 +96,7 @@ main, [data-animate] { animation: fadeIn 0.3s ease-out; }
   -webkit-backdrop-filter: blur(20px) saturate(180%);
   border: 1px solid rgba(255, 255, 255, 0.3);
 }
+
 .glass-dark {
   background: var(--color-glass-dark);
   backdrop-filter: blur(20px) saturate(180%);
@@ -64,26 +106,64 @@ main, [data-animate] { animation: fadeIn 0.3s ease-out; }
 }
 
 /* ===== Custom scrollbar ===== */
-::-webkit-scrollbar { width: 6px; height: 6px; }
-::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
-::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
 /* Firefox */
-* { scrollbar-width: thin; scrollbar-color: #cbd5e1 transparent; }
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e1 transparent;
+}
 
 /* ===== Card Flip ===== */
-.perspective-1000 { perspective: 1000px; }
-.transform-style-3d { transform-style: preserve-3d; }
-.backface-hidden { backface-visibility: hidden; }
+.perspective-1000 {
+  perspective: 1000px;
+}
+
+.transform-style-3d {
+  transform-style: preserve-3d;
+}
+
+.backface-hidden {
+  backface-visibility: hidden;
+}
 
 /* ===== Mobile overlay ===== */
 .sidebar-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0,0,0,0.4);
+  background: rgba(0, 0, 0, 0.4);
   z-index: 40;
   opacity: 0;
   pointer-events: none;
   transition: opacity 0.3s;
 }
-.sidebar-overlay.active { opacity: 1; pointer-events: auto; }
+
+.sidebar-overlay.active {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* ===== Utility: Hide scrollbar (for tab strips etc.) ===== */
+.scrollbar-none {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}

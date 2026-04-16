@@ -36,18 +36,14 @@ export default function NewsletterSection() {
   return (
     <section className="py-16 relative overflow-hidden"
       style={{ background: 'linear-gradient(135deg, #1B3A6B 0%, #0f2545 60%, #1B3A6B 100%)' }}>
-      {/* Animated background circles */}
-      <motion.div
+      {/* Static decorative circles — no infinite JS animation */}
+      <div
         className="absolute -top-20 -right-20 w-80 h-80 rounded-full opacity-10"
         style={{ background: '#FF6B35' }}
-        animate={{ scale: [1, 1.2, 1], rotate: [0, 90, 0] }}
-        transition={{ duration: 12, repeat: Infinity }}
       />
-      <motion.div
+      <div
         className="absolute -bottom-20 -left-20 w-64 h-64 rounded-full opacity-10"
         style={{ background: '#FF6B35' }}
-        animate={{ scale: [1.2, 1, 1.2], rotate: [0, -90, 0] }}
-        transition={{ duration: 10, repeat: Infinity }}
       />
 
       <div className="max-w-3xl mx-auto px-4 text-center relative z-10">

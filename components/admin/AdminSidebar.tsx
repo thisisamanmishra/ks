@@ -134,17 +134,7 @@ function buildNavGroups(user: UserData): NavGroup[] {
     all.push({
       title: 'Digital Saarthi',
       items: [
-        { icon: '📊', label: 'Overview', href: '/admin/digital' },
-        { icon: '👥', label: 'Creator Roster', href: '/admin/digital' },
-        { icon: '📥', label: 'Submissions', href: '/admin/digital' },
-        { icon: '📈', label: 'Creator Analytics', href: '/admin/digital' },
-        { icon: '📡', label: 'Lead Generation', href: '/admin/digital' },
-        { icon: '💰', label: 'Revenue Attribution', href: '/admin/digital' },
-        { icon: '💬', label: 'Creator Chat', href: '/admin/digital' },
-        { icon: '🎨', label: 'Ad Creatives', href: '/admin/digital' },
-        { icon: '📅', label: 'Content Calendar', href: '/admin/digital' },
-        { icon: '🔍', label: 'SEO', href: '/admin/digital' },
-        { icon: '📧', label: 'Email Campaigns', href: '/admin/digital' },
+        { icon: '💻', label: 'Digital Dashboard', href: '/admin/digital' },
       ],
     })
   }
@@ -323,9 +313,9 @@ export default function AdminSidebar({ user }: { user: UserData }) {
                   transition={{ duration: 0.2 }}
                   className="overflow-hidden"
                 >
-                  {group.items.map(item => (
+                  {group.items.map((item, idx) => (
                     <Link
-                      key={item.href}
+                      key={`${group.title}-${item.label}-${idx}`}
                       href={item.href}
                       onClick={() => setMobileOpen(false)}
                       className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-medium transition-all mb-0.5 group relative ${

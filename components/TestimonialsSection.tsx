@@ -2,9 +2,6 @@
 
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import dynamic from 'next/dynamic'
-
-const TestimonialBubble = dynamic(() => import('./ThreeElements').then(m => m.TestimonialBubble), { ssr: false })
 
 const testimonials = [
   { text: 'My mentor accepted my thesis and everything is perfect! Karya Saarthi made it so easy.', name: 'Ashish', role: 'MBA Student', rating: 5 },
@@ -14,6 +11,21 @@ const testimonials = [
   { text: 'The logo design exceeded my expectations. Professional, creative, and delivered on time.', name: 'Priya', role: 'Small Business', rating: 5 },
   { text: 'Outstanding resume writing service — got 3 interview calls within a week!', name: 'Amit', role: 'Job Seeker', rating: 5 },
 ]
+
+// Lightweight SVG speech bubble instead of heavy Three.js Canvas per card
+function SpeechBubbleSVG({ variant = 0 }: { variant?: number }) {
+  const colors = ['#1B3A6B', '#FF6B35', '#254d8a', '#e0551f', '#4a90ff', '#0f2545']
+  const color = colors[variant % colors.length]
+  return (
+    <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="24" cy="20" r="16" fill={color} opacity="0.15" />
+      <circle cx="24" cy="20" r="12" fill={color} opacity="0.25" />
+      <path d="M18 32 L22 26 L26 32 Z" fill={color} opacity="0.2" />
+      <circle cx="20" cy="18" r="2" fill="white" opacity="0.6" />
+      <circle cx="28" cy="18" r="2" fill="white" opacity="0.6" />
+    </svg>
+  )
+}
 
 export default function TestimonialsSection() {
   const [data, setData] = useState<{text:string, name:string, role:string, rating:number}[]>([])
@@ -40,7 +52,7 @@ export default function TestimonialsSection() {
 
   return (
     <section id="testimonials" className="py-20 lg:py-28 bg-white relative overflow-hidden">
-      {/* Background 3D pattern */}
+      {/* Background pattern */}
       <div className="absolute inset-0 opacity-5">
         <div className="absolute top-10 left-10 w-32 h-32 rounded-full bg-navy" />
         <div className="absolute bottom-20 right-20 w-48 h-48 rounded-full bg-accent" />
@@ -64,13 +76,13 @@ export default function TestimonialsSection() {
                 key={i}
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
+                viewport={{ once: true, margin: '-50px' }}
                 transition={{ delay: i * 0.08 }}
                 className="bg-surface rounded-2xl p-6 hover:shadow-xl transition-all duration-300 border border-slate-100 relative group hover:-translate-y-1"
               >
-                {/* 3D Speech Bubble */}
+                {/* Lightweight SVG Speech Bubble instead of Three.js Canvas */}
                 <div className="absolute -top-3 -right-3 opacity-70 group-hover:opacity-100 transition-opacity">
-                  <TestimonialBubble variant={i} />
+                  <SpeechBubbleSVG variant={i} />
                 </div>
 
                 <div className="flex gap-1 mb-3">

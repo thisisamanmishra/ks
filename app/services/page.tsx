@@ -32,6 +32,7 @@ const CATEGORIES = [
   { key: 'design', label: 'Design', icon: '🎨' },
   { key: 'marketing', label: 'Marketing', icon: '📣' },
   { key: 'legal', label: 'Legal', icon: '⚖️' },
+  { key: 'other', label: 'Other', icon: '📁' },
 ]
 
 const SORT_OPTIONS = [
@@ -54,6 +55,9 @@ const CAT_COLORS: Record<string, string> = {
   other: '#64748B',
 }
 
+// Normalize category for comparison (handles both 'Academic' and 'academic')
+function normCat(cat: string) { return cat.toLowerCase() }
+
 function StarRating({ value }: { value: number }) {
   return (
     <div className="flex items-center gap-0.5">
@@ -73,7 +77,7 @@ function ServiceCard({ service, wishlisted, onWishlist, onEnquire, onCompare, co
   onCompare: (id: number) => void
   compareSelected: boolean
 }) {
-  const catColor = CAT_COLORS[service.category] || CAT_COLORS.other
+  const catColor = CAT_COLORS[normCat(service.category)] || CAT_COLORS.other
 
   return (
     <motion.div
@@ -90,7 +94,7 @@ function ServiceCard({ service, wishlisted, onWishlist, onEnquire, onCompare, co
           <img src={service.featured_image} alt={service.title} className="w-full h-full object-cover" />
         ) : (
           <span className="text-5xl opacity-30">
-            {CATEGORIES.find(c => c.key === service.category)?.icon || '📁'}
+            {CATEGORIES.find(c => c.key === normCat(service.category))?.icon || '📁'}
           </span>
         )}
 

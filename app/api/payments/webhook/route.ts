@@ -59,7 +59,7 @@ export async function POST(request: Request) {
           .eq('id', paymentRecord.invoice_id)
       }
 
-      console.log(`✅ Payment captured: ${payment.id} for order ${orderId}`)
+      console.info(`[webhook] payment.captured: ${payment.id} order: ${orderId}`)
       break
     }
 
@@ -70,7 +70,7 @@ export async function POST(request: Request) {
         .update({ status: 'failed', failed_at: new Date().toISOString() })
         .eq('razorpay_order_id', payment.order_id)
 
-      console.log(`❌ Payment failed: ${payment.id}`)
+      console.info(`[webhook] payment.failed: ${payment.id}`)
       break
     }
 
@@ -84,7 +84,7 @@ export async function POST(request: Request) {
     }
 
     default:
-      console.log(`Unhandled Razorpay event: ${event.event}`)
+      // Silently ignore unhandled events
   }
 
   return NextResponse.json({ received: true })

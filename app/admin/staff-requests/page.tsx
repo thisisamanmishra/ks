@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState, useCallback } from 'react'
+import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 
 interface PendingUser {
@@ -51,11 +52,20 @@ function getDesignation(u: PendingUser): string {
 }
 
 export default function StaffRequestsPage() {
+  const router = useRouter()
   const [data, setData] = useState<{
     pendingAdmins: PendingUser[]
     pendingPillar: PendingUser[]
     adminRequests: AdminRequest[]
   }>({ pendingAdmins: [], pendingPillar: [], adminRequests: [] })
+
+  // Guard: only super_admin may access this page
+  useEffect(() => {
+    fetch('/api/auth/me').then(r => r.json()).then(d => {
+      if (d.role !== 'super_admin') router.replace('/admin')
+    }).catch(() => router.replace('/admin'))
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   const [loading, setLoading] = useState(true)
   const [actionStates, setActionStates] = useState<Record<number, 'approving' | 'rejecting' | null>>({})

@@ -43,13 +43,15 @@ function AnimatedCounter({ target, suffix, duration = 2 }: { target: number; suf
 export default function LiveStatsBar() {
   return (
     <section className="relative py-4 overflow-hidden" style={{ background: 'linear-gradient(135deg, #1B3A6B 0%, #0f2545 50%, #1B3A6B 100%)' }}>
-      {/* Subtle animated shimmer */}
-      <motion.div
+      {/* CSS-only shimmer — no JS overhead */}
+      <div
         className="absolute inset-0 opacity-10"
-        animate={{ x: ['-100%', '100%'] }}
-        transition={{ duration: 8, repeat: Infinity, ease: 'linear' }}
-        style={{ background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent)' }}
+        style={{
+          background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent)',
+          animation: 'shimmer 8s linear infinite',
+        }}
       />
+      <style>{`@keyframes shimmer { from { transform: translateX(-100%); } to { transform: translateX(100%); } }`}</style>
 
       <div className="max-w-7xl mx-auto px-4">
         <div className="flex flex-wrap justify-center md:justify-between items-center gap-4 md:gap-0">
