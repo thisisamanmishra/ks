@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { getCurrentUser } from '@/lib/auth/middleware'
 
+const ALLOWED_ROLES = ['super_admin', 'board_member']
+
 export async function GET(request: Request) {
   const user = await getCurrentUser()
   if (!user || (user.role !== 'super_admin' && user.role !== 'board_member' && user.role !== 'admin')) {
@@ -16,7 +18,7 @@ export async function GET(request: Request) {
   if (type === 'directory') {
     const { data, error } = await supabase
       .from('users')
-      .select('id, fullname, email, role, department, pillar_role, is_approved, created_at')
+      .select('id, fullname, email, role, department, pillar_role, designation, phone, is_approved, created_at')
       .neq('role', 'customer')
       .order('created_at', { ascending: false })
     
@@ -49,7 +51,7 @@ export async function GET(request: Request) {
     const { data, error } = await supabase
       .from('appraisals')
       .select(`
-        id, review_period, performance_score, feedback, goals_achieved, areas_of_improvement, status,
+        id, review_period, performance_score, feedback, goals_achieved, areas_of_improvement, salary_increment, new_salary, status, created_at,
         users:user_id ( id, fullname )
       `)
       .order('id', { ascending: false })
@@ -89,8 +91,8 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   const user = await getCurrentUser()
-  if (!user || user.role !== 'super_admin') {
-    return NextResponse.json({ error: 'Unauthorized. Super Admin access required.' }, { status: 403 })
+  if (!user || !ALLOWED_ROLES.includes(user.role)) {
+    return NextResponse.json({ error: 'Unauthorized. Super Admin or Board Member access required.' }, { status: 403 })
   }
 
   const { searchParams } = new URL(request.url)
@@ -119,18 +121,23 @@ export async function POST(request: Request) {
   }
 
   if (type === 'appraisals') {
+    const insertData: Record<string, any> = {
+      user_id: body.user_id,
+      reviewer_id: user.userId,
+      review_period: body.review_period,
+      performance_score: body.performance_score,
+      feedback: body.feedback,
+      goals_achieved: body.goals_achieved,
+      areas_of_improvement: body.areas_of_improvement,
+      status: body.status || 'draft'
+    }
+    // Add salary fields if provided
+    if (body.salary_increment) insertData.salary_increment = body.salary_increment
+    if (body.new_salary) insertData.new_salary = body.new_salary
+
     const { data, error } = await supabase
       .from('appraisals')
-      .insert({
-        user_id: body.user_id,
-        reviewer_id: user.userId,
-        review_period: body.review_period,
-        performance_score: body.performance_score,
-        feedback: body.feedback,
-        goals_achieved: body.goals_achieved,
-        areas_of_improvement: body.areas_of_improvement,
-        status: body.status || 'draft'
-      })
+      .insert(insertData)
       .select('*, users:user_id(id, fullname)')
       .single()
       
@@ -143,8 +150,8 @@ export async function POST(request: Request) {
 
 export async function PATCH(request: Request) {
   const user = await getCurrentUser()
-  if (!user || user.role !== 'super_admin') {
-    return NextResponse.json({ error: 'Unauthorized. Super Admin access required.' }, { status: 403 })
+  if (!user || !ALLOWED_ROLES.includes(user.role)) {
+    return NextResponse.json({ error: 'Unauthorized. Super Admin or Board Member access required.' }, { status: 403 })
   }
 
   const { searchParams } = new URL(request.url)

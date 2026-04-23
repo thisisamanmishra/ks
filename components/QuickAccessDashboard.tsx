@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import Link from 'next/link'
+import Image from 'next/image'
 
 // ─── Shared Wrapper for Widgets ────────────────────────────────────────────────
 const WidgetWrapper = ({ children, delay = 0 }: { children: React.ReactNode, delay?: number }) => (
@@ -314,7 +315,7 @@ const SocialProofWidget = () => {
         <div className="mt-auto pt-4 flex items-center gap-3">
           <div className="w-10 h-10 rounded-full bg-slate-200 flex items-center justify-center text-slate-500 font-bold overflow-hidden border-2 border-white shadow-sm">
             {data.customer?.profile_image ? (
-              <img src={data.customer.profile_image} alt="User" className="w-full h-full object-cover" />
+              <Image src={data.customer.profile_image} alt="User" width={40} height={40} className="w-full h-full object-cover" />
             ) : (data.customer?.fullname?.charAt(0) || 'U')}
           </div>
           <div>

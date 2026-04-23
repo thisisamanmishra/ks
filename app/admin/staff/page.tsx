@@ -11,8 +11,10 @@ interface StaffMember {
   role: string
   department: string | null
   pillar_role: string | null
+  designation: string | null
   is_approved: boolean
   created_at: string
+  phone?: string | null
 }
 
 interface PayrollRecord {
@@ -39,7 +41,10 @@ interface AppraisalRecord {
   feedback: string
   goals_achieved: string
   areas_of_improvement: string
+  salary_increment: number | null
+  new_salary: number | null
   status: string
+  created_at?: string
 }
 
 const TABS = [
@@ -51,6 +56,13 @@ const TABS = [
 
 type TabKey = typeof TABS[number]['key']
 const VALID_TABS: TabKey[] = ['directory', 'payroll', 'appraisals', 'leaves']
+
+const ROLE_COLORS: Record<string, { label: string; color: string; bg: string }> = {
+  super_admin: { label: 'Super Admin', color: '#FF6B35', bg: '#FFF0EB' },
+  board_member: { label: 'Board Member', color: '#8B5CF6', bg: '#EDE9FE' },
+  admin: { label: 'Admin', color: '#3B82F6', bg: '#DBEAFE' },
+  pillar_member: { label: 'Pillar Member', color: '#10B981', bg: '#D1FAE5' },
+}
 
 // ── Inner component that uses useSearchParams ──
 function StaffContent() {
@@ -66,6 +78,7 @@ function StaffContent() {
   const [appraisals, setAppraisals] = useState<AppraisalRecord[]>([])
   const [loading, setLoading] = useState(true)
   const [toast, setToast] = useState<string | null>(null)
+  const [searchQuery, setSearchQuery] = useState('')
 
   // Forms
   const [showPayrollForm, setShowPayrollForm] = useState(false)
@@ -73,12 +86,21 @@ function StaffContent() {
   const [savingPay, setSavingPay] = useState(false)
 
   const [showApprForm, setShowApprForm] = useState(false)
-  const [apprForm, setApprForm] = useState({ user_id: '', period: 'Q1 ' + new Date().getFullYear(), score: '8', feedback: '', goals: '', areas: '' })
+  const [apprForm, setApprForm] = useState({ user_id: '', period: 'Q1 ' + new Date().getFullYear(), score: '8', feedback: '', goals: '', areas: '', salary_increment: '0', new_salary: '0' })
   const [savingAppr, setSavingAppr] = useState(false)
 
-  // Sync tab from URL
+  // Upraisal modal
+  const [upraisalTarget, setUpraisalTarget] = useState<StaffMember | null>(null)
+  const [upraisalForm, setUpraisalForm] = useState({ current_salary: '0', increment_pct: '10', new_salary: '0', reason: '', effective_from: '' })
+  const [savingUpraisal, setSavingUpraisal] = useState(false)
+
+  // Sync tab from URL on initial load and direct URL entry
   useEffect(() => {
-    if (tabParam && VALID_TABS.includes(tabParam)) setActiveTab(tabParam)
+    if (tabParam && VALID_TABS.includes(tabParam)) {
+      setActiveTab(tabParam)
+    } else if (!tabParam) {
+      setActiveTab('directory')
+    }
   }, [tabParam])
 
   const showToast = (msg: string) => {
@@ -108,7 +130,7 @@ function StaffContent() {
 
   const setTab = (t: TabKey) => {
     setActiveTab(t)
-    router.push(`/admin/staff?tab=${t}`)
+    window.history.pushState({}, '', `/admin/staff?tab=${t}`)
   }
 
   const savePayroll = async (e: React.FormEvent) => {
@@ -150,6 +172,8 @@ function StaffContent() {
       feedback: apprForm.feedback,
       goals_achieved: apprForm.goals,
       areas_of_improvement: apprForm.areas,
+      salary_increment: Number(apprForm.salary_increment) || 0,
+      new_salary: Number(apprForm.new_salary) || 0,
       status: 'finalized'
     }
     try {
@@ -158,7 +182,7 @@ function StaffContent() {
         const { record } = await res.json()
         setAppraisals(p => [record, ...p])
         setShowApprForm(false)
-        setApprForm({ user_id: '', period: 'Q1 ' + new Date().getFullYear(), score: '8', feedback: '', goals: '', areas: '' })
+        setApprForm({ user_id: '', period: 'Q1 ' + new Date().getFullYear(), score: '8', feedback: '', goals: '', areas: '', salary_increment: '0', new_salary: '0' })
         showToast('✅ Appraisal submitted!')
       } else {
         showToast('❌ Failed to submit appraisal')
@@ -173,6 +197,74 @@ function StaffContent() {
       showToast('✅ Marked as paid')
     }
   }
+
+  // Upraisal
+  const openUpraisal = (member: StaffMember) => {
+    // Find latest payroll for this member to get current salary
+    const latestPayroll = payrolls.find(p => p.user_id === member.id)
+    const currentSalary = latestPayroll ? latestPayroll.base_salary : 0
+    setUpraisalTarget(member)
+    setUpraisalForm({
+      current_salary: String(currentSalary),
+      increment_pct: '10',
+      new_salary: String(Math.round(currentSalary * 1.1)),
+      reason: '',
+      effective_from: new Date().toISOString().split('T')[0]
+    })
+  }
+
+  const handleIncrementChange = (pct: string) => {
+    const p = Number(pct) || 0
+    const current = Number(upraisalForm.current_salary) || 0
+    setUpraisalForm(f => ({
+      ...f,
+      increment_pct: pct,
+      new_salary: String(Math.round(current * (1 + p / 100)))
+    }))
+  }
+
+  const saveUpraisal = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!upraisalTarget) return
+    setSavingUpraisal(true)
+    const incrementAmt = Number(upraisalForm.new_salary) - Number(upraisalForm.current_salary)
+    const payload = {
+      user_id: upraisalTarget.id,
+      review_period: `Upraisal - ${upraisalForm.effective_from}`,
+      performance_score: 10,
+      feedback: `Salary upraisal: ₹${Number(upraisalForm.current_salary).toLocaleString('en-IN')} → ₹${Number(upraisalForm.new_salary).toLocaleString('en-IN')} (${upraisalForm.increment_pct}% increment)`,
+      goals_achieved: upraisalForm.reason || 'Salary revision based on performance',
+      areas_of_improvement: '',
+      salary_increment: incrementAmt,
+      new_salary: Number(upraisalForm.new_salary),
+      status: 'finalized'
+    }
+    try {
+      const res = await fetch('/api/admin/staff?type=appraisals', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) })
+      if (res.ok) {
+        const { record } = await res.json()
+        setAppraisals(p => [record, ...p])
+        setUpraisalTarget(null)
+        showToast('✅ Upraisal submitted successfully!')
+      } else {
+        showToast('❌ Failed to submit upraisal')
+      }
+    } catch { showToast('❌ Error submitting upraisal') } finally { setSavingUpraisal(false) }
+  }
+
+  const filteredStaff = staff.filter(s =>
+    s.fullname.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    s.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    (s.role || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+    (s.department || '').toLowerCase().includes(searchQuery.toLowerCase())
+  )
+
+  // Group payrolls by staff member for salary overview
+  const latestPayrollByUser = staff.map(s => {
+    const userPayrolls = payrolls.filter(p => p.user_id === s.id)
+    const latest = userPayrolls[0] || null
+    return { ...s, latestPayroll: latest }
+  })
 
   if (loading) return (
     <div className="flex items-center justify-center py-20">
@@ -192,6 +284,89 @@ function StaffContent() {
             className="fixed top-5 right-5 z-50 px-5 py-3 rounded-xl shadow-xl text-white text-sm font-bold"
             style={{ background: toast.startsWith('✅') ? '#10B981' : '#EF4444' }}>
             {toast}
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Upraisal Modal */}
+      <AnimatePresence>
+        {upraisalTarget && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+            onClick={() => setUpraisalTarget(null)}>
+            <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }}
+              className="bg-white rounded-3xl p-8 shadow-2xl border border-slate-100 w-full max-w-lg"
+              onClick={e => e.stopPropagation()}>
+              <div className="flex items-center gap-4 mb-6">
+                <div className="w-14 h-14 rounded-2xl flex items-center justify-center text-xl font-bold text-white"
+                  style={{ background: 'linear-gradient(135deg, #10B981, #059669)' }}>
+                  {upraisalTarget.fullname.charAt(0)}
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold text-navy font-heading">📈 Salary Upraisal</h3>
+                  <p className="text-sm text-slate-500">{upraisalTarget.fullname} · {upraisalTarget.role.replace(/_/g, ' ')}</p>
+                </div>
+              </div>
+              <form onSubmit={saveUpraisal} className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-xs font-bold text-slate-500 mb-1 block">Current Salary (₹)</label>
+                    <input type="number" value={upraisalForm.current_salary}
+                      onChange={e => {
+                        const v = e.target.value
+                        setUpraisalForm(f => ({ ...f, current_salary: v, new_salary: String(Math.round(Number(v) * (1 + Number(f.increment_pct) / 100))) }))
+                      }}
+                      className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 focus:outline-none focus:border-navy text-lg font-bold text-navy" />
+                  </div>
+                  <div>
+                    <label className="text-xs font-bold text-slate-500 mb-1 block">Increment (%)</label>
+                    <input type="number" min="0" max="100" value={upraisalForm.increment_pct}
+                      onChange={e => handleIncrementChange(e.target.value)}
+                      className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 focus:outline-none focus:border-green-500 text-lg font-bold text-green-600" />
+                  </div>
+                </div>
+                <div className="rounded-2xl p-5 border-2 border-green-200" style={{ background: 'linear-gradient(135deg, #ECFDF5, #D1FAE5)' }}>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-xs font-bold text-green-600 uppercase tracking-wider">New Salary</p>
+                      <p className="text-3xl font-extrabold text-green-700 mt-1">₹{Number(upraisalForm.new_salary).toLocaleString('en-IN')}</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-xs text-green-600">Increment Amount</p>
+                      <p className="text-lg font-bold text-green-600">+₹{(Number(upraisalForm.new_salary) - Number(upraisalForm.current_salary)).toLocaleString('en-IN')}</p>
+                    </div>
+                  </div>
+                </div>
+                <div>
+                  <label className="text-xs font-bold text-slate-500 mb-1 block">New Salary (₹) — manual override</label>
+                  <input type="number" value={upraisalForm.new_salary}
+                    onChange={e => setUpraisalForm(f => ({ ...f, new_salary: e.target.value }))}
+                    className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 focus:outline-none" />
+                </div>
+                <div>
+                  <label className="text-xs font-bold text-slate-500 mb-1 block">Effective From</label>
+                  <input type="date" required value={upraisalForm.effective_from}
+                    onChange={e => setUpraisalForm(f => ({ ...f, effective_from: e.target.value }))}
+                    className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 focus:outline-none" />
+                </div>
+                <div>
+                  <label className="text-xs font-bold text-slate-500 mb-1 block">Reason for Upraisal</label>
+                  <textarea rows={2} required value={upraisalForm.reason}
+                    onChange={e => setUpraisalForm(f => ({ ...f, reason: e.target.value }))}
+                    placeholder="e.g., Excellent performance in Q1, leadership contributions..."
+                    className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 focus:outline-none resize-none" />
+                </div>
+                <div className="flex justify-end gap-3 pt-2">
+                  <button type="button" onClick={() => setUpraisalTarget(null)}
+                    className="px-5 py-2.5 hover:bg-slate-100 rounded-xl font-bold text-slate-500 cursor-pointer">Cancel</button>
+                  <button type="submit" disabled={savingUpraisal}
+                    className="px-6 py-2.5 text-white font-bold rounded-xl cursor-pointer disabled:opacity-50 shadow-lg hover:shadow-xl transition-all"
+                    style={{ background: 'linear-gradient(135deg, #10B981, #059669)' }}>
+                    {savingUpraisal ? '⏳ Processing...' : '📈 Approve Upraisal'}
+                  </button>
+                </div>
+              </form>
+            </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
@@ -219,56 +394,61 @@ function StaffContent() {
 
           {/* DIRECTORY TAB */}
           {activeTab === 'directory' && (
-            <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
-              <div className="p-5 border-b border-slate-100 flex items-center justify-between">
-                <h3 className="font-bold text-navy font-heading">Team Directory</h3>
-                <span className="px-3 py-1 rounded-full bg-navy/10 text-navy text-xs font-bold">{staff.length} members</span>
+            <div className="space-y-4">
+              {/* Search */}
+              <div className="relative max-w-xs">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm">🔍</span>
+                <input value={searchQuery} onChange={e => setSearchQuery(e.target.value)} placeholder="Search team members..."
+                  className="w-full pl-9 pr-4 py-2.5 rounded-xl border border-slate-200 bg-white text-sm focus:outline-none focus:border-navy" />
               </div>
-              {staff.length === 0 ? (
-                <div className="text-center py-16">
+
+              {/* Team Cards Grid */}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {filteredStaff.map((s, i) => {
+                  const roleCfg = ROLE_COLORS[s.role] || ROLE_COLORS.admin
+                  return (
+                    <motion.div key={s.id} initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.04 }}
+                      className="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 hover:shadow-md transition-all group">
+                      <div className="flex items-center gap-3 mb-4">
+                        <div className="w-12 h-12 rounded-xl flex items-center justify-center text-white font-bold text-lg flex-shrink-0 shadow-md"
+                          style={{ background: `linear-gradient(135deg, ${roleCfg.color}, ${roleCfg.color}cc)` }}>
+                          {s.fullname?.[0]?.toUpperCase() || '?'}
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <p className="font-bold text-navy truncate">{s.fullname}</p>
+                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full"
+                            style={{ background: roleCfg.bg, color: roleCfg.color }}>
+                            {s.role.replace(/_/g, ' ').toUpperCase()}
+                          </span>
+                        </div>
+                        {s.is_approved
+                          ? <span className="w-3 h-3 rounded-full bg-green-400 shadow-sm flex-shrink-0" title="Active" />
+                          : <span className="w-3 h-3 rounded-full bg-amber-400 shadow-sm flex-shrink-0" title="Pending" />}
+                      </div>
+                      <div className="space-y-1.5 text-xs text-slate-500">
+                        <p className="flex items-center gap-2 truncate">✉️ {s.email}</p>
+                        {s.phone && <p className="flex items-center gap-2">📞 {s.phone}</p>}
+                        <p className="flex items-center gap-2 capitalize">🏢 {s.department || s.pillar_role || 'General'}</p>
+                        {s.designation && <p className="flex items-center gap-2">🎖️ {s.designation}</p>}
+                        <p className="flex items-center gap-2">📅 Joined {new Date(s.created_at).toLocaleDateString('en-IN')}</p>
+                      </div>
+                      <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between">
+                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${s.is_approved ? 'bg-green-100 text-green-600' : 'bg-amber-100 text-amber-600'}`}>
+                          {s.is_approved ? '● Active' : '○ Pending'}
+                        </span>
+                        <button onClick={() => openUpraisal(s)}
+                          className="px-3 py-1.5 rounded-lg text-[10px] font-bold text-green-700 bg-green-50 hover:bg-green-100 cursor-pointer transition-colors opacity-0 group-hover:opacity-100">
+                          📈 Upraisal
+                        </button>
+                      </div>
+                    </motion.div>
+                  )
+                })}
+              </div>
+              {filteredStaff.length === 0 && (
+                <div className="text-center py-16 bg-white rounded-2xl border border-slate-100">
                   <span className="text-5xl block mb-3">👥</span>
                   <p className="text-slate-400 text-sm">No staff records found</p>
-                </div>
-              ) : (
-                <div className="overflow-x-auto">
-                  <table className="w-full text-left text-sm">
-                    <thead className="bg-slate-50 text-slate-500">
-                      <tr>
-                        <th className="p-4">Name</th>
-                        <th className="p-4">Role</th>
-                        <th className="p-4">Department / Pillar</th>
-                        <th className="p-4">Joined</th>
-                        <th className="p-4">Status</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-100">
-                      {staff.map(s => (
-                        <tr key={s.id} className="hover:bg-slate-50 transition-colors">
-                          <td className="p-4">
-                            <div className="flex items-center gap-3">
-                              <div className="w-9 h-9 rounded-xl bg-navy/10 flex items-center justify-center text-sm font-bold text-navy">
-                                {s.fullname?.[0]?.toUpperCase() || '?'}
-                              </div>
-                              <div>
-                                <p className="font-bold text-navy">{s.fullname}</p>
-                                <p className="text-xs text-slate-400">{s.email}</p>
-                              </div>
-                            </div>
-                          </td>
-                          <td className="p-4">
-                            <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-blue-100 text-blue-700 capitalize">{s.role.replace(/_/g, ' ')}</span>
-                          </td>
-                          <td className="p-4 text-slate-600 capitalize">{s.department || s.pillar_role || '—'}</td>
-                          <td className="p-4 text-slate-400 text-xs">{new Date(s.created_at).toLocaleDateString('en-IN')}</td>
-                          <td className="p-4">
-                            {s.is_approved
-                              ? <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-green-100 text-green-700">✓ Active</span>
-                              : <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-amber-100 text-amber-700">⏳ Pending</span>}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
                 </div>
               )}
             </div>
@@ -347,7 +527,81 @@ function StaffContent() {
                 </motion.div>
               )}
 
+              {/* Salary Overview by Team Member */}
               <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+                <div className="p-5 border-b border-slate-100">
+                  <h3 className="font-bold text-navy font-heading">👥 Team Salary Overview</h3>
+                  <p className="text-xs text-slate-400 mt-0.5">Latest salary details for each team member</p>
+                </div>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-sm">
+                    <thead className="bg-slate-50 text-slate-500">
+                      <tr>
+                        <th className="p-4">Employee</th>
+                        <th className="p-4">Role</th>
+                        <th className="p-4">Department</th>
+                        <th className="p-4">Latest Salary</th>
+                        <th className="p-4">Status</th>
+                        <th className="p-4">Action</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100">
+                      {latestPayrollByUser.map(s => (
+                        <tr key={s.id} className="hover:bg-slate-50/60 transition-colors">
+                          <td className="p-4">
+                            <div className="flex items-center gap-3">
+                              <div className="w-9 h-9 rounded-xl flex items-center justify-center text-sm font-bold text-white"
+                                style={{ background: (ROLE_COLORS[s.role] || ROLE_COLORS.admin).color }}>
+                                {s.fullname?.[0]?.toUpperCase() || '?'}
+                              </div>
+                              <div>
+                                <p className="font-bold text-navy">{s.fullname}</p>
+                                <p className="text-xs text-slate-400">{s.email}</p>
+                              </div>
+                            </div>
+                          </td>
+                          <td className="p-4">
+                            <span className="px-2.5 py-1 rounded-full text-xs font-bold capitalize"
+                              style={{ background: (ROLE_COLORS[s.role] || ROLE_COLORS.admin).bg, color: (ROLE_COLORS[s.role] || ROLE_COLORS.admin).color }}>
+                              {s.role.replace(/_/g, ' ')}
+                            </span>
+                          </td>
+                          <td className="p-4 text-slate-600 capitalize">{s.department || s.pillar_role || '—'}</td>
+                          <td className="p-4">
+                            {s.latestPayroll ? (
+                              <div>
+                                <p className="font-bold text-navy text-base">₹{Number(s.latestPayroll.net_salary).toLocaleString('en-IN')}</p>
+                                <p className="text-[10px] text-slate-400">{s.latestPayroll.month} {s.latestPayroll.year}</p>
+                              </div>
+                            ) : (
+                              <span className="text-xs text-slate-400">No record</span>
+                            )}
+                          </td>
+                          <td className="p-4">
+                            {s.latestPayroll?.status === 'paid'
+                              ? <span className="px-2 py-0.5 rounded-full text-xs bg-green-100 text-green-700 font-bold">Paid</span>
+                              : s.latestPayroll
+                                ? <span className="px-2 py-0.5 rounded-full text-xs bg-amber-100 text-amber-700 font-bold">Unpaid</span>
+                                : <span className="px-2 py-0.5 rounded-full text-xs bg-slate-100 text-slate-400 font-bold">N/A</span>}
+                          </td>
+                          <td className="p-4">
+                            <button onClick={() => openUpraisal(s)}
+                              className="text-xs bg-green-500/10 text-green-700 font-bold px-3 py-1.5 rounded-lg hover:bg-green-500 hover:text-white transition-colors cursor-pointer">
+                              📈 Upraisal
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              {/* Payroll History */}
+              <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+                <div className="p-5 border-b border-slate-100">
+                  <h3 className="font-bold text-navy font-heading">📋 Payroll History</h3>
+                </div>
                 {payrolls.length === 0 ? (
                   <div className="text-center py-16">
                     <span className="text-5xl block mb-3">💰</span>
@@ -409,7 +663,7 @@ function StaffContent() {
           {/* APPRAISALS TAB */}
           {activeTab === 'appraisals' && (
             <div className="space-y-6">
-              <div className="flex justify-end">
+              <div className="flex justify-end gap-3">
                 <button onClick={() => setShowApprForm(!showApprForm)}
                   className="px-5 py-2.5 text-white font-bold rounded-xl shadow-md hover:shadow-lg transition-all cursor-pointer"
                   style={{ background: 'linear-gradient(135deg, #F59E0B, #F97316)' }}>
@@ -447,6 +701,20 @@ function StaffContent() {
                     <textarea required rows={2} placeholder="Areas of Improvement" value={apprForm.areas}
                       onChange={e => setApprForm(p => ({ ...p, areas: e.target.value }))}
                       className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 focus:outline-none resize-none" />
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="text-xs font-bold text-slate-500 mb-1 block">💰 Salary Increment (₹) — optional</label>
+                        <input type="number" placeholder="e.g., 5000" value={apprForm.salary_increment}
+                          onChange={e => setApprForm(p => ({ ...p, salary_increment: e.target.value }))}
+                          className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 focus:outline-none" />
+                      </div>
+                      <div>
+                        <label className="text-xs font-bold text-slate-500 mb-1 block">📈 New Salary (₹) — optional</label>
+                        <input type="number" placeholder="e.g., 55000" value={apprForm.new_salary}
+                          onChange={e => setApprForm(p => ({ ...p, new_salary: e.target.value }))}
+                          className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 focus:outline-none" />
+                      </div>
+                    </div>
                     <div className="flex justify-end gap-3 pt-2">
                       <button type="button" onClick={() => setShowApprForm(false)} className="px-5 py-2 hover:bg-slate-100 rounded-xl font-bold text-slate-500 cursor-pointer">Cancel</button>
                       <button type="submit" disabled={savingAppr} className="px-5 py-2 bg-amber-500 text-white font-bold rounded-xl cursor-pointer disabled:opacity-50">
@@ -457,6 +725,38 @@ function StaffContent() {
                 </motion.div>
               )}
 
+              {/* Quick Upraisal for team members */}
+              <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+                <div className="p-5 border-b border-slate-100 flex items-center justify-between">
+                  <div>
+                    <h3 className="font-bold text-navy font-heading">📈 Quick Upraisal</h3>
+                    <p className="text-xs text-slate-400 mt-0.5">Select a team member to process salary upraisal</p>
+                  </div>
+                </div>
+                <div className="p-4 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+                  {staff.map(s => {
+                    const latestPay = payrolls.find(p => p.user_id === s.id)
+                    return (
+                      <button key={s.id} onClick={() => openUpraisal(s)}
+                        className="p-3 rounded-xl border border-slate-100 hover:border-green-300 hover:bg-green-50/50 transition-all cursor-pointer text-left group">
+                        <div className="flex items-center gap-2 mb-2">
+                          <div className="w-8 h-8 rounded-lg flex items-center justify-center text-white text-xs font-bold"
+                            style={{ background: (ROLE_COLORS[s.role] || ROLE_COLORS.admin).color }}>
+                            {s.fullname.charAt(0)}
+                          </div>
+                          <div className="min-w-0">
+                            <p className="text-xs font-bold text-navy truncate">{s.fullname}</p>
+                            <p className="text-[10px] text-slate-400 capitalize">{s.role.replace(/_/g, ' ')}</p>
+                          </div>
+                        </div>
+                        {latestPay && <p className="text-[10px] text-slate-500">Current: ₹{Number(latestPay.base_salary).toLocaleString('en-IN')}</p>}
+                        <p className="text-[10px] text-green-600 font-bold mt-1 opacity-0 group-hover:opacity-100 transition-opacity">📈 Click to upraise</p>
+                      </button>
+                    )
+                  })}
+                </div>
+              </div>
+
               {appraisals.length === 0 ? (
                 <div className="text-center py-16 bg-white rounded-2xl border border-slate-100">
                   <span className="text-5xl block mb-3">⭐</span>
@@ -464,29 +764,45 @@ function StaffContent() {
                   <button onClick={() => setShowApprForm(true)} className="px-4 py-2 rounded-xl text-xs font-bold text-white bg-amber-500 cursor-pointer">+ Create First Appraisal</button>
                 </div>
               ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {appraisals.map(a => (
-                    <div key={a.id} className="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 hover:shadow-md transition-shadow">
-                      <div className="flex justify-between items-start mb-3">
-                        <div>
-                          <h4 className="font-bold text-navy text-lg">{a.fullname}</h4>
-                          <p className="text-xs text-slate-500">{a.review_period}</p>
+                <div>
+                  <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Appraisal History ({appraisals.length})</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {appraisals.map(a => (
+                      <div key={a.id} className="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 hover:shadow-md transition-shadow">
+                        <div className="flex justify-between items-start mb-3">
+                          <div>
+                            <h4 className="font-bold text-navy text-lg">{a.fullname}</h4>
+                            <p className="text-xs text-slate-500">{a.review_period}</p>
+                          </div>
+                          <div className="w-14 h-14 rounded-2xl bg-amber-50 border-2 border-amber-200 flex items-center justify-center flex-col">
+                            <span className="text-2xl font-extrabold text-amber-500">{a.performance_score}</span>
+                            <span className="text-[9px] text-amber-400">/10</span>
+                          </div>
                         </div>
-                        <div className="w-14 h-14 rounded-2xl bg-amber-50 border-2 border-amber-200 flex items-center justify-center flex-col">
-                          <span className="text-2xl font-extrabold text-amber-500">{a.performance_score}</span>
-                          <span className="text-[9px] text-amber-400">/10</span>
+                        <div className="w-full bg-slate-100 rounded-full h-1.5 mb-3">
+                          <div className="h-1.5 rounded-full bg-amber-400" style={{ width: `${a.performance_score * 10}%` }} />
+                        </div>
+                        {/* Salary change info */}
+                        {(a.salary_increment || a.new_salary) ? (
+                          <div className="mb-3 p-3 rounded-xl border border-green-200" style={{ background: '#ECFDF5' }}>
+                            <div className="flex items-center justify-between">
+                              {a.salary_increment ? (
+                                <span className="text-xs font-bold text-green-700">📈 Increment: +₹{Number(a.salary_increment).toLocaleString('en-IN')}</span>
+                              ) : null}
+                              {a.new_salary ? (
+                                <span className="text-xs font-bold text-green-800">New: ₹{Number(a.new_salary).toLocaleString('en-IN')}</span>
+                              ) : null}
+                            </div>
+                          </div>
+                        ) : null}
+                        <div className="space-y-2 text-sm">
+                          {a.feedback && <div><strong className="text-xs text-navy">Feedback:</strong><p className="text-slate-600 line-clamp-2">{a.feedback}</p></div>}
+                          {a.goals_achieved && <div><strong className="text-xs text-green-600">✓ Goals:</strong><p className="text-slate-600 line-clamp-1">{a.goals_achieved}</p></div>}
+                          {a.areas_of_improvement && <div><strong className="text-xs text-red-500">↑ Improve:</strong><p className="text-slate-600 line-clamp-1">{a.areas_of_improvement}</p></div>}
                         </div>
                       </div>
-                      <div className="w-full bg-slate-100 rounded-full h-1.5 mb-3">
-                        <div className="h-1.5 rounded-full bg-amber-400" style={{ width: `${a.performance_score * 10}%` }} />
-                      </div>
-                      <div className="space-y-2 text-sm">
-                        {a.feedback && <div><strong className="text-xs text-navy">Feedback:</strong><p className="text-slate-600 line-clamp-2">{a.feedback}</p></div>}
-                        {a.goals_achieved && <div><strong className="text-xs text-green-600">✓ Goals:</strong><p className="text-slate-600 line-clamp-1">{a.goals_achieved}</p></div>}
-                        {a.areas_of_improvement && <div><strong className="text-xs text-red-500">↑ Improve:</strong><p className="text-slate-600 line-clamp-1">{a.areas_of_improvement}</p></div>}
-                      </div>
-                    </div>
-                  ))}
+                    ))}
+                  </div>
                 </div>
               )}
             </div>

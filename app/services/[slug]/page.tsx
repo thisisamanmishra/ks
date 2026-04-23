@@ -5,6 +5,7 @@ import { motion } from 'framer-motion'
 import Navbar from '@/components/Navbar'
 import Footer from '@/components/Footer'
 import Link from 'next/link'
+import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 
 interface Service {
@@ -174,7 +175,7 @@ export default function ServiceDetailPage({ params }: { params: Promise<{ slug: 
                 <div className="flex items-center gap-4">
                   <div className="w-20 h-20 rounded-full bg-navy/5 flex items-center justify-center text-3xl font-bold text-navy border border-slate-100">
                     {service.expert.avatar_url ? (
-                      <img src={service.expert.avatar_url} alt="Expert" className="w-full h-full object-cover rounded-full" />
+                      <Image src={service.expert.avatar_url} alt="Expert" width={80} height={80} className="w-full h-full object-cover rounded-full" />
                     ) : (
                       service.expert.fullname.charAt(0)
                     )}

@@ -222,9 +222,12 @@ export default function AdminSidebar({ user }: { user: UserData }) {
   const navGroups = buildNavGroups(user)
 
   useEffect(() => {
-    // Auto-expand group containing current path
+    // Auto-expand group containing current path (strip query params before comparing)
     navGroups.forEach(group => {
-      if (group.items.some(item => pathname === item.href || pathname.startsWith(item.href + '/'))) {
+      if (group.items.some(item => {
+        const itemPath = item.href.split('?')[0]
+        return pathname === itemPath || pathname.startsWith(itemPath + '/')
+      })) {
         setExpanded(prev => new Set([...prev, group.title]))
       }
     })
@@ -240,8 +243,21 @@ export default function AdminSidebar({ user }: { user: UserData }) {
   }
 
   const isActive = (href: string) => {
-    if (href === '/admin') return pathname === '/admin'
-    return pathname === href || pathname.startsWith(href + '/')
+    // Strip query params for comparison
+    const hrefPath = href.split('?')[0]
+    if (hrefPath === '/admin') return pathname === '/admin'
+    return pathname === hrefPath || pathname.startsWith(hrefPath + '/')
+  }
+
+  // Handle navigation — for same-pathname links (tab switches), use router.push without full remount
+  const handleNavClick = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
+    const hrefPath = href.split('?')[0]
+    // If we're already on this base path, prevent Link default and use push
+    if (pathname === hrefPath) {
+      e.preventDefault()
+      router.push(href, { scroll: false })
+    }
+    setMobileOpen(false)
   }
 
   const handleLogout = async () => {
@@ -317,7 +333,7 @@ export default function AdminSidebar({ user }: { user: UserData }) {
                     <Link
                       key={`${group.title}-${item.label}-${idx}`}
                       href={item.href}
-                      onClick={() => setMobileOpen(false)}
+                      onClick={(e) => handleNavClick(e, item.href)}
                       className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-medium transition-all mb-0.5 group relative ${
                         isActive(item.href)
                           ? 'bg-white/10 text-white'

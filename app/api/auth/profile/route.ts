@@ -10,7 +10,7 @@ export async function GET() {
 
     const { data, error } = await supabase
       .from('users')
-      .select('id, fullname, email, phone, role, department, user_type, avatar_url, created_at')
+      .select('id, fullname, email, phone, role, department, user_type, avatar_url, created_at, slack_connected')
       .eq('id', user.userId)
       .single()
 
@@ -42,7 +42,7 @@ export async function PATCH(request: Request) {
       .from('users')
       .update(updates)
       .eq('id', user.userId)
-      .select('id, fullname, email, phone, role, department, user_type, avatar_url')
+      .select('id, fullname, email, phone, role, department, user_type, avatar_url, slack_connected')
       .single()
 
     if (error) throw error

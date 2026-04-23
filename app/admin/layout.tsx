@@ -104,7 +104,7 @@ function TopBar({ user }: { user: UserData }) {
         {showNotifs && NotifComp && <NotifComp userId={user.id} onClose={() => setShowNotifs(false)} />}
       </AnimatePresence>
       <AnimatePresence>
-        {showGroupChat && ChatComp && <ChatComp currentUserId={user.id} isAdmin={['super_admin', 'admin'].includes(user.role)} onClose={() => setShowGroupChat(false)} />}
+        {showGroupChat && ChatComp && <ChatComp currentUserId={user.id} isAdmin={['super_admin', 'admin', 'board_member'].includes(user.role)} onClose={() => setShowGroupChat(false)} />}
       </AnimatePresence>
       <AnimatePresence>
         {showDM && DMComp && <DMComp currentUserId={user.id} mode="ops" onClose={() => setShowDM(false)} />}

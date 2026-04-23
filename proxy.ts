@@ -190,7 +190,16 @@ export async function proxy(request: NextRequest) {
     if (user.role === 'super_admin') return NextResponse.next()
 
     if (user.role === 'board_member') {
-      if (pathname.startsWith('/admin/board') || pathname.startsWith('/api/admin/board') || pathname.startsWith('/api/admin/about') || pathname.startsWith('/api/admin/announcements')) {
+      if (
+        pathname.startsWith('/admin/board') ||
+        pathname.startsWith('/api/admin/board') ||
+        pathname.startsWith('/admin/staff') ||
+        pathname.startsWith('/api/admin/staff') ||
+        pathname.startsWith('/admin/profile') ||
+        pathname.startsWith('/api/admin/about') ||
+        pathname.startsWith('/api/admin/announcements') ||
+        pathname === '/admin'
+      ) {
         return NextResponse.next()
       }
       return NextResponse.redirect(new URL('/admin/board', request.url))

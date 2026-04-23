@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import Link from 'next/link'
+import Image from 'next/image'
 import Navbar from '@/components/Navbar'
 import Footer from '@/components/Footer'
 
@@ -90,8 +91,7 @@ function ServiceCard({ service, wishlisted, onWishlist, onEnquire, onCompare, co
       <div className="h-44 relative overflow-hidden flex items-center justify-center"
         style={{ background: `linear-gradient(135deg, ${catColor}15, ${catColor}05)` }}>
         {service.featured_image ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={service.featured_image} alt={service.title} className="w-full h-full object-cover" />
+          <Image src={service.featured_image} alt={service.title} fill sizes="(max-width: 768px) 100vw, 400px" className="object-cover" />
         ) : (
           <span className="text-5xl opacity-30">
             {CATEGORIES.find(c => c.key === normCat(service.category))?.icon || '📁'}

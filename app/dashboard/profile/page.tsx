@@ -10,6 +10,7 @@ interface Profile {
   phone: string | null
   role: string
   created_at: string
+  slack_connected?: boolean
 }
 
 export default function CustomerProfilePage() {
@@ -100,6 +101,36 @@ export default function CustomerProfilePage() {
                 {saving ? 'Saving...' : '💾 Save Changes'}
               </button>
               {msg && <span className="text-sm">{msg}</span>}
+            </div>
+          </div>
+        </motion.div>
+
+        {/* Slack Connection */}
+        <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }} className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 mb-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="font-bold text-navy text-lg mb-1 font-heading">
+                <span className="mr-2">💬</span> Connect with Slack
+              </h3>
+              <p className="text-slate-500 text-sm">
+                {profile?.slack_connected 
+                  ? 'Your account is successfully linked to Slack for notifications and tools.'
+                  : 'Link your Slack account to receive direct project updates and manage tasks without leaving Slack.'}
+              </p>
+            </div>
+            <div>
+              {profile?.slack_connected ? (
+                <div className="px-4 py-2 bg-emerald-50 text-emerald-600 border border-emerald-200 rounded-xl font-bold text-sm flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-emerald-500"></span> Connected
+                </div>
+              ) : (
+                <button
+                  onClick={() => window.location.href = `/api/slack/auth?userId=${profile?.id}`}
+                  className="px-6 py-2.5 rounded-xl bg-[#4A154B] text-white font-bold text-sm hover:bg-[#3E113F] transition-colors shadow-lg shadow-[#4A154B]/25"
+                >
+                  Connect Slack Workspace
+                </button>
+              )}
             </div>
           </div>
         </motion.div>

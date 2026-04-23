@@ -1,10 +1,12 @@
-'use client'
-
-import { useEffect, useState } from 'react'
-import { useParams } from 'next/navigation'
-import { motion } from 'framer-motion'
+import { createClient } from '@/lib/supabase/server'
+import { notFound } from 'next/navigation'
 import Navbar from '@/components/Navbar'
 import Footer from '@/components/Footer'
+import Image from 'next/image'
+import type { Metadata } from 'next'
+
+// ISR: Revalidate every 30 minutes for blog content
+export const revalidate = 1800
 
 interface Blog {
   id: number
@@ -22,41 +24,39 @@ interface Blog {
   author: { id: number; fullname: string; avatar_url: string | null } | null
 }
 
-export default function BlogDetailPage() {
-  const params = useParams()
-  const slug = params.slug as string
-  const [blog, setBlog] = useState<Blog | null>(null)
-  const [loading, setLoading] = useState(true)
+async function getBlog(slug: string): Promise<Blog | null> {
+  const supabase = await createClient()
+  const { data } = await supabase
+    .from('blogs')
+    .select('id, title, content, excerpt, tags, views, created_at, published_at, featured_image, meta_title, meta_description, category:blog_categories(id, name, slug), author:users!blogs_author_id_fkey(id, fullname, avatar_url)')
+    .eq('slug', slug)
+    .eq('status', 'published')
+    .single()
 
-  useEffect(() => {
-    fetch(`/api/blogs/${slug}`)
-      .then(r => r.json())
-      .then(d => { setBlog(d.blog || null); setLoading(false) })
-      .catch(() => setLoading(false))
-  }, [slug])
+  return data as Blog | null
+}
 
-  if (loading) {
-    return (
-      <>
-        <Navbar />
-        <div className="min-h-screen flex items-center justify-center">
-          <div className="w-10 h-10 border-4 border-navy/20 border-t-accent rounded-full animate-spin" />
-        </div>
-      </>
-    )
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+  const { slug } = await params
+  const blog = await getBlog(slug)
+  if (!blog) return { title: 'Blog Not Found' }
+  return {
+    title: blog.meta_title || blog.title,
+    description: blog.meta_description || blog.excerpt,
+    openGraph: {
+      title: blog.meta_title || blog.title,
+      description: blog.meta_description || blog.excerpt,
+      images: blog.featured_image ? [blog.featured_image] : [],
+    },
   }
+}
+
+export default async function BlogDetailPage({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params
+  const blog = await getBlog(slug)
 
   if (!blog) {
-    return (
-      <>
-        <Navbar />
-        <div className="min-h-screen flex flex-col items-center justify-center text-center">
-          <span className="text-5xl mb-4">📝</span>
-          <h1 className="text-2xl font-bold text-navy font-heading mb-2">Blog Not Found</h1>
-          <p className="text-slate-500">The article you&apos;re looking for doesn&apos;t exist.</p>
-        </div>
-      </>
-    )
+    notFound()
   }
 
   return (
@@ -64,7 +64,7 @@ export default function BlogDetailPage() {
       <Navbar />
       <main className="pt-20 lg:pt-24 pb-20 bg-surface min-h-screen">
         <article className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+          <div>
             {/* Category */}
             {blog.category && (
               <span className="inline-block px-3 py-1 rounded-full bg-accent/10 text-accent text-xs font-bold mb-4">
@@ -95,8 +95,15 @@ export default function BlogDetailPage() {
 
             {/* Featured Image */}
             {blog.featured_image && (
-              <div className="mb-8 rounded-2xl overflow-hidden">
-                <img src={blog.featured_image} alt={blog.title} className="w-full h-auto object-cover" />
+              <div className="mb-8 rounded-2xl overflow-hidden relative aspect-video">
+                <Image
+                  src={blog.featured_image}
+                  alt={blog.title}
+                  fill
+                  sizes="(max-width: 768px) 100vw, 800px"
+                  className="object-cover"
+                  priority
+                />
               </div>
             )}
 
@@ -123,7 +130,7 @@ export default function BlogDetailPage() {
                 </div>
               </div>
             )}
-          </motion.div>
+          </div>
         </article>
       </main>
       <Footer />
