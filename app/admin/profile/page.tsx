@@ -134,13 +134,13 @@ function ProfileContent() {
 
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <div>
-          <h1 className="text-2xl font-bold text-navy font-heading">👤 My Profile &amp; Documents</h1>
+          <h1 className="text-xl sm:text-2xl font-bold text-navy font-heading">👤 My Profile &amp; Documents</h1>
           <p className="text-slate-500 text-sm mt-0.5">Your joining documents, payslips, appraisals and leave history</p>
         </div>
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-1 border-b border-slate-200 overflow-x-auto" style={{ scrollbarWidth: 'none' }}>
+      <div className="flex gap-1 border-b border-slate-200 overflow-x-auto scrollbar-none" style={{ scrollbarWidth: 'none' }}>
         {TABS.map(t => (
           <button key={t.key} onClick={() => setActiveTab(t.key)}
             className={`px-5 py-2.5 text-sm font-bold cursor-pointer transition-all border-b-2 -mb-px whitespace-nowrap ${activeTab === t.key ? 'border-accent text-accent' : 'border-transparent text-slate-500 hover:text-navy'}`}>
@@ -171,7 +171,7 @@ function ProfileContent() {
               <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
                 className="bg-white rounded-2xl p-5 border border-slate-100 shadow-sm">
                 <h4 className="font-bold text-navy font-heading mb-4">📎 Upload Your Document</h4>
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
                   <select value={docForm.doc_type} onChange={e => setDocForm(p => ({ ...p, doc_type: e.target.value }))}
                     className="px-3 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-sm focus:outline-none">
                     {Object.keys(DOC_TYPE_ICONS).map(t => <option key={t} value={t}>{DOC_TYPE_ICONS[t]} {t.replace(/_/g,' ')}</option>)}
@@ -205,7 +205,7 @@ function ProfileContent() {
           {payslips.length > 0 && (
             <div>
               <h3 className="font-bold text-slate-600 text-sm mb-3">💰 Payslips</h3>
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
                 {payslips.map(d => <DocCard key={d.id} doc={d} onDelete={deleteDoc} />)}
               </div>
             </div>
@@ -215,7 +215,7 @@ function ProfileContent() {
           {joiningDocs.length > 0 && (
             <div>
               <h3 className="font-bold text-slate-600 text-sm mb-3">📋 Joining &amp; HR Documents</h3>
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                 {joiningDocs.map(d => <DocCard key={d.id} doc={d} onDelete={deleteDoc} />)}
               </div>
             </div>
@@ -225,7 +225,7 @@ function ProfileContent() {
           {otherDocs.length > 0 && (
             <div>
               <h3 className="font-bold text-slate-600 text-sm mb-3">📁 Other Documents</h3>
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                 {otherDocs.map(d => <DocCard key={d.id} doc={d} onDelete={deleteDoc} />)}
               </div>
             </div>
@@ -319,7 +319,7 @@ function ProfileContent() {
               <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
                 className="bg-white rounded-2xl p-5 border border-slate-100 shadow-sm">
                 <h4 className="font-bold text-navy font-heading mb-4">🏖️ Apply for Leave</h4>
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
                   <select value={leaveForm.leave_type} onChange={e => setLeaveForm(p => ({ ...p, leave_type: e.target.value }))}
                     className="px-3 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-sm focus:outline-none">
                     {LEAVE_TYPES.map(t => <option key={t} value={t}>{t.replace(/_/g, ' ')}</option>)}
@@ -347,7 +347,7 @@ function ProfileContent() {
           </AnimatePresence>
 
           {/* Stats */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             {[
               { label: 'Total Requests', count: leaves.length, color: '#3B82F6', bg: '#EFF6FF' },
               { label: 'Pending', count: leaves.filter(l => l.status === 'pending').length, color: '#F59E0B', bg: '#FFFBEB' },

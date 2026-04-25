@@ -4,7 +4,7 @@ import { getCurrentUser } from '@/lib/auth/middleware'
 
 export async function GET(request: Request) {
   const user = await getCurrentUser()
-  if (!user || !['super_admin', 'admin'].includes(user.role)) {
+  if (!user || !['super_admin', 'admin', 'board_member'].includes(user.role)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })
   }
 
@@ -65,7 +65,7 @@ export async function GET(request: Request) {
 // PATCH — approve / reject leave
 export async function PATCH(request: Request) {
   const user = await getCurrentUser()
-  if (!user || !['super_admin', 'admin'].includes(user.role)) {
+  if (!user || !['super_admin', 'admin', 'board_member'].includes(user.role)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })
   }
 
@@ -83,7 +83,7 @@ export async function PATCH(request: Request) {
 // POST — log attendance manually
 export async function POST(request: Request) {
   const user = await getCurrentUser()
-  if (!user || !['super_admin', 'admin'].includes(user.role)) {
+  if (!user || !['super_admin', 'admin', 'board_member'].includes(user.role)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })
   }
 

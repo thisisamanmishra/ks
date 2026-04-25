@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import Image from 'next/image'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { usePathname, useRouter } from 'next/navigation'
 
@@ -14,6 +14,14 @@ const navLinks = [
   { label: 'Contact', href: '/contact' },
 ]
 
+const saarthiPortals = [
+  { icon: '🎓', label: 'Campus Saarthi', href: '/login?pillar=campus', color: 'hover:bg-blue-500/10 hover:text-blue-600' },
+  { icon: '💻', label: 'Digital Saarthi', href: '/login?pillar=digital', color: 'hover:bg-violet-500/10 hover:text-violet-600' },
+  { icon: '📞', label: 'Calling Saarthi', href: '/login?pillar=calling', color: 'hover:bg-orange-500/10 hover:text-orange-600' },
+  { icon: '🏛️', label: 'Government Saarthi', href: '/login?pillar=government', color: 'hover:bg-emerald-500/10 hover:text-emerald-600' },
+  { icon: '🗺️', label: 'Market Saarthi', href: '/login?pillar=market', color: 'hover:bg-amber-500/10 hover:text-amber-600' },
+]
+
 interface AuthUser {
   id: number
   fullname: string
@@ -23,11 +31,14 @@ interface AuthUser {
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false)
   const [mobileOpen, setMobileOpen] = useState(false)
+  const [saarthiOpen, setSaarthiOpen] = useState(false)
+  const [mobileSaarthiOpen, setMobileSaarthiOpen] = useState(false)
   const [user, setUser] = useState<AuthUser | null>(null)
   const [authChecked, setAuthChecked] = useState(false)
   const pathname = usePathname()
   const router = useRouter()
   const isHome = pathname === '/'
+  const dropdownRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     let ticking = false
@@ -43,6 +54,24 @@ export default function Navbar() {
     window.addEventListener('scroll', onScroll, { passive: true })
     return () => window.removeEventListener('scroll', onScroll)
   }, [])
+
+  // Close dropdown on outside click
+  useEffect(() => {
+    const handleClick = (e: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setSaarthiOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClick)
+    return () => document.removeEventListener('mousedown', handleClick)
+  }, [])
+
+  // Close mobile menu on route change
+  useEffect(() => {
+    setMobileOpen(false)
+    setMobileSaarthiOpen(false)
+    setSaarthiOpen(false)
+  }, [pathname])
 
   // Check auth state
   useEffect(() => {
@@ -100,6 +129,7 @@ export default function Navbar() {
             </div>
           </Link>
 
+          {/* Desktop Nav Links */}
           <div className="hidden lg:flex items-center gap-1">
             {navLinks.map(link => (
               <Link
@@ -116,7 +146,8 @@ export default function Navbar() {
             ))}
           </div>
 
-          <div className="hidden lg:flex items-center gap-3">
+          {/* Desktop CTAs */}
+          <div className="hidden lg:flex items-center gap-2">
             {authChecked && user ? (
               <>
                 <Link href={getDashboardLink()} className="px-5 py-2.5 rounded-full text-sm font-semibold bg-accent text-white hover:bg-accent-dark shadow-lg shadow-accent/25 hover:shadow-accent/40 transition-all duration-200 hover:-translate-y-0.5">
@@ -128,26 +159,73 @@ export default function Navbar() {
               </>
             ) : authChecked ? (
               <>
-                <div className="relative group">
-                  <button className={`flex items-center gap-1 px-5 py-2.5 rounded-full text-sm font-semibold transition-all duration-200 ${
-                    navBg ? 'text-navy hover:bg-navy/5' : 'text-white hover:bg-white/10'
-                  }`}>
-                    Sign In <span className="text-[10px]">▼</span>
+                {/* Customer / Vendor Login — Direct button */}
+                <Link
+                  href="/login"
+                  className={`flex items-center gap-1.5 px-4 py-2.5 rounded-full text-sm font-semibold transition-all duration-200 border ${
+                    navBg
+                      ? 'text-navy border-navy/20 hover:bg-navy/5'
+                      : 'text-white border-white/20 hover:bg-white/10'
+                  }`}
+                >
+                  👤 Customer / Vendor
+                </Link>
+
+                {/* Saarthi Login Dropdown */}
+                <div className="relative" ref={dropdownRef}>
+                  <button
+                    onClick={() => setSaarthiOpen(v => !v)}
+                    className={`flex items-center gap-1.5 px-4 py-2.5 rounded-full text-sm font-semibold transition-all duration-200 cursor-pointer ${
+                      navBg ? 'text-accent hover:bg-accent/5' : 'text-accent-light hover:bg-white/10'
+                    }`}
+                  >
+                    🌟 Saarthi Login
+                    <svg className={`w-3 h-3 transition-transform duration-200 ${saarthiOpen ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                    </svg>
                   </button>
-                  <div className="absolute right-0 top-full mt-2 w-56 bg-white rounded-xl shadow-xl py-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 border border-slate-100 divide-y divide-slate-100">
-                    <div className="pb-1">
-                      <Link href="/login" className="block px-4 py-2 text-sm text-slate-700 hover:bg-accent/10 hover:text-accent font-medium">👤 Customer Login</Link>
-                    </div>
-                    <div className="py-1">
-                      <div className="px-4 py-1 text-[10px] font-bold tracking-wider text-slate-400 uppercase">Saarthi Portals</div>
-                      <Link href="/login?pillar=campus" className="block px-4 py-2 text-sm text-slate-700 hover:bg-blue-500/10 hover:text-blue-600 font-medium">🎓 Campus Saarthi</Link>
-                      <Link href="/login?pillar=digital" className="block px-4 py-2 text-sm text-slate-700 hover:bg-violet-500/10 hover:text-violet-600 font-medium">💻 Digital Saarthi</Link>
-                      <Link href="/login?pillar=calling" className="block px-4 py-2 text-sm text-slate-700 hover:bg-orange-500/10 hover:text-orange-600 font-medium">📞 Calling Saarthi</Link>
-                      <Link href="/login?pillar=government" className="block px-4 py-2 text-sm text-slate-700 hover:bg-emerald-500/10 hover:text-emerald-600 font-medium">🏛️ Government Saarthi</Link>
-                      <Link href="/login?pillar=market" className="block px-4 py-2 text-sm text-slate-700 hover:bg-amber-500/10 hover:text-amber-600 font-medium">🗺️ Market Saarthi</Link>
-                    </div>
-                  </div>
+
+                  <AnimatePresence>
+                    {saarthiOpen && (
+                      <motion.div
+                        initial={{ opacity: 0, y: 8, scale: 0.96 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: 8, scale: 0.96 }}
+                        transition={{ duration: 0.15 }}
+                        className="absolute right-0 top-full mt-2 w-64 bg-white rounded-2xl shadow-2xl py-2 border border-slate-100 overflow-hidden"
+                      >
+                        {/* Saarthi pillar header */}
+                        <div className="px-4 py-2 border-b border-slate-100">
+                          <p className="text-[10px] font-bold tracking-wider text-slate-400 uppercase">Saarthi Portals</p>
+                        </div>
+                        {saarthiPortals.map(portal => (
+                          <Link
+                            key={portal.label}
+                            href={portal.href}
+                            onClick={() => setSaarthiOpen(false)}
+                            className={`flex items-center gap-3 px-4 py-2.5 text-sm text-slate-700 font-medium transition-all ${portal.color}`}
+                          >
+                            <span className="text-lg">{portal.icon}</span>
+                            {portal.label}
+                          </Link>
+                        ))}
+                        {/* Staff / Admin Portal */}
+                        <div className="border-t border-slate-100 mt-1 pt-1">
+                          <Link
+                            href="/staff-login"
+                            onClick={() => setSaarthiOpen(false)}
+                            className="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-700 font-medium hover:bg-navy/5 hover:text-navy transition-all"
+                          >
+                            <span className="text-lg">🔐</span>
+                            Staff / Admin Portal
+                          </Link>
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
                 </div>
+
+                {/* Track Project CTA */}
                 <Link href="/dashboard" className="px-5 py-2.5 rounded-full text-sm font-semibold bg-accent text-white hover:bg-accent-dark shadow-lg shadow-accent/25 hover:shadow-accent/40 transition-all duration-200 hover:-translate-y-0.5">
                   Track Project
                 </Link>
@@ -155,6 +233,7 @@ export default function Navbar() {
             ) : null}
           </div>
 
+          {/* Mobile hamburger */}
           <button onClick={() => setMobileOpen(!mobileOpen)} className="lg:hidden p-2 rounded-lg" aria-label="Toggle menu">
             <div className="w-6 flex flex-col gap-1.5">
               <span className={`block h-0.5 rounded transition-all duration-300 ${navBg ? 'bg-navy' : 'bg-white'} ${mobileOpen ? 'rotate-45 translate-y-2' : ''}`} />
@@ -165,6 +244,7 @@ export default function Navbar() {
         </div>
       </div>
 
+      {/* Mobile Menu */}
       <AnimatePresence>
         {mobileOpen && (
           <motion.div
@@ -173,7 +253,8 @@ export default function Navbar() {
             exit={{ opacity: 0, height: 0 }}
             className="lg:hidden bg-white/95 backdrop-blur-xl shadow-2xl border-t border-slate-100"
           >
-            <div className="px-4 py-6 space-y-1">
+            <div className="px-4 py-6 space-y-1 max-h-[80vh] overflow-y-auto">
+              {/* Navigation Links */}
               {navLinks.map(link => (
                 <Link
                   key={link.label}
@@ -188,6 +269,7 @@ export default function Navbar() {
                   {link.label}
                 </Link>
               ))}
+
               <div className="pt-4 border-t border-slate-100 flex flex-col gap-2">
                 {user ? (
                   <>
@@ -196,15 +278,61 @@ export default function Navbar() {
                   </>
                 ) : (
                   <>
-                    <Link href="/dashboard" onClick={() => setMobileOpen(false)} className="text-center px-4 py-3 rounded-xl bg-accent text-white font-semibold hover:bg-accent-dark">Track Project</Link>
-                    <Link href="/login" onClick={() => setMobileOpen(false)} className="text-center px-4 py-3 rounded-xl text-navy font-semibold hover:bg-navy/5 border border-slate-200">Customer Login</Link>
-                    
-                    <div className="border-t border-slate-100 mt-2 pt-2 pb-1 px-4 text-xs font-semibold text-slate-400 uppercase text-center">Saarthi Portals</div>
-                    <Link href="/login?pillar=campus" onClick={() => setMobileOpen(false)} className="text-center px-4 py-2 text-sm text-slate-700 font-medium hover:bg-blue-50">🎓 Campus Saarthi</Link>
-                    <Link href="/login?pillar=digital" onClick={() => setMobileOpen(false)} className="text-center px-4 py-2 text-sm text-slate-700 font-medium hover:bg-violet-50">💻 Digital Saarthi</Link>
-                    <Link href="/login?pillar=calling" onClick={() => setMobileOpen(false)} className="text-center px-4 py-2 text-sm text-slate-700 font-medium hover:bg-orange-50">📞 Calling Saarthi</Link>
-                    <Link href="/login?pillar=government" onClick={() => setMobileOpen(false)} className="text-center px-4 py-2 text-sm text-slate-700 font-medium hover:bg-emerald-50">🏛️ Government Saarthi</Link>
-                    <Link href="/login?pillar=market" onClick={() => setMobileOpen(false)} className="text-center px-4 py-2 text-sm text-slate-700 font-medium hover:bg-amber-50">🗺️ Market Saarthi</Link>
+                    {/* Customer / Vendor Login — Top priority */}
+                    <Link href="/login" onClick={() => setMobileOpen(false)} className="text-center px-4 py-3.5 rounded-xl bg-navy text-white font-semibold hover:bg-navy-dark transition-colors">
+                      👤 Customer / Vendor Login
+                    </Link>
+
+                    {/* Track Project */}
+                    <Link href="/dashboard" onClick={() => setMobileOpen(false)} className="text-center px-4 py-3.5 rounded-xl bg-accent text-white font-semibold hover:bg-accent-dark transition-colors">
+                      Track Project
+                    </Link>
+
+                    {/* Collapsible Saarthi Portals */}
+                    <div className="mt-2">
+                      <button
+                        onClick={() => setMobileSaarthiOpen(v => !v)}
+                        className="w-full flex items-center justify-between px-4 py-3 rounded-xl text-navy font-semibold hover:bg-navy/5 transition-colors cursor-pointer"
+                      >
+                        <span>🌟 Saarthi Login</span>
+                        <svg className={`w-4 h-4 transition-transform duration-200 ${mobileSaarthiOpen ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                        </svg>
+                      </button>
+
+                      <AnimatePresence>
+                        {mobileSaarthiOpen && (
+                          <motion.div
+                            initial={{ height: 0, opacity: 0 }}
+                            animate={{ height: 'auto', opacity: 1 }}
+                            exit={{ height: 0, opacity: 0 }}
+                            className="overflow-hidden"
+                          >
+                            <div className="ml-2 pl-3 border-l-2 border-accent/20 space-y-0.5 py-1">
+                              {saarthiPortals.map(portal => (
+                                <Link
+                                  key={portal.label}
+                                  href={portal.href}
+                                  onClick={() => setMobileOpen(false)}
+                                  className="flex items-center gap-3 px-3 py-2.5 text-sm text-slate-700 font-medium hover:bg-slate-50 rounded-lg transition-colors"
+                                >
+                                  <span>{portal.icon}</span>
+                                  {portal.label}
+                                </Link>
+                              ))}
+                              <Link
+                                href="/staff-login"
+                                onClick={() => setMobileOpen(false)}
+                                className="flex items-center gap-3 px-3 py-2.5 text-sm text-slate-700 font-medium hover:bg-slate-50 rounded-lg transition-colors border-t border-slate-100 mt-1 pt-2.5"
+                              >
+                                <span>🔐</span>
+                                Staff / Admin Portal
+                              </Link>
+                            </div>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </div>
                   </>
                 )}
               </div>

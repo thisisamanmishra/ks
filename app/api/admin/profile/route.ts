@@ -13,7 +13,7 @@ export async function GET(req: Request) {
 
     if (action === 'docs') {
       // Each user sees only their own docs; super_admin/admins can see all via user_id param
-      const targetUserId = (user.role === 'super_admin' || user.role === 'admin') && searchParams.get('user_id')
+      const targetUserId = (user.role === 'super_admin' || user.role === 'admin' || user.role === 'board_member') && searchParams.get('user_id')
         ? Number(searchParams.get('user_id'))
         : user.userId
 
@@ -28,7 +28,7 @@ export async function GET(req: Request) {
     }
 
     if (action === 'appraisals') {
-      const targetUserId = (user.role === 'super_admin' || user.role === 'admin') && searchParams.get('user_id')
+      const targetUserId = (user.role === 'super_admin' || user.role === 'admin' || user.role === 'board_member') && searchParams.get('user_id')
         ? Number(searchParams.get('user_id'))
         : user.userId
 
@@ -57,7 +57,7 @@ export async function GET(req: Request) {
 
     if (action === 'scorecard') {
       // Fetch all staff + their appraisals for HR/admin
-      if (!['super_admin', 'admin'].includes(user.role)) {
+      if (!['super_admin', 'admin', 'board_member'].includes(user.role)) {
         return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
       }
       const { data: staff } = await supabase
@@ -103,7 +103,7 @@ export async function POST(req: Request) {
     }
 
     if (action === 'add_appraisal') {
-      if (!['super_admin', 'admin'].includes(user.role)) {
+      if (!['super_admin', 'admin', 'board_member'].includes(user.role)) {
         return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
       }
       const { data, error } = await supabase
@@ -142,7 +142,7 @@ export async function DELETE(req: Request) {
       // Only allow if super_admin/admin or own doc
       const { data: doc } = await supabase.from('staff_documents').select('user_id').eq('id', id).single()
       if (!doc) return NextResponse.json({ error: 'Not found' }, { status: 404 })
-      if (doc.user_id !== user.userId && !['super_admin', 'admin'].includes(user.role)) {
+      if (doc.user_id !== user.userId && !['super_admin', 'admin', 'board_member'].includes(user.role)) {
         return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
       }
       await supabase.from('staff_documents').delete().eq('id', id)
@@ -150,7 +150,7 @@ export async function DELETE(req: Request) {
     }
 
     if (action === 'delete_appraisal') {
-      if (!['super_admin', 'admin'].includes(user.role)) {
+      if (!['super_admin', 'admin', 'board_member'].includes(user.role)) {
         return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
       }
       await supabase.from('staff_appraisals').delete().eq('id', id)
