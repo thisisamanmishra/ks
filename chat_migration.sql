@@ -10,7 +10,7 @@ CREATE TABLE IF NOT EXISTS group_chats (
   is_deleted BOOLEAN DEFAULT FALSE
 );
 
--- Group Chat Members Table (Mapping users to groups)
+-- Group Chat Members Table 
 CREATE TABLE IF NOT EXISTS group_chat_members (
   group_id INTEGER REFERENCES group_chats(id) ON DELETE CASCADE,
   user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
